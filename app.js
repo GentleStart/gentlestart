@@ -206,8 +206,8 @@
       // the animal, right side
       var f='stroke="var(--ink)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"';
       var v=critterIdx();s+='<g transform="translate(440 78) scale(1.3) translate(-440 -78)" filter="url(#gWob)">';
-      var artFox=(m==='balanced'&&v===1&&(se==='autumn'||se==='winter')),artDeer=(m==='balanced'&&v===2);
-      if(artFox||artDeer){}else if(v>0&&CRITTERS[m]&&CRITTERS[m][v-1]){s+=CRITTERS[m][v-1](f,o)}else if(m==='slow'){ // sleepy bear in a scarf
+      var artFox=(m==='balanced'&&v===1&&(se==='autumn'||se==='winter')),artDeer=(m==='balanced'&&v===2),artHog=(m==='balanced'&&v===0);
+      if(artFox||artDeer||artHog){}else if(v>0&&CRITTERS[m]&&CRITTERS[m][v-1]){s+=CRITTERS[m][v-1](f,o)}else if(m==='slow'){ // sleepy bear in a scarf
         s+='<path d="M300 78C300 54 318 46 342 46C368 46 386 58 386 78Z" style="fill:var(--wood)" '+f+'/>';
         s+='<circle cx="364" cy="56" r="17" style="fill:var(--wood)" '+f+'/><circle cx="351" cy="42" r="6" style="fill:var(--wood)" '+f+'/><circle cx="377" cy="42" r="6" style="fill:var(--wood)" '+f+'/>';
         s+='<ellipse cx="369" cy="62" rx="9" ry="6.5" style="fill:var(--surface2)" '+f+'/><ellipse cx="371" cy="59.5" rx="2.6" ry="1.8" style="fill:var(--ink)"/>';
@@ -227,6 +227,7 @@
         s+='<path d="M296 26C290 18 282 22 286 30C290 32 294 30 296 26Z M296 26C302 18 310 22 306 30C302 32 298 30 296 26Z" style="fill:var(--accent);opacity:.85" stroke="var(--ink)" stroke-width="1.2"/><path d="M296 24V32" '+o+'/>';
       }else{ s+=HEDGEHOG(); }
       s+='</g>';
+      if(artHog){var HX='x="306" y="12" width="96" height="70" preserveAspectRatio="xMidYMax meet"';s+='<defs><mask id="hogM" style="mask-type:alpha"><image href="art/hedgehog.png" '+HX+'/></mask></defs><image href="art/hedgehog.png" '+HX+'/><rect x="302" y="8" width="104" height="78" mask="url(#hogM)" style="fill:var(--accent);mix-blend-mode:color;opacity:.12"/>'}
       if(artDeer){var DX='x="300" y="-14" width="104" height="96" preserveAspectRatio="xMidYMax meet"';s+='<defs><mask id="deerM" style="mask-type:alpha"><image href="art/deer.png" '+DX+'/></mask></defs><image href="art/deer.png" '+DX+'/><rect x="296" y="-18" width="112" height="104" mask="url(#deerM)" style="fill:var(--accent);mix-blend-mode:color;opacity:.16"/>'}
       if(artFox){var FX='x="312" y="6" width="84" height="76" preserveAspectRatio="xMidYMax meet"';
         if(se==='winter')s+='<image href="art/fox-autumn.png" '+FX+'/>';
