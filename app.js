@@ -308,7 +308,7 @@
   var DOW=['S','M','T','W','T','F','S'];
 
   function load(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
-  function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+  function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}try{window.GSSync&&window.GSSync.touch(k)}catch(e){}}
   /* personal names are filled in at display time, so none of them live in the code */
   var PROF=(function(){try{return JSON.parse(localStorage.getItem('gs-profile'))}catch(e){return null}})();
   function fxWith(s,html){
@@ -1489,7 +1489,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     if(PROF)return '';
     return '<div class="backdrop" style="z-index:40"><div class="sheet" role="dialog" aria-modal="true" aria-label="Welcome"><h2 style="font-size:26px">Welcome</h2><p class="small">A few names make this feel like yours. All of it is optional, it stays on this device, and you can change it any time in the menu.</p><form id="welcomeform" style="display:flex;flex-direction:column;gap:4px">'+nameFields({})+'<button class="btn" type="submit" style="margin-top:14px">Start</button></form><button class="quiet" data-a="wskip">Skip for now</button></div></div>';
   }
-  function saveProf(o){PROF={name:(o.name||'').trim(),partner:(o.partner||'').trim(),pet:(o.pet||'').trim()};try{localStorage.setItem('gs-profile',JSON.stringify(PROF))}catch(e){}}
+  function saveProf(o){PROF={name:(o.name||'').trim(),partner:(o.partner||'').trim(),pet:(o.pet||'').trim()};try{localStorage.setItem('gs-profile',JSON.stringify(PROF))}catch(e){}try{window.GSSync&&window.GSSync.touch('gs-profile')}catch(e){}}
 
   /* ---- Routine tab: daily steps and repeating tasks ---- */
   var DAYN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -1538,6 +1538,24 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     else h+='<div class="grp"><div class="lab">Time of day</div>'+evChips('repart',R.part,[['morning','Morning'],['afternoon','Afternoon'],['evening','Evening']])+'</div>';
     return h+'<button class="btn" data-a="resave">Save</button>'+(R.id?'<button class="quiet" style="text-align:center" data-a="redel">Delete this repeating task</button>':'')+'<button class="quiet" style="text-align:center" data-a="recancel">Cancel</button></div></div>';
   }
+  function accountUI(){
+    var G=window.GSSync,st=G&&G.state,h='<div class="grp acct"><div class="lab">Account</div>';
+    if(!G||!st.ready){var slow=(window.performance&&performance.now()>8000);h+='<p class="small">'+(!navigator.onLine?'You are offline. Everything still works on this device, and you can sign in when you are back online.':slow?'Could not reach the sign-in service just now. Everything still works on this device. Try again later.':'Connecting\u2026')+'</p></div>';return h}
+    if(st.user){
+      var when=st.last?Math.max(0,Math.round((Date.now()-st.last)/60000)):null;
+      h+='<p class="small">Signed in as <b>'+esc(st.email||'your account')+'</b>. Your tasks, plans, lists, log and settings sync across every device you sign in on.</p>';
+      h+='<p class="small acstat">'+(st.status==='syncing'?'Syncing\u2026':st.status==='pending'?'Saving your latest change\u2026':st.status==='error'?esc(st.error):when===null?'Up to date.':when<1?'Synced just now.':'Synced '+when+' min ago.')+'</p>';
+      h+='<div class="chips sm"><button data-a="acsync">Sync now</button><button data-a="acout">Sign out</button></div>';
+    }else{
+      h+='<p class="small">Sign in to keep your phone and computer in step. Without an account everything stays on this device only, which also works fine.</p>';
+      h+='<button class="btn acg" data-a="acgoogle"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg><span>Sign in with Google</span></button>';
+      h+='<p class="small" style="margin-top:8px">Or get a sign-in link by email:</p><form class="add" data-a="acemail"><input type="email" id="acmail" placeholder="you@example.com" aria-label="Email for a sign-in link" autocomplete="email"><button type="submit">Send link</button></form>';
+      if(st.sent)h+='<p class="small acstat">Link sent to '+esc(st.sent)+'. Open it on this device to finish signing in.</p>';
+    }
+    if(st.error&&!st.user)h+='<p class="small acstat" role="alert">'+esc(st.error)+'</p>';
+    return h+'</div>';
+  }
+  window.gsSyncChanged=function(){try{if(S.menu&&S.mt==='settings')keepSheet(render)}catch(e){}};
   function menuSheet(){
     if(!S.menu)return '';
     var h='<div class="backdrop" data-a="mbg"><div class="sheet" role="dialog" aria-modal="true" aria-label="Menu"><div class="between"><h2 style="font-size:24px">Menu</h2><button class="x" data-a="mclose" aria-label="Close menu">&times;</button></div>';
@@ -1572,7 +1590,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       h+='</div>';
 
     }else if(S.mt==='settings'){
-      h+='<div class="sethead first">About you</div>';
+      h+='<div class="sethead first">About you</div>'+accountUI();
       h+='<form id="profform" class="grp" style="display:flex;flex-direction:column;gap:4px">'+nameFields(PROF)+'<button class="btn alt" type="submit" style="margin-top:10px">Save names</button></form>';
       h+='<div class="grp"><div class="lab">Back up your data</div><p class="small">Everything lives on this device only for now. A backup is one small file with your tasks, plans, lists, log and settings. Keep it somewhere safe, or use it to move to a new phone.</p><button class="btn" data-a="dexport">Save a backup</button></div>';
       h+='<div class="grp"><div class="lab">Restore from a backup</div><p class="small">This replaces what is on this device with what is in the file.</p><label class="btn alt" style="cursor:pointer">Choose a backup file<input type="file" id="dimport" accept=".json,application/json" hidden></label></div>';
@@ -1708,6 +1726,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
         var del=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k.indexOf('gs-')===0)del.push(k)}
         del.forEach(function(k){localStorage.removeItem(k)});
         Object.keys(p.data).forEach(function(k){if(k.indexOf('gs-')===0&&typeof p.data[k]==='string')localStorage.setItem(k,p.data[k])});
+        localStorage.setItem('gs-sync-pushall','1');
         location.reload();
       }catch(e){S.dataMsg='That did not work. Nothing was changed.';S.dataPending=null;keepSheet(render)}
     },
@@ -1819,6 +1838,9 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       }).then(function(){S.tkBusy=false;if(S.tk===T){syncTk();keepSheet(render)}});
     },
     menu:function(){S.menu=true;render()},
+    acgoogle:function(){window.GSSync&&window.GSSync.google()},
+    acout:function(){if(window.GSSync&&confirm('Sign out? Everything stays on this device; it just stops syncing.'))window.GSSync.signOut()},
+    acsync:function(){window.GSSync&&window.GSSync.flush();toast('Syncing.')},
     musset:function(){S.menu=true;S.mt='settings';render();var g=document.getElementById('musgrp');if(g)g.scrollIntoView({block:'start'})},
     mustog:function(b){var k=b.dataset.v;S.mus[k]=!S.mus[k];save('gs-mus',S.mus);keepSheet(render)},
     mclose:function(){S.menu=false;render()},
@@ -2112,6 +2134,8 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       var rp=f.dataset.p,rid='c'+Date.now();
       S.cust.push({id:rid,t:v.slice(0,50)});S.rtn.parts[rp].push(rid);syncSteps();saveRtn();
       keepSheet(render);var rn=document.getElementById('rtadd-'+rp);if(rn)rn.focus();
+    }else if(f.dataset.a==='acemail'){
+      if(/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)){window.GSSync&&window.GSSync.emailLink(v)}else toast('That email does not look right.');
     }else if(f.dataset.a==='lgadd'){
       if(S.groups.length<20&&!S.groups.some(function(g){return g.name.toLowerCase()===v.toLowerCase()})){S.groups.push({id:'g'+Date.now(),name:v.slice(0,24)});save('gs-groups',S.groups)}
       render();var gn=document.getElementById('lgnew');if(gn)gn.focus();

@@ -909,3 +909,7 @@ body{padding-bottom:calc(160px + env(safe-area-inset-bottom,0px))}
 .lgcard span{font-size:13px;opacity:.8}
 .lgtitle{font-family:var(--font-display);font-weight:400;font-size:22px;margin:2px 0 4px;color:inherit}
 .lot .between .quiet{color:inherit}
+
+/* account */
+.acct .btn.acg{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--surface);color:var(--ink);border-color:var(--line)}
+.acct .acstat{color:var(--accent)}
