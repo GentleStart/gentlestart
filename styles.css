@@ -920,3 +920,8 @@ body{padding-bottom:calc(160px + env(safe-area-inset-bottom,0px))}
 .btn.saved{border-color:var(--accent);color:var(--accent)}
 .usx{margin:6px 0 12px;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px}
 .usx b{font-weight:600}
+
+/* dismissible tips */
+.hint{position:relative;padding-right:40px}
+.hintx{position:absolute;top:6px;right:6px;width:30px;height:30px;border:0;background:transparent;color:inherit;opacity:.6;font-size:20px;line-height:1;cursor:pointer;border-radius:50%}
+.hintx:hover{opacity:1}

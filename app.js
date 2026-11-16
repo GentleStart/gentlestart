@@ -803,18 +803,20 @@
       else{h+='<div class="spaces">';list.forEach(function(t,i){h+=bay(t,i+1,false)});h+='</div>'}
       return h;
     }
-    h+='<div class="lotnote">Little lots for things that belong together. A task can be in one group and still show up in Weekly or Monthly.</div><div class="lgrid">';
+    h+=hint('groups','lotnote','Little lots for things that belong together. A task can be in one group and still show up in Weekly or Monthly.')+'<div class="lgrid">';
     S.groups.forEach(function(g){var n=S.tasks.filter(function(t){return !t.done&&t.g===g.id}).length;h+='<button class="lgcard" data-a="lgopen" data-v="'+g.id+'"><b>'+esc(g.name)+'</b><span>'+n+' task'+(n===1?'':'s')+'</span></button>'});
     h+='</div><form class="add lotadd" data-a="lgadd"><input type="text" id="lgnew" maxlength="24" placeholder="New group, e.g. Car" aria-label="New group name"><button type="submit">Add</button></form>';
     return h;
   }
+  S.hints=load('gs-hints',{});
+  function hint(id,cls,html){if(S.hints[id])return '';return '<div class="'+cls+' hint">'+html+'<button class="hintx" data-a="hintx" data-v="'+id+'" aria-label="Dismiss this tip">&times;</button></div>'}
   function lotInner(embedded){
     var u=U(),tab=S.lotTab;
     var h='<div class="between"><h2 class="lottitle">'+esc(u.lot)+'</h2>'+(embedded?'':'<button class="x lotx" data-a="lclose" aria-label="Close">&times;</button>')+'</div>';
     h+='<div class="subtabs lotabs" role="group" aria-label="Sections"><button data-a="lottab" data-v="week" aria-pressed="'+(tab==='week')+'">Weekly</button><button data-a="lottab" data-v="month" aria-pressed="'+(tab==='month')+'">Monthly</button><button data-a="lottab" data-v="groups" aria-pressed="'+(tab==='groups')+'">Groups</button></div>';
     if(tab==='groups')h+=groupsView(u);
     else{
-      h+='<form class="add lotadd" data-a="tkquick" data-h="'+tab+'"><input type="text" id="tkq" placeholder="'+(tab==='week'?'Something for this week':'Something for this month')+'" aria-label="Add something"><button type="submit">'+esc(u.parkIt)+'</button></form><div class="lotnote">Tip: hold the button to fill in details first.</div>';
+      h+='<form class="add lotadd" data-a="tkquick" data-h="'+tab+'"><input type="text" id="tkq" placeholder="'+(tab==='week'?'Something for this week':'Something for this month')+'" aria-label="Add something"><button type="submit">'+esc(u.parkIt)+'</button></form>'+hint('hold','lotnote','Tip: hold the button to fill in details first.');
       var list=S.tasks.filter(function(t){return !t.done&&(t.h||'week')===tab}).sort(function(a,b){
         var da=dueOf(a),db=dueOf(b);
         if(da&&db)return da<db?-1:da>db?1:0;
@@ -1240,7 +1242,7 @@
   function lists(){
     var ed=!!S.lmode;
     var h=head({title:'Lists',sub:'Separate from today. Nothing here is due. Tap Park it on any item and I\u2019ll find space for it in your week.'});
-    h+='<div class="note">Sample items are marked. Check them off, park them, or edit them. They are saved in this browser only.</div>';
+    h+=hint('lists','note','Sample items are marked. Check them off, park them, or edit them.');
     var CK='<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7.5l3 3 6-7"/></svg>';
     S.lists.forEach(function(L,li){
       var n=L.items.filter(function(i){return !i.done}).length;
@@ -1341,7 +1343,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     var ms=monthStart(),y=ms.getFullYear(),m=ms.getMonth(),mig=S.lv==='migraine';
     var label=ms.toLocaleDateString(undefined,{month:'long',year:'numeric'});
     var h=head({title:'Log',sub:'Optional. Only what you choose to add.'});
-    if(S.log.some(function(e){return e.smp}))h+='<div class="note">Some entries here are sample data, so the calendar has something to show. <button class="quiet" data-a="rmsample">Remove sample entries</button></div>';
+    if(S.log.some(function(e){return e.smp}))h+=hint('logsample','note','Some entries here are sample data, so the calendar has something to show. <button class="quiet" data-a="rmsample">Remove sample entries</button>');
 
     h+='<div class="card"><h3>Log something</h3>';
     if(S.day){var dq=S.day.split('-');h+='<p class="small">Adding to '+esc(new Date(+dq[0],+dq[1]-1,+dq[2]).toLocaleDateString(undefined,{month:'short',day:'numeric'}))+'. Tap the day again to go back to right now.</p>'}
@@ -1487,7 +1489,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       return e;
     }
     var h=head({title:'Us',sub:'What §P sees of your day'});
-    h+='<div class="note">Built from the plans you add on Today. Each plan shows the way you set it: full details, just "Appointment", or nothing. Flexible things stay tucked away, and free time shows nothing.</div>';
+    h+=hint('us','note','Built from the plans you add on Today. Each plan shows the way you set it: full details, just "Appointment", or nothing. Free time shows nothing.');
     var groups=[['Today',[0]],['Tomorrow',[1]],['Later this week',[2,3,4,5,6,7]]],hidden=0,any=false;
     groups.forEach(function(g){
       var rows='';
@@ -1913,6 +1915,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       }).then(function(){S.tkBusy=false;if(S.tk===T){syncTk();keepSheet(render)}});
     },
     menu:function(){S.menu=true;S.profSaved=false;render()},
+    hintx:function(b){S.hints[b.dataset.v]=1;save('gs-hints',S.hints);var ids=openIds();render();reopen(ids)},
     uslive:function(){publishLive.last=null;publishLive();sendOut('',liveUrl(),'Live link copied.')},
     dtxsent:function(b,e){save('gs-dtx-day',ymd(new Date()));setTimeout(render,400)},
     dtxskip:function(){save('gs-dtx-day',ymd(new Date()));render()},
