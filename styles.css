@@ -915,3 +915,5 @@ body{padding-bottom:calc(160px + env(safe-area-inset-bottom,0px))}
 .acct .acstat{color:var(--accent)}
 
 .welcome .btn.acg{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--surface);color:var(--ink);border-color:var(--line)}
+
+.tabs .tabsp{flex:.5}

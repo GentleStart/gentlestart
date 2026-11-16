@@ -1646,8 +1646,10 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
 
   function tabs(){
     var h='';
-    [['lists','Lists'],['ov','Overview'],['today','Today'],['us','Us'],['log','Log']].forEach(function(t){
-      h+='<button data-a="tab" data-v="'+t[0]+'"'+(S.tab===t[0]?' aria-current="page"':'')+'>'+ICON[t[0]]+t[1]+'</button>';
+    var hasP=!!(PROF&&PROF.partner);if(!hasP&&S.tab==='us')S.tab='today';
+    [['lists','Lists'],['ov','Overview'],['today','Today'],['us','Us'],['log','Log']].filter(function(t){return hasP||t[0]!=='us'}).forEach(function(t){
+      var sp=(!hasP&&t[0]==='log')?'<span class="tabsp" aria-hidden="true"></span>':'';
+      h+=sp+'<button data-a="tab" data-v="'+t[0]+'"'+(S.tab===t[0]?' aria-current="page"':'')+'>'+ICON[t[0]]+t[1]+'</button>'+sp;
     });
     return h;
   }
@@ -1686,6 +1688,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     var app=document.getElementById('app');
     var _sl=document.getElementById('simslider'),keepSl=(_sl&&document.activeElement===_sl)?_sl:null;
     app.classList.toggle('wide',S.tab==='ov');
+    if(S.tab==='us'&&!(PROF&&PROF.partner))S.tab='today';
     app.innerHTML=fx(S.tab==='today'?today():S.tab==='ov'?overview():S.tab==='lists'?lists():S.tab==='log'?logview():us());
     if(keepSl){var _ns=document.getElementById('simslider');if(_ns&&_ns.parentNode)_ns.parentNode.replaceChild(keepSl,_ns)}
     document.getElementById('tabs').innerHTML=fx(tabs());
