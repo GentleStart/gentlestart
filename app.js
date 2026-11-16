@@ -1151,7 +1151,7 @@
   ];
   function forgotSheet(){
     if(!S.fg)return '';
-    return '<div class="backdrop mid" data-a="fgbg"><div class="sheet" role="alertdialog" aria-modal="true" aria-label="Forgot medications"><h2 style="font-size:24px;text-align:center">Uh oh!</h2><p class="small" style="text-align:center;margin:0">I will make a note in the log in case you need it later.</p><button class="btn" data-a="fgok">Okay</button></div></div>';
+    return '<div class="backdrop mid" data-a="fgbg"><div class="sheet" role="alertdialog" aria-modal="true" aria-label="Forgot medications"><h2 style="font-size:24px;text-align:center">Uh oh!</h2><p class="small" style="text-align:center;margin:0">We'll make a note in the log in case you need it later.</p><button class="btn" data-a="fgok">Okay</button></div></div>';
   }
   function catSheet(){
     if(!S.ce)return '';
