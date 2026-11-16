@@ -511,7 +511,6 @@ html:root[data-look] .tabs button[data-v="today"][aria-current="page"]{backgroun
 :root[data-look="creature"] .bay .check[aria-checked="true"]{background:#5A3318;color:#FBF3E4}
 :root[data-look="creature"] .bay .tag{border-color:#7A4A22;color:#3E2210}
 :root[data-look="creature"] .bay .small,:root[data-look="creature"] .lotnote{color:#5A3A1E;border-color:#7A4A22}
-:root[data-look="creature"] .psign{border-radius:999px}
 
 /* plinko */
 .plboard{background:var(--surface2);border-radius:18px;padding:6px;cursor:pointer}
