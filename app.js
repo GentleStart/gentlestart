@@ -1137,6 +1137,82 @@
   function rptObj(k){return k==='ev'?(S.ev&&S.ev.rpt):k==='tk'?(S.tk&&S.tk.rpt):S.re}
   function rptSyncAll(k){if(k==='ev')syncEv();else if(k==='tk')syncTk();else syncRe()}
   function rptSync(k,R){var d=document.getElementById(k+'-dom');if(d&&R)R.dom=Math.max(1,Math.min(31,parseInt(d.value,10)||1))}
+  /* ---- reading a plan out of a pasted or shared message ----
+     Plain pattern matching, no AI: it pulls what it can (day, time, place, length, a title)
+     and the plan editor opens for a quick check. Anything it is unsure about stays blank. */
+  function parsePlan(raw,now){
+    now=now||new Date();
+    var text=String(raw||'').replace(/[‘’]/g,"'").replace(/\s+/g,' ').trim().slice(0,600),low=text.toLowerCase(),out={found:[]};
+    var today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+    var DAYS=['sun','mon','tue','wed','thu','fri','sat'];
+    var MON=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+    function setDay(d,why){if(out.date)return;out.date=d;out.found.push(why)}
+    /* day */
+    var m;
+    if(/\b(today|tonight|this (morning|afternoon|evening))\b/.test(low))setDay(today,'today');
+    else if(/\b(tomorrow|tmrw|tmr|tomorow)\b/.test(low))setDay(addDays(today,1),'tomorrow');
+    if(!out.date&&(m=low.match(/\b(next |this |on )?(sun|mon|tue|tues|wed|weds|thu|thur|thurs|fri|sat)(day|nesday|sday|urday|rsday)?\b/))){
+      var wd=DAYS.indexOf(m[2].slice(0,3)),diff=(wd-today.getDay()+7)%7;
+      if(m[1]==='next '&&diff===0)diff=7;
+      var d=addDays(today,diff);setDay(d,d.toLocaleDateString(undefined,{weekday:'long'}));
+    }
+    if(!out.date&&/\b(this|the) weekend\b/.test(low)){var dw=today.getDay();setDay(addDays(today,dw===0||dw===6?0:6-dw),'this weekend')}
+    if(!out.date&&(m=low.match(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.? (\d{1,2})(st|nd|rd|th)?\b/)||low.match(/\b(\d{1,2})(st|nd|rd|th)? (?:of )?(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\b/))){
+      var mo,dd;if(isNaN(+m[1])){mo=MON.indexOf(m[1].slice(0,3));dd=+m[2]}else{mo=MON.indexOf(m[3].slice(0,3));dd=+m[1]}
+      if(mo>=0&&dd>=1&&dd<=31){var x=new Date(today.getFullYear(),mo,dd);if(x<today)x=new Date(today.getFullYear()+1,mo,dd);setDay(x,x.toLocaleDateString(undefined,{month:'short',day:'numeric'}))}
+    }
+    if(!out.date&&(m=low.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b/))){
+      var mo2=+m[1]-1,dd2=+m[2];if(mo2>=0&&mo2<12&&dd2>=1&&dd2<=31){var yr=m[3]?(+m[3]<100?2000+(+m[3]):+m[3]):today.getFullYear(),x2=new Date(yr,mo2,dd2);if(!m[3]&&x2<today)x2=new Date(yr+1,mo2,dd2);setDay(x2,x2.toLocaleDateString(undefined,{month:'short',day:'numeric'}))}
+    }
+    if(!out.date&&(m=low.match(/\bthe (\d{1,2})(st|nd|rd|th)\b/))){var dd3=+m[1];if(dd3>=1&&dd3<=31){var x3=new Date(today.getFullYear(),today.getMonth(),dd3);if(x3<today)x3=new Date(today.getFullYear(),today.getMonth()+1,dd3);setDay(x3,x3.toLocaleDateString(undefined,{month:'short',day:'numeric'}))}}
+    /* time */
+    var eve=/\b(dinner|drinks|tonight|evening|night|movie|party|bar|concert|show|game night|date)\b/.test(low),mins=null;
+    if(/\bnoon\b/.test(low))mins=720;
+    if(mins===null){
+      var re=/(^|[^\d\/:])(at |@ ?|around |by |til |till |until |~ ?)?(\d{1,2})(?::(\d{2}))? ?((?:am|pm|a\.m\.|p\.m\.|a|p)(?![a-z]))?(ish)?(?![\d\/:])/g,best=null;
+      while((m=re.exec(low))){
+        var hh=+m[3],mm=m[4]?+m[4]:0,ap=m[5]?m[5].charAt(0):'',strong=!!(m[2]||m[4]||ap||m[6]);
+        if(!strong||hh<1||hh>23||mm>59)continue;
+        var after=low.slice(m.index+m[0].length,m.index+m[0].length+10);
+        if(!ap&&!m[4]&&/^ ?(people|ppl|of us|min|minutes|hours|hrs|hr|days|weeks|bucks|dollars|%)/.test(after))continue;
+        if(ap==='p'&&hh<12)hh+=12;else if(ap==='a'&&hh===12)hh=0;
+        else if(!ap&&hh<=12){if(hh===12)hh=12;else if(hh<=7||eve)hh+=12}
+        best=hh*60+mm;break;
+      }
+      mins=best;
+    }
+    if(mins!==null){out.time=pad(Math.floor(mins/60))+':'+pad(mins%60);out.found.push(fmt(mins))}
+    /* how long */
+    if((m=low.match(/\bfor (an?|one|\d+(?:\.\d+)?|half an?) ?(hour|hr|hours|hrs|minutes|mins|min)\b/))){
+      var q=m[1]==='a'||m[1]==='an'||m[1]==='one'?1:/half/.test(m[1])?0.5:+m[1],dur=/^h/.test(m[2])?Math.round(q*60):Math.round(q);
+      if(dur>0&&dur<=720){out.dur=dur;out.found.push(fmtMins(dur))}
+    }
+    /* where */
+    var STOP=/^(least|all|first|last|most|once|some point|the moment|the latest|the earliest|noon|midnight|night)\b/i;
+    var pre=/(?:^|[\s(])(?:at\s+|@\s*)(?![\d\s])([^,.!?;\n()]{2,50}?)(?=\s+(?:on|at|around|by|for|tomorrow|tonight|today|this|next|instead|then|if|so|after|before|with|lol|haha)\b|[,.!?;\n()]|$)/gi;
+    while((m=pre.exec(text))){var pl=m[1].trim().replace(/\s+(ok|okay|yeah|pls|please)$/i,'');if(STOP.test(pl))continue;out.place=pl.charAt(0).toUpperCase()+pl.slice(1);break}
+    if(out.place)out.found.push(out.place);
+    /* what it is */
+    var KW=[['game night','Game night'],['brunch','Brunch'],['breakfast','Breakfast'],['lunch','Lunch'],['dinner','Dinner'],['coffee','Coffee'],['drinks','Drinks'],['happy hour','Happy hour'],['movies?','Movie'],['birthday','Birthday'],['party','Party'],['concert','Concert'],['wedding','Wedding'],['baby shower','Baby shower'],['bbq|barbecue|cookout','Cookout'],['picnic','Picnic'],['hike','Hike'],['dentist','Dentist'],['doctor|dr\\.? appt','Doctor'],['haircut|hair appt','Haircut'],['appointment|appt','Appointment'],['meeting','Meeting'],['interview','Interview'],['yoga','Yoga'],['gym|workout','Workout'],['class','Class'],['practice','Practice'],['playdate','Playdate'],['date night','Date night'],['call\\b|phone call|facetime','Call'],['game\\b','Game']];
+    for(var i=0;i<KW.length;i++){if(new RegExp('\\b('+KW[i][0]+')').test(low)){out.title=KW[i][1];break}}
+    if(!out.title){
+      var t=text.replace(/^(hey|hi|hello|yo|so|ok|okay|omg|ooh|oh|lol|haha|hahaha)\b[\s,!.]*/i,'').replace(/^(do you |did you |wanna |want to |you want to |are you free (to )?|would you (like|want) to |can you |let's |lets |we should )/i,'');
+      t=t.split(/[.!?\n]/)[0].trim();if(t.length>40)t=t.slice(0,40).replace(/\s+\S*$/,'')+'…';
+      out.title=t?t.charAt(0).toUpperCase()+t.slice(1):'';out.titleGuess=true;
+    }
+    out.text=text;
+    return out;
+  }
+  /* fill the open plan editor from a message; only fields the message actually had are touched */
+  function fillFromText(txt){
+    if(!S.ev)S.ev=newEv();var E=S.ev,r=parsePlan(txt);
+    if(r.title&&(!r.titleGuess||!E.title))E.title=r.title;
+    if(r.date){var k=ymd(r.date);E.dk=k===ymd(new Date())?'today':k===ymd(addDays(new Date(),1))?'tomorrow':'other';E.dateVal=k}
+    if(r.time)E.time=r.time;
+    if(r.place)E.place=r.place;
+    if(r.dur){E.dur=r.dur;E.durOther=undefined}
+    E.from={found:r.found,guess:!!r.titleGuess,text:r.text};E.pasteOpen=false;E.pasteMsg='';
+  }
   function newEv(){return {rpt:rptNew(),tags:[],id:null,by:'me',title:'',dk:'today',dateVal:'',time:'',dur:60,place:'',travel:0,prep:'',withJ:false,share:'full',err:''}}
   function syncEv(){
     var E=S.ev;if(!E)return;rptSync('ev',E.rpt);var tr=document.getElementById('ev-trm');if(E.trOther&&tr)E.travel=Math.max(0,Math.min(600,parseInt(tr.value,10)||0));var dh=document.getElementById('ev-durh'),dm=document.getElementById('ev-durm');if(E.durOther&&dh&&dm){E.dur=Math.max(0,Math.min(23,parseInt(dh.value,10)||0))*60+Math.max(0,Math.min(59,parseInt(dm.value,10)||0))}
@@ -1153,6 +1229,16 @@
     var h='<div class="backdrop" data-a="evbg"><div class="sheet" role="dialog" aria-modal="true" aria-label="'+ttl+'"><div class="between"><h2 style="font-size:24px">'+ttl+'</h2><button class="x" data-a="evclose" aria-label="Close">&times;</button></div>';
     if(E.err)h+='<div class="note" role="alert">'+esc(E.err)+'</div>';
     if(E.ask)h+='<div class="note askseries" role="alert"><b>This plan repeats.</b> '+(E.ask==='del'?'Delete':'Change')+' just this one, or every one?<div class="row" style="margin-top:10px">'+(E.occ?'<button class="btn alt grow" data-a="evscope" data-v="one">Just '+esc(dayLabel(E.occ))+'</button>':'')+'<button class="btn grow" data-a="evscope" data-v="all">Every one</button></div><button class="quiet" data-a="evscope" data-v="cancel">Cancel</button></div>';
+    if(!E.id&&E.by!=='p'){
+      if(E.from){
+        var fd=E.from.found;
+        h+='<div class="note pastenote">'+(fd.length?'Filled in from your message: <b>'+esc(fd.join(', '))+'</b>. Check it over, then save.'+(E.from.guess?' The title is a guess from the first line.':''):'No day or time turned up in that message, so it went into the title. Fill in the rest.')+'<details class="tuck"><summary>Show the message</summary><p class="small">'+esc(E.from.text)+'</p></details></div>';
+      }else{
+        h+='<div class="pastebox"><button class="btn alt" data-a="evpaste">Paste from a message</button><p class="small">Copy a text about plans, then tap this. The app fills in what it can find.</p>';
+        if(E.pasteOpen)h+=(E.pasteMsg?'<p class="small" role="status">'+esc(E.pasteMsg)+'</p>':'')+'<textarea class="field" id="ev-pastetxt" rows="3" placeholder="Paste the message here" aria-label="Message to read"></textarea><button class="btn alt" data-a="evparse">Fill in the plan</button>';
+        h+='</div>';
+      }
+    }
     if(E.by==='p')h+='<p class="small">Something on §P&rsquo;s day you want to plan around, like a lunch break or a late shift. It shows with a tag, and it never sends you a leave-by reminder.</p>';
     h+='<div class="grp"><div class="lab">What is it</div><input class="field" type="text" id="ev-title" value="'+esc(E.title)+'" placeholder="e.g. Dentist" aria-label="What is it"><div class="chips sm" role="group" aria-label="Tags" style="margin-top:8px">';
     S.evtags.forEach(function(q){h+='<button data-a="evquick" data-v="'+esc(q)+'" aria-pressed="'+((E.tags||[]).indexOf(q)>=0)+'">'+esc(q)+'</button>'});
@@ -2123,6 +2209,13 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     nbg:function(b,e){if(e.target===b){S.ns=null;save('gs-stacks',S.stacks);render()}},
     ncancel:function(){S.ns=null;render()},
     evnew:function(){S.ev=newEv();render()},
+    evpaste:function(){
+      var E=S.ev;if(!E)return;syncEv();
+      function box(msg){E.pasteOpen=true;E.pasteMsg=msg;keepSheet(render);var t=document.getElementById('ev-pastetxt');if(t)t.focus()}
+      if(!(navigator.clipboard&&navigator.clipboard.readText)){box('Paste the message into the box below.');return}
+      navigator.clipboard.readText().then(function(t){if(t&&t.trim()){fillFromText(t);keepSheet(render)}else box('Nothing is copied yet. Copy the message first, or paste it into the box below.')}).catch(function(){box('The app could not read what you copied. Paste it into the box below instead.')});
+    },
+    evparse:function(){var t=document.getElementById('ev-pastetxt'),v=t?t.value.trim():'';if(!v){toast('Paste the message in first.');return}syncEv();fillFromText(v);keepSheet(render)},
     evnewp:function(){S.ev=newEv();S.ev.by='p';render()},
     evedit:function(b){
       if(b.dataset.v.indexOf('rv_')===0){A.reedit({dataset:{v:b.dataset.v.slice(3)}});return}
@@ -2518,6 +2611,8 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   window.addEventListener('hashchange',function(){S.pv=pvParse();startLive(0);render()});
   seedSamples();
   try{applyLook()}catch(e){}
+  (function(){try{var q=new URLSearchParams(location.search),st=[q.get('title'),q.get('text'),q.get('url')].filter(Boolean).join(' ').trim();
+    if(st){history.replaceState(null,'',location.pathname+location.hash);S.tab='today';S.ev=newEv();fillFromText(st)}}catch(e){}})();
   render();
   document.addEventListener('submit',function(e){
     var f=e.target;if(!f||(f.id!=='welcomeform'&&f.id!=='profform'))return;e.preventDefault();

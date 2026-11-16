@@ -927,3 +927,8 @@ body{padding-bottom:calc(160px + env(safe-area-inset-bottom,0px))}
 
 /* Bear minimum: a light italic nod that the pun is on purpose */
 em.pun{font-style:italic;font-weight:inherit;letter-spacing:.01em}
+
+/* plan editor: paste from a message */
+.pastebox{display:flex;flex-direction:column;gap:6px;padding:12px;border:1.5px dashed var(--line);border-radius:14px;margin-bottom:6px}
+.pastebox .small{margin:0}
+.pastenote details{margin-top:6px}
