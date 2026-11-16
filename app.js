@@ -1444,6 +1444,11 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     return '<div class="him"><b>'+esc(line)+'</b>'+(ev.ex?'<span class="small">Example</span>':'')+'</div>';
   }
   function us(){
+    if(!(PROF&&PROF.partner)){
+      var e=head({title:'Us',sub:'Share your day with the people you plan around'});
+      e+='<div class="card"><h3>What Us is for</h3><p class="small">Add a partner and this becomes your shared view of each other&rsquo;s day.</p><ul class="usx"><li><b>See their agenda at a glance.</b> Today, tomorrow and the rest of the week, without asking.</li><li><b>Plan joint activities.</b> Dinner out or a movie night shows up once for both of you.</li><li><b>Choose what they see.</b> Each plan can show full details, just &ldquo;Appointment&rdquo;, or stay private.</li><li><b>Plan around their schedule.</b> Add their late shift or lunch break so your Overview knows.</li><li><b>Send a quick summary.</b> A bulleted list or a read-only link of your week, in one tap.</li></ul><button class="btn" data-a="usadd">Add a partner</button></div>';
+      return e;
+    }
     var h=head({title:'Us',sub:'What §P sees of your day'});
     h+='<div class="note">Built from the plans you add on Today. Each plan shows the way you set it: full details, just "Appointment", or nothing. Flexible things stay tucked away, and free time shows nothing.</div>';
     var groups=[['Today',[0]],['Tomorrow',[1]],['Later this week',[2,3,4,5,6,7]]],hidden=0,any=false;
@@ -1619,7 +1624,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
 
     }else if(S.mt==='settings'){
       h+='<div class="sethead first">About you</div>'+accountUI();
-      h+='<form id="profform" class="grp" style="display:flex;flex-direction:column;gap:4px">'+nameFields(PROF)+'<button class="btn alt" type="submit" style="margin-top:10px">Save names</button></form>';
+      h+='<form id="profform" class="grp" style="display:flex;flex-direction:column;gap:4px">'+nameFields(PROF)+'<button class="btn alt'+(S.profSaved?' saved':'')+'" type="submit" style="margin-top:10px" id="profsave">'+(S.profSaved?'Saved \u2713':'Save names')+'</button></form>';
       h+='<div class="grp"><div class="lab">Back up your data</div><p class="small">Everything lives on this device only for now. A backup is one small file with your tasks, plans, lists, log and settings. Keep it somewhere safe, or use it to move to a new phone.</p><button class="btn" data-a="dexport">Save a backup</button></div>';
       h+='<div class="grp"><div class="lab">Restore from a backup</div><p class="small">This replaces what is on this device with what is in the file.</p><label class="btn alt" style="cursor:pointer">Choose a backup file<input type="file" id="dimport" accept=".json,application/json" hidden></label></div>';
       if(S.dataPending)h+='<div class="note" role="alert">Found a backup with '+S.dataPending.n+' saved items'+(S.dataPending.when?' from '+esc(S.dataPending.when):'')+'. Replace what is on this device with it?<div class="row" style="margin-top:10px"><button class="btn grow" data-a="dgo">Yes, restore it</button><button class="btn alt grow" data-a="dno">Cancel</button></div></div>';
@@ -1646,10 +1651,8 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
 
   function tabs(){
     var h='';
-    var hasP=!!(PROF&&PROF.partner);if(!hasP&&S.tab==='us')S.tab='today';
-    [['lists','Lists'],['ov','Overview'],['today','Today'],['us','Us'],['log','Log']].filter(function(t){return hasP||t[0]!=='us'}).forEach(function(t){
-      var sp=(!hasP&&t[0]==='log')?'<span class="tabsp" aria-hidden="true"></span>':'';
-      h+=sp+'<button data-a="tab" data-v="'+t[0]+'"'+(S.tab===t[0]?' aria-current="page"':'')+'>'+ICON[t[0]]+t[1]+'</button>'+sp;
+    [['lists','Lists'],['ov','Overview'],['today','Today'],['us','Us'],['log','Log']].forEach(function(t){
+      h+='<button data-a="tab" data-v="'+t[0]+'"'+(S.tab===t[0]?' aria-current="page"':'')+'>'+ICON[t[0]]+t[1]+'</button>';
     });
     return h;
   }
@@ -1688,7 +1691,6 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     var app=document.getElementById('app');
     var _sl=document.getElementById('simslider'),keepSl=(_sl&&document.activeElement===_sl)?_sl:null;
     app.classList.toggle('wide',S.tab==='ov');
-    if(S.tab==='us'&&!(PROF&&PROF.partner))S.tab='today';
     app.innerHTML=fx(S.tab==='today'?today():S.tab==='ov'?overview():S.tab==='lists'?lists():S.tab==='log'?logview():us());
     if(keepSl){var _ns=document.getElementById('simslider');if(_ns&&_ns.parentNode)_ns.parentNode.replaceChild(keepSl,_ns)}
     document.getElementById('tabs').innerHTML=fx(tabs());
@@ -1740,7 +1742,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     welskip:function(){S.welInfo=true;render()},
     welnext:function(){var n=document.getElementById('pf-name');S.welName=n?n.value:'';S.welP2=true;render();var f=document.querySelector('#welcomeform input:not([type=hidden])');if(f)f.focus()},
     welback:function(){S.welP2=false;render()},
-    incl:function(b){keepSheet(function(){keepAll(function(){S.incl=S.incl||{};S.incl[b.dataset.v]=!S.incl[b.dataset.v];render()})})},
+    incl:function(b){S.profSaved=false;keepSheet(function(){keepAll(function(){S.incl=S.incl||{};S.incl[b.dataset.v]=!S.incl[b.dataset.v];render()})})},
     dexport:function(){
       var o={app:'gentle-start',version:1,saved:new Date().toISOString(),data:{}};
       try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k.indexOf('gs-')===0)o.data[k]=localStorage.getItem(k)}}catch(e){}
@@ -1872,7 +1874,8 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
         T.err=(e&&e.code==='not_granted')?'The step-maker is not switched on for this page. You can add steps yourself.':'That did not go through. Try again, or add steps yourself.';
       }).then(function(){S.tkBusy=false;if(S.tk===T){syncTk();keepSheet(render)}});
     },
-    menu:function(){S.menu=true;render()},
+    menu:function(){S.menu=true;S.profSaved=false;render()},
+    usadd:function(){S.menu=true;S.mt='settings';S.incl=inclOf(PROF);S.incl.partner=true;render();var f=document.getElementById('pf-partner');if(f){f.scrollIntoView({block:'center'});f.focus()}},
     acgoogle:function(){window.GSSync&&window.GSSync.google()},
     acout:function(){if(window.GSSync&&confirm('Sign out? Everything stays on this device; it just stops syncing.'))window.GSSync.signOut()},
     acsync:function(){window.GSSync&&window.GSSync.flush();toast('Syncing.')},
@@ -2416,7 +2419,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     var f=e.target;if(!f||(f.id!=='welcomeform'&&f.id!=='profform'))return;e.preventDefault();
     function g(i){var x=document.getElementById(i);return x?x.value:''}
     saveProf({name:g('pf-name'),partner:g('pf-partner'),pets:g('pf-pets'),kids:g('pf-kids'),others:g('pf-others')});
-    if(f.id==='profform'){S.dataMsg='Saved.';keepSheet(render)}else render();
+    if(f.id==='profform'){S.profSaved=true;keepSheet(render)}else render();
   });
   document.addEventListener('change',function(e){
     var ls=e.target;if(ls&&ls.classList&&ls.classList.contains('lsedit')){
@@ -2476,5 +2479,6 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     var wv=t.closest('.deco .wv');
     if(wv){var sv=wv.ownerSVGElement;sv.classList.remove('drift');void sv.getBoundingClientRect();sv.classList.add('drift');setTimeout(function(){sv.classList.remove('drift')},1700)}
   });
+  document.addEventListener('input',function(e){if(S.profSaved&&e.target.closest&&e.target.closest('#profform')){S.profSaved=false;var b=document.getElementById('profsave');if(b){b.textContent='Save names';b.classList.remove('saved')}}});
   getSample().then(function(f){if(!f){S.noAI=true;render()}});
 })();

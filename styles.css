@@ -916,4 +916,7 @@ body{padding-bottom:calc(160px + env(safe-area-inset-bottom,0px))}
 
 .welcome .btn.acg{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--surface);color:var(--ink);border-color:var(--line)}
 
-.tabs .tabsp{flex:.5}
+
+.btn.saved{border-color:var(--accent);color:var(--accent)}
+.usx{margin:6px 0 12px;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.usx b{font-weight:600}
