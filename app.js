@@ -1774,6 +1774,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     cbg:function(b,e){if(e.target===b)chatClose()},
     cnew:function(){if(CHATCTL)CHATCTL.abort();S.chat.opts=null;S.chat.act=[];S.chat.msgs=[];S.chat.err='';S.chat.retry='';S.chat.busy=false;S.chat.wait=false;chatRender();focusChat()},
     cstop:function(){if(CHATCTL)CHATCTL.abort()},
+    chpapp:function(){var c=S.chat;c.opts=HELP['A question about the app'].o;c.act=[];c.appq=false;c.msgs.push({r:'a',t:'What else would you like to know?',fresh:1});chatRender()},
     cstart:function(b){if(S.noAI)helpPick(b.dataset.v);else chatSend(b.dataset.v)},
     chp:function(b){helpPick(b.dataset.v)},
     hact:function(b){var k=b.dataset.v;S.chat.open=false;chatRender();if(A[k])A[k](b);else render()},
@@ -2326,7 +2327,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
 
   /* ---- the "Stuck?" helper: a back-and-forth chat answered by Claude ---- */
   var CHATCTL=null,CHATICON='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-5 4v-4H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>';
-  var STARTERS=["I can't get out of bed","I don't know what to do first","I can't start something","I'm stuck on a decision"];
+  var STARTERS=["I can't get out of bed","I don't know what to do first","I can't start something","I'm stuck on a decision","A question about the app"];
   function getSample(){try{return window.claude&&window.claude.use?window.claude.use('sample').then(function(f){return f||null},function(){return null}):Promise.resolve(null)}catch(e){return Promise.resolve(null)}}
   function fab(){if(!PROF||S.menu||S.rp||S.ev||S.ns||S.tk||S.lot||S.pl||S.chat.open)return '';return '<button class="fab" data-a="stuck" aria-label="Open the stuck helper">'+CHATICON+'<span>'+esc(U().stuck)+'</span></button>'}
   /* guided mode (no Claude needed): tap what is going on, get a short, gentle reply and a way in */
@@ -2342,7 +2343,16 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       "I don't know the first step":{a:"Then the first step is finding the first step. Write one line about what done looks like, then name the very first thing your hands would do, like opening the file or finding the form.",act:[]},
       "I'm avoiding it":{a:"Avoiding usually means something about it feels boring, uncomfortable or fuzzy. Boring gets music or company, uncomfortable gets a two-minute timer, fuzzy gets one line about what done looks like. Which one sounds closest?",act:[]},
       "It's boring":{a:"Then pair it with something that is not boring: music, a warm drink, or someone nearby doing their own thing in the same room. Start with just five minutes.",act:[]}}},
-    "I'm stuck on a decision":{a:"You do not have to decide. Let chance choose, and if the result makes you wince or relax, that tells you something too.",act:['pl']}
+    "I'm stuck on a decision":{a:"You do not have to decide. Let chance choose, and if the result makes you wince or relax, that tells you something too.",act:['pl']},
+    "A question about the app":{q:"Happy to help. What would you like to know about?",o:{
+      "The parking lot":{a:"The parking lot holds anything with no set time: things you mean to do this week or this month. Today suggests one when it fits the time you have, and nothing in it is ever overdue. Tap Park it to add something, or hold the button to fill in details first. Groups let you keep errands, house jobs and so on in their own little lots.",act:[]},
+      "My routine":{a:"Your routine is the steps for each part of the day. Change it in the menu under Settings, Routine: rename steps, drag the grab bar to reorder, hide what you do not need, or add your own. Mark the steps that matter most with Anchor it, and low battery mode shows only those.",act:[]},
+      "Plans and repeats":{a:"Plans are things at a set time, like an appointment or dinner out. Add one with + Add on Today or Overview. A plan can repeat weekly or monthly, and tasks in the parking lot can repeat too. If you change or delete a repeating one, it asks whether you mean just that day or every time.",act:[]},
+      "Modes and moods":{a:"In the menu under Logic you can change how the app thinks: Gentle is the default, On the clock adds times and a day planner, Tiny steps shrinks everything to its first thirty seconds, and Low battery shows only the essentials. A rough morning switches you to low battery until tomorrow.",act:[]},
+      "Sharing with someone":{a:"The Us tab shows what your partner sees of your day. Each plan can show full details, just Appointment, or stay private. Once you are signed in you can send a live schedule link that updates by itself, and a daily card can open Messages with your plans for the day.",act:[]},
+      "Syncing my devices":{a:"Sign in from the menu under Settings, Account, using Google or an email link, then sign in on your other devices. Everything syncs within a few seconds. Without signing in, everything stays on this device, and you can always save a backup file.",act:[]},
+      "The Log":{a:"The Log is an optional, quick way to note things like a migraine, a medication or watering the plants. Tap what happened and it is saved for that day. Look back by month whenever you like. Nothing is ever required.",act:[]},
+      "Themes and looks":{a:"Open the menu with the button at the top right. Themes changes the whole look, Colorway changes the colors, and Appearance switches between light and dark. Woodland creatures, under Premium Themes, is a storybook look with moods and seasons.",act:[]}}}
   };
   function helpPick(l){
     var c=S.chat,node=(c.opts&&c.opts[l])||HELP[l];if(!node)return;
@@ -2353,6 +2363,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       if(S.chat!==c||!c.wait)return;
       c.wait=false;
       c.msgs.push({r:'a',t:reply,fresh:1});
+      c.appq=!node.q&&!!HELP['A question about the app'].o[l];
       if(node.q){c.opts=node.o;c.act=[]}else{c.opts=null;c.act=node.act||[]}
       if(c.open)chatRender()
     },ms);
@@ -2382,7 +2393,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     else if(S.noAI){
       var acts=(c.act||[]).filter(function(k){return k!=='pl'||plPool().length>=2});
       if(acts.length){h+='<div class="row">';acts.forEach(function(k){h+='<button class="btn alt grow" data-a="hact" data-v="'+(k==='pl'?'plopen':'rough')+'">'+esc(k==='pl'?u.plbtn:'Rough morning options')+'</button>'});h+='</div>'}
-      h+='<div class="row"><button class="quiet" data-a="cnew">Something else</button></div>';
+      h+='<div class="row">'+(c.appq?'<button class="quiet" data-a="chpapp">Another app question</button>':'')+'<button class="quiet" data-a="cnew">Something else</button></div>';
     }
     if(c.err)h+='<div class="note" role="alert">'+esc(c.err)+(c.retry?' <button class="quiet" data-a="cretry">Try again</button>':'')+'</div>';
     if(!S.noAI)h+='<form class="chatform" id="chatform"><input class="field" type="text" id="chatin" placeholder="Tell me what is going on" autocomplete="off" aria-label="Message">'+(c.busy?'<button type="button" class="btn alt" data-a="cstop">Stop</button>':'<button type="submit" class="btn">Send</button>')+'</form>';
