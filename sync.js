@@ -8,12 +8,12 @@ import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signI
 import { getFirestore, collection, doc, getDocs, setDoc, deleteDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 const app = initializeApp({
-  apiKey: 'AIzaSyBbxbu0c_C_QwCLTLmJQjzf1yPro1pQAPA',
-  authDomain: 'gentle-start.firebaseapp.com',
-  projectId: 'gentle-start',
-  storageBucket: 'gentle-start.firebasestorage.app',
-  messagingSenderId: '408912414322',
-  appId: '1:408912414322:web:6b4c813810696fd9b324eb'
+  apiKey: 'AIzaSyDMZX-H7vz_b5hG0qRLHJSCB3LBvJsFOnY',
+  authDomain: 'gentle-start-65b43.firebaseapp.com',
+  projectId: 'gentle-start-65b43',
+  storageBucket: 'gentle-start-65b43.firebasestorage.app',
+  messagingSenderId: '282272351023',
+  appId: '1:282272351023:web:c1cec623ba6c05c3ec17da'
 });
 const auth = getAuth(app), db = getFirestore(app);
 
