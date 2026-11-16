@@ -542,11 +542,12 @@
   }
 
   /* self care: what the "parking lot" card turns into when the battery is low */
-  var CARE0=['Drink a full glass of water','Make a cup of tea','Take a warm shower','Step outside for five minutes','Stretch your neck and shoulders','Lie down with your eyes closed for ten minutes','Put on a favorite album','Sit with §C for a few minutes','Wrap up in something soft','Eat something small and easy'];
+  var CARE0=['Drink a full glass of water','Make a cup of tea','Take a warm shower','Step outside for five minutes','Stretch your neck and shoulders','Sit somewhere sunny for a few minutes','Put on a favorite album','Sit with §C for a few minutes','Wrap up in something soft','Eat something small and easy'];
   S.care=load('gs-care',null);if(!Array.isArray(S.care)||!S.care.length)S.care=CARE0.slice();
+  S.care=S.care.map(function(x){return x==='Lie down with your eyes closed for ten minutes'?'Sit somewhere sunny for a few minutes':x});
   S.careIdx=Math.floor(Math.random()*S.care.length);
   /* Woodland wording for the built-in ideas; your own ideas show as you wrote them */
-  var CAREW={'Drink a full glass of water':'Drink from the stream: one full glass of water','Make a cup of tea':'Steep something warm for the den','Take a warm shower':'Soak in a warm spring (a warm shower counts)','Step outside for five minutes':'Poke your nose outside for five minutes','Stretch your neck and shoulders':'Have a long, slow stretch like a bear waking up','Lie down with your eyes closed for ten minutes':'Curl up and close your eyes for ten minutes','Put on a favorite album':'Fill the den with a favorite album','Sit with §C for a few minutes':'Nestle in with §C for a few minutes','Wrap up in something soft':'Burrow into the softest blanket you have','Eat something small and easy':'Nibble something small and easy'};
+  var CAREW={'Drink a full glass of water':'Drink from the stream: one full glass of water','Make a cup of tea':'Brew a warm cup of tea and wrap your paws around it','Take a warm shower':'Soak in a warm spring (a warm shower counts)','Step outside for five minutes':'Poke your nose outside for five minutes','Stretch your neck and shoulders':'Have a long, slow stretch like a bear waking up','Sit somewhere sunny for a few minutes':'Find a patch of sun and bask for a few minutes','Put on a favorite album':'Fill the den with a favorite album','Sit with §C for a few minutes':'Nestle in with §C for a few minutes','Wrap up in something soft':'Burrow into the softest blanket you have','Eat something small and easy':'Nibble something small and easy'};
   function careList(){
     var pet=!!(PROF&&PROF.pet);
     return S.care.filter(function(x){return pet||String(x).indexOf('§C')<0}).map(function(x){return creature()&&CAREW[x]?CAREW[x]:x});
