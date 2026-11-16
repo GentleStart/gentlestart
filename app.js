@@ -335,8 +335,27 @@
   var S={tab:'today',part:'morning',status:{},lists:load('gs-lists',DEFAULT_LISTS),log:load('gs-log',[]),custom:load('gs-custom',[]),
     colors:load('gs-colors',{}),hide:{},mo:0,day:null,lv:'everyday',filt:false,rp:null,menu:false,
     opts:{meds:load('gs-meds',[]),trig:load('gs-trig',['Poor sleep','Skipped a meal','Dehydration','Weather change','Stress','Bright light']),symp:load('gs-symp',['Aura','Nausea','Light sensitivity','Sound sensitivity','Brain fog','Neck tension'])},
-    f:{sels:[],sev:null,meds:[],trig:[],symp:[]}};
+    f:{sels:[],td:{}}};
   BASE_CHIPS.forEach(function(c,i){if(S.colors[c]===undefined)S.colors[c]=i});
+  /* health trackers: things the person names themselves (migraine, flare, pain day). Up to three.
+     Someone set up before trackers existed keeps Migraine; a brand-new person starts with none. */
+  S.trk=load('gs-trk',null);if(!Array.isArray(S.trk))S.trk=PROF?[{id:'mig',name:'Migraine'}]:[];
+  function trkById(id){for(var i=0;i<S.trk.length;i++)if(S.trk[i].id===id)return S.trk[i];return null}
+  function trkNames(){return S.trk.map(function(t){return t.name})}
+  function entTrk(en){var id=en.trk||(en.label==='Migraine'?'mig':null);return id&&trkById(id)?id:null}
+  function saveTrk(){save('gs-trk',S.trk);if(S.stacks)syncTrkStacks()}
+  function addTrk(name){var t={id:'h'+Date.now().toString(36),name:String(name).trim().slice(0,30)};S.trk.push(t);saveTrk();return t}
+  function setTrk(names){
+    var seen={};names=names.map(function(x){return x.trim().slice(0,30)}).filter(function(x){var k=x.toLowerCase();if(!x||seen[k])return false;seen[k]=1;return true}).slice(0,3);
+    names.forEach(function(n,i){if(S.trk[i])S.trk[i].name=n;else S.trk.push({id:'h'+(Date.now()+i).toString(36),name:n})});
+    S.trk=S.trk.slice(0,names.length);saveTrk();
+  }
+  /* symptoms and triggers belong to each tracker; medications are shared */
+  S.optc={};
+  function optKey(kind,tid){return (kind==='meds'||!tid||tid==='mig')?KINDS[kind].store:KINDS[kind].store+'-'+tid}
+  function optsOf(kind,tid){var k=optKey(kind,tid);if(k===KINDS[kind].store)return S.opts[kind];if(!S.optc[k])S.optc[k]=load(k,[]);return S.optc[k]}
+  function saveOpts(kind,tid){save(optKey(kind,tid),optsOf(kind,tid))}
+  function tdOf(tid){return S.f.td[tid]||(S.f.td[tid]={sev:null,meds:[],trig:[],symp:[]})}
   S.floorIds=load('gs-floor',null);if(!Array.isArray(S.floorIds))S.floorIds=FLOORDEF.slice();
   S.rtn=load('gs-rtn',null);if(!S.rtn||!S.rtn.parts)S.rtn={parts:{morning:PARTS.morning.steps.slice(),afternoon:PARTS.afternoon.steps.slice(),evening:PARTS.evening.steps.slice()},hidden:[],names:{}};
   [['kidsam','morning','meal'],['checkin','evening','tomorrow']].forEach(function(x){var all=[].concat(S.rtn.parts.morning,S.rtn.parts.afternoon,S.rtn.parts.evening,S.rtn.hidden||[]);if(all.indexOf(x[0])>=0)return;var a=S.rtn.parts[x[1]],i=a.indexOf(x[2]);if(i<0)a.push(x[0]);else a.splice(i,0,x[0])});
@@ -981,11 +1000,11 @@
       for(var d=1;d<=last;d++){
         var r=Math.random(),n=r<.3?0:r<.78?1:2;
         for(var i=0;i<n;i++){
-          var dt=new Date(y.getFullYear(),y.getMonth(),d,9+Math.floor(Math.random()*10),pick([0,15,30,45])),mig=Math.random()<.22;
-          var en={label:mig?'Migraine':pick(every),ts:dt.toISOString(),when:dt.toLocaleDateString(undefined,{month:'short',day:'numeric'})+', '+dt.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'}),smp:true};
+          var dt=new Date(y.getFullYear(),y.getMonth(),d,9+Math.floor(Math.random()*10),pick([0,15,30,45])),mig=S.trk.length&&Math.random()<.22;
+          var en={label:mig?S.trk[0].name:pick(every),ts:dt.toISOString(),when:dt.toLocaleDateString(undefined,{month:'short',day:'numeric'})+', '+dt.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'}),smp:true};
           if(mig){
-            en.sev=pick(SEVS);en.symp=many(S.opts.symp,1+Math.floor(Math.random()*3));
-            var tr=Math.floor(Math.random()*3);if(tr)en.trig=many(S.opts.trig,tr);
+            en.trk=S.trk[0].id;en.sev=pick(SEVS);en.symp=many(optsOf('symp',en.trk),1+Math.floor(Math.random()*3));
+            var tr=Math.floor(Math.random()*3);if(tr)en.trig=many(optsOf('trig',en.trk),tr);
             if(Math.random()<.6)en.meds=[pick(['Sample med A','Sample med B'])];
           }else colorOf(en.label);
           add.push(en);
@@ -1008,7 +1027,11 @@
 
   /* ---- tile stacks ---- */
   S.stacks=load('gs-stacks',null);if(!Array.isArray(S.stacks))S.stacks=[];
-  if(!S.stacks.some(function(x){return x.id==='mig'}))S.stacks.unshift({id:'mig',name:'Migraine',builtin:true,kids:[]});
+  function syncTrkStacks(){
+    S.stacks=S.stacks.filter(function(x){return !x.builtin||trkById(x.id)});
+    S.trk.slice().reverse().forEach(function(t){var st=stackById(t.id);if(!st)S.stacks.unshift({id:t.id,name:t.name,builtin:true,kids:[]});else st.name=t.name});
+  }
+  syncTrkStacks();
   S.openStacks=[];S.ns=null;
   function allTiles(){return S.cats}
   function stackById(id){for(var i=0;i<S.stacks.length;i++)if(S.stacks[i].id===id)return S.stacks[i];return null}
@@ -1022,7 +1045,7 @@
     S.openStacks=S.openStacks.filter(function(id){return !!stackById(id)});
   }
   cleanStacks();
-  function isOpen(st){return st.id==='mig'?S.f.sels.indexOf('Migraine')>=0:S.openStacks.indexOf(st.id)>=0}
+  function isOpen(st){return trkById(st.id)?S.f.sels.indexOf('trk:'+st.id)>=0:S.openStacks.indexOf(st.id)>=0}
   function stackSelCount(st){return st.kids.filter(function(k){return S.f.sels.indexOf(k)>=0}).length}
 
   /* ---- plans: appointments and other events ---- */
@@ -1176,7 +1199,7 @@
     return '<div class="backdrop" data-a="nbg"><div class="sheet" role="dialog" aria-modal="true" aria-label="Name this stack"><h2 style="font-size:22px">Name this stack</h2><p class="small">It holds: '+esc(st.kids.join(', '))+'.</p><input class="field" type="text" id="stackname" maxlength="24" value="'+esc(S.ns.name)+'" aria-label="Stack name"><button class="btn" data-a="namestack">Save name</button><button class="quiet" data-a="unstack" data-v="'+esc(st.id)+'">Ungroup these tiles</button><button class="quiet" data-a="ncancel">Keep the name "'+esc(st.name)+'"</button></div></div>';
   }
   function focusName(){var i=document.getElementById('stackname');if(i){i.focus();i.select()}}
-  function toggleSel(l){var i=S.f.sels.indexOf(l);if(i>=0){S.f.sels.splice(i,1);if(l==='Migraine'){S.f.sev=null;S.f.meds=[];S.f.trig=[];S.f.symp=[]}}else S.f.sels.push(l)}
+  function toggleSel(l){var i=S.f.sels.indexOf(l);if(i>=0){S.f.sels.splice(i,1);if(l.indexOf('trk:')===0)delete S.f.td[l.slice(4)]}else S.f.sels.push(l)}
 
   function colorOf(label){
     if(S.colors[label]===undefined){var n=Object.keys(S.colors).length;S.colors[label]=n%8;save('gs-colors',S.colors)}
@@ -1267,31 +1290,31 @@
   }
 
   /* picker for meds / triggers / symptoms: tap saved chips, or add a new one */
-  function pickUI(kind,scope,sel){
-    var K=KINDS[kind],h='<div class="grp"><div class="lab">'+K.label+' (optional)</div>';
-    if(S.opts[kind].length){
+  function pickUI(kind,scope,sel,tid){
+    var K=KINDS[kind],O=optsOf(kind,tid),h='<div class="grp"><div class="lab">'+K.label+' (optional)</div>';
+    if(O.length){
       h+='<div class="chips sm" role="group" aria-label="'+K.label+'">';
-      S.opts[kind].forEach(function(n){h+='<button data-a="togopt" data-k="'+kind+'" data-s="'+scope+'" data-v="'+esc(n)+'" aria-pressed="'+(sel.indexOf(n)>=0)+'">'+esc(n)+'</button>'});
+      O.forEach(function(n){h+='<button data-a="togopt" data-k="'+kind+'" data-s="'+scope+'" data-t="'+esc(tid)+'" data-v="'+esc(n)+'" aria-pressed="'+(sel.indexOf(n)>=0)+'">'+esc(n)+'</button>'});
       h+='</div>';
     }
-    h+='<form class="add" data-a="addopt" data-k="'+kind+'" data-s="'+scope+'" style="margin-top:0"><input type="text" id="new-'+scope+'-'+kind+'" placeholder="'+K.add+'" aria-label="'+K.add+'"><button type="submit">Add</button></form>'+suggUI(kind,scope)+'</div>';
+    h+='<form class="add" data-a="addopt" data-k="'+kind+'" data-s="'+scope+'" data-t="'+esc(tid)+'" style="margin-top:0"><input type="text" id="new-'+scope+'-'+kind+'-'+esc(tid)+'" placeholder="'+K.add+'" aria-label="'+K.add+'"><button type="submit">Add</button></form>'+suggUI(kind,scope,tid)+'</div>';
     return h;
   }
 var SUGG={meds:['Rescue med','OTC painkiller']};
-  function suggUI(kind,scope){
-    var l=(SUGG[kind]||[]).filter(function(s){return S.opts[kind].every(function(x){return x.toLowerCase()!==s.toLowerCase()})});
+  function suggUI(kind,scope,tid){
+    var l=(SUGG[kind]||[]).filter(function(s){return optsOf(kind,tid).every(function(x){return x.toLowerCase()!==s.toLowerCase()})});
     if(!l.length)return '';
     var h='<div class="medsugg" role="group" aria-label="Suggestions"><span class="small">Suggestions</span>';
-    l.forEach(function(s){h+='<button type="button" data-a="sugopt" data-k="'+kind+'" data-s="'+scope+'" data-v="'+esc(s)+'">'+esc(s)+'</button>'});
+    l.forEach(function(s){h+='<button type="button" data-a="sugopt" data-k="'+kind+'" data-s="'+scope+'" data-t="'+esc(tid)+'" data-v="'+esc(s)+'">'+esc(s)+'</button>'});
     return h+'</div>';
   }
-  function selOf(scope,kind){return scope==='rp'?S.rp.meds:S.f[kind]}
-  function sevUI(cur,act){
+  function selOf(scope,kind,tid){return scope==='rp'?S.rp.meds:tdOf(tid)[kind]}
+  function sevUI(cur,act,tid){
     var h='<div class="grp"><div class="lab">How bad (optional)</div><div class="chips sm">';
-    SEVS.forEach(function(v){h+='<button data-a="'+act+'" data-v="'+v+'" aria-pressed="'+(cur===v)+'"><span class="sw" style="background:'+SEVCOL[v]+'"></span>'+v+'</button>'});
+    SEVS.forEach(function(v){h+='<button data-a="'+act+'" data-t="'+esc(tid||'')+'" data-v="'+v+'" aria-pressed="'+(cur===v)+'"><span class="sw" style="background:'+SEVCOL[v]+'"></span>'+v+'</button>'});
     return h+'</div></div>';
   }
-  function groupCount(){return (S.f.sev?1:0)+S.f.symp.length+S.f.trig.length+S.f.meds.length}
+  function groupCount(tid){var t=tdOf(tid);return (t.sev?1:0)+t.symp.length+t.trig.length+t.meds.length}
 
   function monthStart(){var n=new Date();return new Date(n.getFullYear(),n.getMonth()+S.mo,1)}
   function dkey(t){return t.getFullYear()+'-'+(t.getMonth()+1)+'-'+t.getDate()}
@@ -1329,15 +1352,15 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     return '<button data-a="chip" data-v="'+esc(c)+'" data-drag="'+esc(c)+'"'+(from?' data-from="'+esc(from)+'"':' data-drop-tile="'+esc(c)+'"')+' aria-pressed="'+on+'"><span class="sw" style="background:'+colorOf(c)+'"></span>'+esc(c)+'</button>';
   }
   function stackBtn(st){
-    var open=isOpen(st),sel=stackSelCount(st),n=(st.id==='mig'?groupCount():0)+sel,sw='';
+    var isT=!!trkById(st.id),open=isOpen(st),sel=stackSelCount(st),n=(isT?groupCount(st.id):0)+sel,sw='';
     if(st.kids.length){sw='<span class="kss" aria-hidden="true">';st.kids.slice(0,4).forEach(function(k){sw+='<i class="ks" style="background:'+colorOf(k)+'"></i>'});sw+='</span>'}
-    var pressed=st.id==='mig'?' aria-pressed="'+open+'"':'';
+    var pressed=isT?' aria-pressed="'+open+'"':'';
     return '<button class="gchip" data-a="stack" data-v="'+esc(st.id)+'" data-drop-stack="'+esc(st.id)+'"'+pressed+' aria-expanded="'+open+'">'+STACK+'<span>'+esc(st.name)+'</span>'+sw+(n?'<span class="gcount" aria-label="'+n+' selected">'+n+'</span>':'')+CHEV+'</button>';
   }
   function stackPanel(st){
-    var mig=st.id==='mig',title=mig?GROUPS.Migraine.title:st.name;
+    var mig=!!trkById(st.id),title=mig?st.name+' details':st.name,td=mig?tdOf(st.id):null;
     var h='<div class="gpanel" role="group" aria-label="'+esc(title)+'" data-drop-stack="'+esc(st.id)+'"><div class="gtitle">'+STACK+'<b>'+esc(title)+'</b>'+(mig?'<span class="small">all optional</span>':'<button class="quiet" style="margin-left:auto" data-a="rename" data-v="'+esc(st.id)+'">Rename</button>')+'</div>';
-    if(mig)h+=sevUI(S.f.sev,'sev')+pickUI('symp','log',S.f.symp)+pickUI('trig','log',S.f.trig)+pickUI('meds','log',S.f.meds);
+    if(mig)h+=sevUI(td.sev,'sev',st.id)+pickUI('symp','log',td.symp,st.id)+pickUI('trig','log',td.trig,st.id)+pickUI('meds','log',td.meds,st.id);
     if(st.kids.length){
       h+='<div class="grp"><div class="lab">'+(mig?'Also in this stack':'Pick any of these')+'</div><div class="chips sm">';
       st.kids.forEach(function(k){h+=tileBtn(k,st.id)});
@@ -1348,7 +1371,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   }
 
   function logview(){
-    var ms=monthStart(),y=ms.getFullYear(),m=ms.getMonth(),mig=S.lv==='migraine';
+    var ms=monthStart(),y=ms.getFullYear(),m=ms.getMonth(),tv=trkById(S.lv)?S.lv:(S.lv==='migraine'&&trkById('mig')?'mig':null),T=trkById(tv),mig=!!T;
     var label=ms.toLocaleDateString(undefined,{month:'long',year:'numeric'});
     var h=head({title:'Log',sub:'Optional. Only what you choose to add.'});
     if(S.log.some(function(e){return e.smp}))h+=hint('logsample','note','Some entries here are sample data, so the calendar has something to show. <button class="quiet" data-a="rmsample">Remove sample entries</button>');
@@ -1364,10 +1387,10 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     h+='<button class="quiet" data-a="catmode" style="align-self:flex-start">'+(S.catEdit?'Done editing categories':'Edit categories')+'</button>'+(S.catEdit?'<p class="small">Tap a tile to rename it or take it away. Past entries stay in your log either way.</p>':'');
     h+='<input class="field" type="text" id="custom" placeholder="Or track something new" aria-label="Track something new"><button class="btn" data-a="savelog">Save</button></div>';
 
-    h+='<div class="subtabs" role="group" aria-label="Log view"><button data-a="lv" data-v="everyday" aria-pressed="'+(!mig)+'">Everyday</button><button data-a="lv" data-v="migraine" aria-pressed="'+mig+'">Migraine</button></div>';
+    if(S.trk.length){h+='<div class="subtabs" role="group" aria-label="Log view"><button data-a="lv" data-v="everyday" aria-pressed="'+(!mig)+'">Everyday</button>';S.trk.forEach(function(t){h+='<button data-a="lv" data-v="'+esc(t.id)+'" aria-pressed="'+(tv===t.id)+'">'+esc(t.name)+'</button>'});h+='</div>'}
     h+='<div class="monthnav"><button class="navbtn" data-a="prevmo" aria-label="Previous month">&lsaquo;</button><h2>'+esc(label)+'</h2><button class="navbtn" data-a="nextmo" aria-label="Next month"'+(S.mo>=0?' disabled':'')+'>&rsaquo;</button></div>';
 
-    var rows=[];S.log.forEach(function(en,i){var t=entryDate(en);if(t.getFullYear()===y&&t.getMonth()===m&&((en.label==='Migraine')===mig))rows.push({en:en,i:i,t:t,k:dkey(t)})});
+    var rows=[];S.log.forEach(function(en,i){var t=entryDate(en);if(t.getFullYear()===y&&t.getMonth()===m&&(mig?entTrk(en)===tv:!entTrk(en)))rows.push({en:en,i:i,t:t,k:dkey(t)})});
     var labels=[];rows.forEach(function(r){if(labels.indexOf(r.en.label)<0)labels.push(r.en.label)});
     var vis=mig?rows:rows.filter(function(r){return !S.hide[r.en.label]});
     var byDay={};vis.forEach(function(r){(byDay[r.k]=byDay[r.k]||[]).push(r)});
@@ -1383,7 +1406,12 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
 
     if(mig&&rows.length){
       var days={};rows.forEach(function(r){days[r.k]=1});
-      h+='<div class="card"><h3>This month</h3><p class="small">'+Object.keys(days).length+' migraine day'+(Object.keys(days).length===1?'':'s')+', '+rows.length+' entr'+(rows.length===1?'y':'ies')+'</p>';
+      var nd=Object.keys(days).length;
+      h+='<div class="card"><h3>This month</h3><p class="small">'+esc(T.name)+' on '+nd+' day'+(nd===1?'':'s')+', '+rows.length+' entr'+(rows.length===1?'y':'ies')+' in all. Just counts, so you can see it at a glance or bring it to an appointment.</p>';
+      var sc={};rows.forEach(function(r){var k=r.en.sev||'Not rated';sc[k]=(sc[k]||0)+1});
+      h+='<div class="grp"><div class="lab">How bad</div>';
+      SEVS.concat(['Not rated']).forEach(function(k){if(!sc[k])return;h+='<div class="brow"><span>'+k+'</span><span class="small">'+sc[k]+' &times;</span><span class="bar"><i style="width:'+Math.round(100*sc[k]/rows.length)+'%;background:'+(SEVCOL[k]||'var(--c7)')+'"></i></span></div>'});
+      h+='</div>';
       [['symp','Symptoms'],['trig','Triggers'],['meds','Medications']].forEach(function(g){
         var c=counts(rows,g[0]);if(!c.length)return;
         h+='<div class="grp"><div class="lab">'+g[1]+'</div>';
@@ -1399,14 +1427,14 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       h+='<div class="between"><h3 style="font-size:18px">'+esc(dt.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'}))+'</h3><button class="quiet" data-a="clearday">Show whole month</button></div>';
     }
     if(!shown.length){
-      h+='<div class="note">'+(S.day?'Nothing logged this day.':rows.length?'Everything is filtered out above.':mig?'No migraine entries this month. Pick the Migraine tile in the log above to add one, with symptoms, triggers, and medications.':'Nothing logged this month. That is fine. Entries show up here as colored tiles when you add them.')+'</div>';
+      h+='<div class="note">'+(S.day?'Nothing logged this day.':rows.length?'Everything is filtered out above.':mig?'Nothing for '+esc(T.name)+' this month. On a rough day, tapping the '+esc(T.name)+' tile above and Save is a whole entry. Details are always optional.':'Nothing logged this month. That is fine. Entries show up here as colored tiles when you add them.')+'</div>';
     }else if(!S.day){
       h+='<p class="small">Tap a day on the calendar to see what you logged.</p>';
     }else{
       shown.slice().reverse().forEach(function(r){
         var sw=mig?(SEVCOL[r.en.sev]||'var(--c7)'):colorOf(r.en.label);
         var lines=entryLines(r.en);
-        h+='<div class="entry"><span class="sw" style="background:'+sw+'"></span><div class="e"><b>'+esc(r.en.label)+'</b>';
+        h+='<div class="entry"><span class="sw" style="background:'+sw+'"></span><div class="e"><b>'+esc(mig?T.name:r.en.label)+'</b>';
         lines.forEach(function(l){h+='<span class="small">'+esc(l)+'</span>'});
         h+='<span class="small">'+esc(r.en.when)+'</span></div><button class="x" aria-label="Delete entry" data-a="dellog" data-i="'+r.i+'">&times;</button></div>';
       });
@@ -1529,14 +1557,18 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
 
   function roughSheet(){
     if(!S.rp)return '';
-    var h='<div class="backdrop" data-a="rbg"><div class="sheet" role="dialog" aria-modal="true" aria-label="Rough morning"><h2 style="font-size:22px">Rough morning. Migraine?</h2><p class="small">Totally optional. The rough morning gets logged either way, then we switch to '+(creature()?'bear minimum':'low battery mode')+' for the rest of today. You can add symptoms and triggers later in the Log tab.</p><div class="chips"><button class="gchip" data-a="rmig" aria-pressed="'+S.rp.mig+'" aria-expanded="'+S.rp.mig+'">'+STACK+'<span>Migraine</span>'+CHEV+'</button></div>';
-    if(S.rp.mig)h+='<div class="gpanel">'+sevUI(S.rp.sev,'rsev')+pickUI('meds','rp',S.rp.meds)+'</div>';
+    var n=S.trk.length,tt=n===1?'Rough morning. '+esc(S.trk[0].name)+'?':n?'Rough morning. Any of these?':'Rough morning.';
+    var h='<div class="backdrop" data-a="rbg"><div class="sheet" role="dialog" aria-modal="true" aria-label="Rough morning"><h2 style="font-size:22px">'+tt+'</h2><p class="small">'+(n?'Totally optional. ':'')+'The rough morning gets logged either way, then we switch to '+(creature()?'bear minimum':'low battery mode')+' for the rest of today.'+(n?' You can add symptoms and triggers later in the Log tab.':'')+'</p>';
+    if(n){h+='<div class="chips">';S.trk.forEach(function(t){var on=S.rp.t===t.id;h+='<button class="gchip" data-a="rmig" data-v="'+esc(t.id)+'" aria-pressed="'+on+'" aria-expanded="'+on+'">'+STACK+'<span>'+esc(t.name)+'</span>'+CHEV+'</button>'});h+='</div>'}
+    else h+='<details class="tuck"><summary>Does this happen to you a lot?</summary><p class="small">Give it a name, like migraine, flare or pain day, and the app will keep track of it for you. Next time, one tap logs it.</p><input class="field" type="text" id="rp-name" maxlength="30" placeholder="What do you call it?" aria-label="Name for what you want to track"></details>';
+    if(S.rp.t)h+='<div class="gpanel">'+sevUI(S.rp.sev,'rsev',S.rp.t)+pickUI('meds','rp',S.rp.meds,S.rp.t)+'</div>';
     h+='<button class="btn" data-a="rgo">'+(creature()?'Switch to bear minimum':'Switch to low battery mode')+'</button><button class="quiet" data-a="rcancel">Never mind</button></div></div>';
     return h;
   }
 
-  var INCL=[['partner','My partner'],['pets','My pet(s)'],['kids','My kids'],['others','Someone else']];
-  function inclOf(p){p=p||{};var o={};o.partner=!!p.partner;o.pets=!!((p.pets&&p.pets.length)||p.pet);o.kids=!!(p.kids&&p.kids.length);o.others=!!(p.others&&p.others.length);if(p.incl)for(var k in p.incl)o[k]=o[k]||!!p.incl[k];return o}
+  var INCL=[['partner','My partner'],['pets','My pet(s)'],['kids','My kids'],['others','Someone else'],['health','A health thing I track']];
+  function anyIncl(){var I=S.incl||{};return !!(I.partner||I.pets||I.kids||I.others||I.health)}
+  function inclOf(p){p=p||{};var o={};o.partner=!!p.partner;o.pets=!!((p.pets&&p.pets.length)||p.pet);o.kids=!!(p.kids&&p.kids.length);o.others=!!(p.others&&p.others.length);o.health=S.trk.length>0;if(p.incl)for(var k in p.incl)o[k]=o[k]||!!p.incl[k];return o}
   function listStr(a){return (a||[]).join(', ')}
   function nameFields(p,mode){
     p=p||{};if(!S.incl)S.incl=inclOf(p);var I=S.incl,h='';
@@ -1549,6 +1581,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     if(I.pets)h+='<label class="lab" for="pf-pets" style="margin-top:10px">Pet names</label><input class="field" type="text" id="pf-pets" maxlength="80" placeholder="e.g. Muffin, Bean" value="'+esc(listStr(p.pets||(p.pet?[p.pet]:[])))+'"><p class="small">Separate names with commas. Feeding steps show up in your routine, and you can rename or hide them in Settings.</p>';
     if(I.kids)h+='<label class="lab" for="pf-kids" style="margin-top:10px">Kids&rsquo; names</label><input class="field" type="text" id="pf-kids" maxlength="80" placeholder="e.g. Lily, Sam" value="'+esc(listStr(p.kids))+'"><p class="small">Separate names with commas. An example step, getting them ready for the day, shows up in your morning. Rename it, hide it, or add your own in Settings.</p>';
     if(I.others)h+='<label class="lab" for="pf-others" style="margin-top:10px">Who else?</label><input class="field" type="text" id="pf-others" maxlength="80" placeholder="e.g. Mom, Alex" value="'+esc(listStr(p.others))+'"><p class="small">Separate names with commas. An example step, checking in with them, shows up in your evening. Rename it, hide it, or add your own in Settings.</p>';
+    if(I.health)h+='<label class="lab" for="pf-health" style="margin-top:10px">What would you like to track?</label><input class="field" type="text" id="pf-health" maxlength="90" placeholder="e.g. Migraine, Flare, Pain day" value="'+esc(trkNames().join(', '))+'"><p class="small">Your own word for it. On a rough day, one tap in the Log is a whole entry, and details like symptoms are always optional. Up to three, separated by commas.</p>';
     return h;
   }
   function welcomeSheet(){
@@ -1565,11 +1598,11 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       }
       return h+'<button class="quiet" data-a="welskip">Skip for now</button></div></div>';
     }
-    return '<div class="backdrop" style="z-index:40"><div class="sheet" role="dialog" aria-modal="true" aria-label="Welcome"><h2 style="font-size:26px">Welcome</h2>'+(S.welP2?'<p class="small">A name or two for each, so the app can talk about them the way you do.</p><form id="welcomeform" style="display:flex;flex-direction:column;gap:4px"><input type="hidden" id="pf-name" value="'+esc(S.welName||'')+'">'+nameFields({},'p2')+'<button class="btn" type="submit" style="margin-top:14px">Start</button></form><button class="quiet" data-a="welback">&larr; Back</button>':'<p class="small">A few names make this feel like yours. All of it is optional, and you can change it any time in the menu.</p><form id="welcomeform" style="display:flex;flex-direction:column;gap:4px">'+nameFields({name:S.welName||''},'p1')+'<button class="btn" type="'+(S.incl&&(S.incl.partner||S.incl.pets||S.incl.kids||S.incl.others)?'button" data-a="welnext':'submit')+'" style="margin-top:14px">'+(S.incl&&(S.incl.partner||S.incl.pets||S.incl.kids||S.incl.others)?'Next':'Start')+'</button></form><button class="quiet" data-a="wskip">Skip for now</button>')+'</div></div>';
+    return '<div class="backdrop" style="z-index:40"><div class="sheet" role="dialog" aria-modal="true" aria-label="Welcome"><h2 style="font-size:26px">Welcome</h2>'+(S.welP2?'<p class="small">A name or two for each, so the app can talk about them the way you do.</p><form id="welcomeform" style="display:flex;flex-direction:column;gap:4px"><input type="hidden" id="pf-name" value="'+esc(S.welName||'')+'">'+nameFields({},'p2')+'<button class="btn" type="submit" style="margin-top:14px">Start</button></form><button class="quiet" data-a="welback">&larr; Back</button>':'<p class="small">A few names make this feel like yours. All of it is optional, and you can change it any time in the menu.</p><form id="welcomeform" style="display:flex;flex-direction:column;gap:4px">'+nameFields({name:S.welName||''},'p1')+'<button class="btn" type="'+(anyIncl()?'button" data-a="welnext':'submit')+'" style="margin-top:14px">'+(anyIncl()?'Next':'Start')+'</button></form><button class="quiet" data-a="wskip">Skip for now</button>')+'</div></div>';
   }
   function splitNames(s){return String(s||'').split(',').map(function(x){return x.trim()}).filter(Boolean).slice(0,8)}
   function joinNames(a){return a.length<2?(a[0]||''):a.slice(0,-1).join(', ')+' and '+a[a.length-1]}
-  function saveProf(o){var I=S.incl||{},pets=I.pets?splitNames(o.pets):[];var partners=I.partner?splitNames(o.partner):[];PROF={name:(o.name||'').trim(),partners:partners,partner:joinNames(partners),pets:pets,pet:joinNames(pets),kids:I.kids?splitNames(o.kids):[],others:I.others?splitNames(o.others):[],incl:{partner:!!I.partner,pets:!!I.pets,kids:!!I.kids,others:!!I.others}};try{localStorage.setItem('gs-profile',JSON.stringify(PROF))}catch(e){}try{window.GSSync&&window.GSSync.touch('gs-profile')}catch(e){}}
+  function saveProf(o){var I=S.incl||{},pets=I.pets?splitNames(o.pets):[];var partners=I.partner?splitNames(o.partner):[];PROF={name:(o.name||'').trim(),partners:partners,partner:joinNames(partners),pets:pets,pet:joinNames(pets),kids:I.kids?splitNames(o.kids):[],others:I.others?splitNames(o.others):[],incl:{partner:!!I.partner,pets:!!I.pets,kids:!!I.kids,others:!!I.others,health:!!I.health}};try{localStorage.setItem('gs-profile',JSON.stringify(PROF))}catch(e){}try{window.GSSync&&window.GSSync.touch('gs-profile')}catch(e){}}
 
   /* ---- Routine tab: daily steps and repeating tasks ---- */
   var DAYN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -1758,15 +1791,16 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     if(onDay&&S.day){var p=S.day.split('-');d=new Date(+p[0],+p[1]-1,+p[2],12,0,0)}
     var when=(onDay&&S.day)?d.toLocaleDateString(undefined,opts):d.toLocaleDateString(undefined,opts)+', '+d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
     var en={label:label,ts:d.toISOString(),when:when};
+    if(extra&&extra.trk)en.trk=extra.trk;
     if(extra){['sev','meds','trig','symp'].forEach(function(k){if(extra[k]&&(!Array.isArray(extra[k])||extra[k].length))en[k]=extra[k]})}
     S.log.push(en);
-    if(label!=='Migraine')colorOf(label);
+    if(!(extra&&extra.trk))colorOf(label);
     save('gs-log',S.log);
   }
   function openIds(){return Array.prototype.map.call(document.querySelectorAll('details.lcard[open]'),function(d){return d.dataset.id})}
   function reopen(ids){ids.forEach(function(id){var d=document.querySelector('details.lcard[data-id="'+id+'"]');if(d)d.open=true})}
   function keepOpen(){var ids=openIds();render();reopen(ids)}
-  function resetForm(){S.f={sels:[],sev:null,meds:[],trig:[],symp:[]}}
+  function resetForm(){S.f={sels:[],td:{}}}
   function keepSheet(fn){var sh=document.querySelector('.sheet'),st=sh?sh.scrollTop:0;fn();var s2=document.querySelector('.sheet');if(s2)s2.scrollTop=st}
   function closeSheets(){S.menu=false;S.rp=null;S.ev=null;S.ns=null;S.tk=null;S.pl=null;S.sq=null;S.fg=null;S.ce=null;S.se=null;S.re=null}
 
@@ -1787,7 +1821,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     chp:function(b){helpPick(b.dataset.v)},
     hact:function(b){var k=b.dataset.v;S.chat.open=false;chatRender();if(A[k])A[k](b);else render()},
     cretry:function(){var t=S.chat.retry;if(!t)return;var m=S.chat.msgs;if(m.length&&m[m.length-1].r==='u'&&m[m.length-1].t===t)m.pop();chatSend(t)},
-    wskip:function(){saveProf({});render()},
+    wskip:function(){saveProf({});saveTrk();render()},
     welskip:function(){S.welInfo=true;render()},
     welnext:function(){var n=document.getElementById('pf-name');S.welName=n?n.value:'';S.welP2=true;render();var f=document.querySelector('#welcomeform input:not([type=hidden])');if(f)f.focus()},
     welback:function(){S.welP2=false;render()},
@@ -1951,10 +1985,10 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     },
     sqno:function(){S.sq=null;render()},
     sugopt:function(b){
-      var kind=b.dataset.k,sc=b.dataset.s,name=b.dataset.v,arr=selOf(sc,kind);
-      if(S.opts[kind].indexOf(name)<0){S.opts[kind].push(name);save(KINDS[kind].store,S.opts[kind])}
+      var kind=b.dataset.k,sc=b.dataset.s,tid=b.dataset.t,name=b.dataset.v,arr=selOf(sc,kind,tid),O=optsOf(kind,tid);
+      if(O.indexOf(name)<0){O.push(name);saveOpts(kind,tid)}
       if(arr.indexOf(name)<0)arr.push(name);
-      var fid='new-'+sc+'-'+kind;
+      var fid='new-'+sc+'-'+kind+'-'+tid;
       keepAll(render);var nm=document.getElementById(fid);if(nm)nm.focus()
     },
     stepclick:function(b){
@@ -1972,14 +2006,16 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     recime:function(){toast('Opening a recipe search.')},
     lunch:function(){S.status.lunch='done';render();toast('Prototype: the real app would draft a quick "lunch?" text to §P.')},
     lunchsolo:function(){S.status.lunch='done';render();toast('Got it. Lunch is on your own today.')},
-    rough:function(){S.rp={mig:false,sev:null,meds:[]};render()},
-    rmig:function(){S.rp.mig=!S.rp.mig;if(!S.rp.mig){S.rp.sev=null;S.rp.meds=[]}keepAll(render)},
+    rough:function(){S.rp={t:null,sev:null,meds:[]};render()},
+    rmig:function(b){var id=b.dataset.v;S.rp.t=S.rp.t===id?null:id;S.rp.sev=null;S.rp.meds=[];keepAll(render)},
     rsev:function(b){keepAll(function(){S.rp.sev=S.rp.sev===b.dataset.v?null:b.dataset.v;render()})},
     rcancel:function(){S.rp=null;render()},
     rbg:function(b,e){if(e.target===b){S.rp=null;render()}},
     rgo:function(){
       logIt('Rough morning');
-      if(S.rp.mig)logIt('Migraine',{sev:S.rp.sev,meds:S.rp.meds});
+      var rt=S.rp.t&&trkById(S.rp.t);
+      if(rt)logIt(rt.name,{trk:rt.id,sev:S.rp.sev,meds:S.rp.meds});
+      else if(!S.trk.length){var rn=document.getElementById('rp-name'),rv=rn?rn.value.trim():'';if(rv){var nt=addTrk(rv);logIt(nt.name,{trk:nt.id})}}
       S.rp=null;
       if(creature()){var mt=load('gs-moodtmp',null);save('gs-moodtmp',{prev:(mt&&mt.prev)?mt.prev:(S.mood==='slow'?'balanced':S.mood),day:ymd(new Date())});S.mood='slow';save('gs-mood','slow');bearFirst();S.skipPark=[];S.status={};render();toast('Bear minimum until tomorrow. Logged.');return}
       var tmp=load('gs-lowtmp',null);var prev=(tmp&&tmp.prev)?tmp.prev:(S.logic==='low'?'gentle':S.logic);
@@ -1988,7 +2024,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     chip:function(b){keepAll(function(){toggleSel(b.dataset.v);render()})},
     stack:function(b){keepAll(function(){
       var id=b.dataset.v;
-      if(id==='mig'){var was=S.f.sels.indexOf('Migraine')>=0;toggleSel('Migraine');if(!was)S.justOpen='mig'}
+      if(trkById(id)){var was=S.f.sels.indexOf('trk:'+id)>=0;toggleSel('trk:'+id);if(!was)S.justOpen=id}
       else{var i=S.openStacks.indexOf(id);if(i>=0)S.openStacks.splice(i,1);else{S.openStacks.push(id);S.justOpen=id}}
       render();S.justOpen=null})},
     rtmv:function(b){
@@ -2054,7 +2090,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       var ce=S.ce,i=document.getElementById('ce-name'),v=(i?i.value:'').trim().slice(0,40);if(!ce)return;
       if(!v){toast('A category needs a name.');return}
       if(v!==ce.label){
-        if(S.cats.concat(['Migraine']).some(function(x){return x.toLowerCase()===v.toLowerCase()&&x!==ce.label})){toast('That name is already a category.');return}
+        if(S.cats.concat(trkNames()).some(function(x){return x.toLowerCase()===v.toLowerCase()&&x!==ce.label})){toast('That name is already a category.');return}
         var ix=S.cats.indexOf(ce.label);if(ix>=0)S.cats[ix]=v;
         S.stacks.forEach(function(x){var k=x.kids.indexOf(ce.label);if(k>=0)x.kids[k]=v});
         var s=S.f.sels.indexOf(ce.label);if(s>=0)S.f.sels[s]=v;
@@ -2134,23 +2170,25 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     evscope:function(b){var E=S.ev;if(!E)return;var v=b.dataset.v;if(v==='cancel'){E.ask=null;keepSheet(render);return}var what=E.ask;E.ask=null;E.scope=v;syncEv();if(what==='del')A.evdel();else A.evsave()},
     evready:function(b){S.evReady[b.dataset.v]=true;render();toast('Good. You are all set.')},
     evhide:function(b){S.evHide[b.dataset.v]=true;render()},
-    sev:function(b){keepAll(function(){S.f.sev=S.f.sev===b.dataset.v?null:b.dataset.v;render()})},
+    sev:function(b){keepAll(function(){var t=tdOf(b.dataset.t);t.sev=t.sev===b.dataset.v?null:b.dataset.v;render()})},
     togopt:function(b){
-      var arr=selOf(b.dataset.s,b.dataset.k),n=b.dataset.v,i=arr.indexOf(n);
+      var arr=selOf(b.dataset.s,b.dataset.k,b.dataset.t),n=b.dataset.v,i=arr.indexOf(n);
       keepAll(function(){if(i>=0)arr.splice(i,1);else arr.push(n);render()});
     },
     savelog:function(){
       var c=document.getElementById('custom');
       var custom=c?c.value.trim():'';
       if(!S.f.sels.length&&!custom){toast('Pick something or type it. Or just leave it.');return}
-      S.f.sels.forEach(function(l){logIt(l,l==='Migraine'?{sev:S.f.sev,meds:S.f.meds,trig:S.f.trig,symp:S.f.symp}:null,true)});
+      var firstT=null;
+      S.f.sels.forEach(function(l){
+        if(l.indexOf('trk:')===0){var t=trkById(l.slice(4));if(!t)return;if(!firstT)firstT=t;var d=tdOf(t.id);logIt(t.name,{trk:t.id,sev:d.sev,meds:d.meds,trig:d.trig,symp:d.symp},true)}
+        else logIt(l,null,true)});
       if(custom){
         logIt(custom,null,true);
-        var all=S.cats.concat(['Migraine']).map(function(x){return x.toLowerCase()});
+        var all=S.cats.concat(trkNames()).map(function(x){return x.toLowerCase()});
         if(all.indexOf(custom.toLowerCase())<0){S.cats.push(custom);save('gs-cats',S.cats)}
       }
-      var hadMig=S.f.sels.indexOf('Migraine')>=0;
-      resetForm();render();toast(hadMig?'Saved. Migraine entries are in the Migraine view.':'Saved.')
+      resetForm();render();toast(firstT?'Saved. '+firstT.name+' entries have their own view below.':'Saved.')
     },
     lv:function(b){S.lv=b.dataset.v;S.day=null;render()},
     day:function(b){keepAll(function(){S.day=S.day===b.dataset.k?null:b.dataset.k;render()})},
@@ -2212,11 +2250,11 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     var inp=f.querySelector('input'),v=inp.value.trim();if(!v)return;
     var ids=openIds();
     if(f.dataset.a==='addopt'){
-      var kind=f.dataset.k,sc=f.dataset.s,arr=selOf(sc,kind),name=v;
-      var hit=S.opts[kind].filter(function(x){return x.toLowerCase()===v.toLowerCase()})[0];
-      if(hit)name=hit;else{S.opts[kind].push(v);save(KINDS[kind].store,S.opts[kind])}
+      var kind=f.dataset.k,sc=f.dataset.s,tid=f.dataset.t,arr=selOf(sc,kind,tid),name=v,O=optsOf(kind,tid);
+      var hit=O.filter(function(x){return x.toLowerCase()===v.toLowerCase()})[0];
+      if(hit)name=hit;else{O.push(v);saveOpts(kind,tid)}
       if(arr.indexOf(name)<0)arr.push(name);
-      var fid='new-'+sc+'-'+kind;
+      var fid='new-'+sc+'-'+kind+'-'+tid;
       keepAll(function(){document.getElementById(fid).value='';render()});
       var nm=document.getElementById(fid);if(nm){nm.value='';nm.focus()}
     }else if(f.dataset.a==='additem'){
@@ -2294,7 +2332,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     }else if(t.hasAttribute('data-drop-stack')){
       var st=stackById(t.dataset.dropStack);if(!st)return;
       removeKid(label);st.kids.push(label);
-      if(st.id!=='mig'&&S.openStacks.indexOf(st.id)<0)S.openStacks.push(st.id);
+      if(!trkById(st.id)&&S.openStacks.indexOf(st.id)<0)S.openStacks.push(st.id);
       msg='Moved into '+st.name+'.';
     }else{
       var other=t.dataset.dropTile,id='s'+Date.now();
@@ -2359,7 +2397,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       "Modes and moods":{a:"In the menu under Logic you can change how the app thinks: Gentle is the default, On the clock adds times and a day planner, Tiny steps shrinks everything to its first thirty seconds, and Low battery shows only the essentials. A rough morning switches you to low battery until tomorrow.",act:[]},
       "Sharing with someone":{a:"The Us tab shows what your partner sees of your day. Each plan can show full details, just Appointment, or stay private. Once you are signed in you can send a live schedule link that updates by itself, and a daily card can open Messages with your plans for the day.",act:[]},
       "Syncing my devices":{a:"Sign in from the menu under Settings, Account, using Google or an email link, then sign in on your other devices. Everything syncs within a few seconds. Without signing in, everything stays on this device, and you can always save a backup file.",act:[]},
-      "The Log":{a:"The Log is an optional, quick way to note things like a migraine, a medication or watering the plants. Tap what happened and it is saved for that day. Look back by month whenever you like. Nothing is ever required.",act:[]},
+      "The Log":{a:"The Log is an optional, quick way to note things like a rough morning, a medication or watering the plants. If you track something health-related, like migraines or flares, it gets its own tile and its own view, and one tap is a whole entry. Tap what happened and it is saved for that day. Look back by month whenever you like. Nothing is ever required.",act:[]},
       "Themes and looks":{a:"Open the menu with the button at the top right. Themes changes the whole look, Colorway changes the colors, and Appearance switches between light and dark. Woodland creatures, under Premium Themes, is a storybook look with moods and seasons.",act:[]}}}
   };
   function helpPick(l){
@@ -2485,6 +2523,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     var f=e.target;if(!f||(f.id!=='welcomeform'&&f.id!=='profform'))return;e.preventDefault();
     function g(i){var x=document.getElementById(i);return x?x.value:''}
     saveProf({name:g('pf-name'),partner:g('pf-partner'),pets:g('pf-pets'),kids:g('pf-kids'),others:g('pf-others')});
+    setTrk((S.incl&&S.incl.health)?splitNames(g('pf-health')):[]);
     if(f.id==='profform'){S.profSaved=true;keepSheet(render)}else render();
   });
   document.addEventListener('change',function(e){
