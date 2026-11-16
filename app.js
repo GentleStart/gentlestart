@@ -1487,6 +1487,18 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   }
   function welcomeSheet(){
     if(PROF)return '';
+    var G=window.GSSync,st=G&&G.state;
+    if(!S.welInfo&&!(st&&st.user)){
+      var h='<div class="backdrop" style="z-index:40"><div class="sheet welcome" role="dialog" aria-modal="true" aria-label="Welcome"><h2 style="font-size:26px">Welcome</h2><p class="small">Sign in to keep your plans, tasks and settings in step across your phone and computer. You can also skip this and keep everything on this device.</p>';
+      if(!G||!st.ready)h+='<p class="small">'+((window.performance&&performance.now()>8000)||!navigator.onLine?'The sign-in service is not reachable right now. You can skip for now and sign in later from the menu.':'Connecting\u2026')+'</p>';
+      else{
+        h+='<button class="btn acg" data-a="acgoogle"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg><span>Sign in with Google</span></button>';
+        h+='<p class="small" style="margin-top:6px">Or get a sign-in link by email:</p><form class="add" data-a="acemail"><input type="email" id="acmail" placeholder="you@example.com" aria-label="Email for a sign-in link" autocomplete="email"><button type="submit">Send link</button></form>';
+        if(st.sent)h+='<p class="small acstat">Link sent to '+esc(st.sent)+'. Open it on this device to finish signing in.</p>';
+        if(st.error)h+='<p class="small acstat" role="alert">'+esc(st.error)+'</p>';
+      }
+      return h+'<button class="quiet" data-a="welskip">Skip for now</button></div></div>';
+    }
     return '<div class="backdrop" style="z-index:40"><div class="sheet" role="dialog" aria-modal="true" aria-label="Welcome"><h2 style="font-size:26px">Welcome</h2><p class="small">A few names make this feel like yours. All of it is optional, it stays on this device, and you can change it any time in the menu.</p><form id="welcomeform" style="display:flex;flex-direction:column;gap:4px">'+nameFields({})+'<button class="btn" type="submit" style="margin-top:14px">Start</button></form><button class="quiet" data-a="wskip">Skip for now</button></div></div>';
   }
   function saveProf(o){PROF={name:(o.name||'').trim(),partner:(o.partner||'').trim(),pet:(o.pet||'').trim()};try{localStorage.setItem('gs-profile',JSON.stringify(PROF))}catch(e){}try{window.GSSync&&window.GSSync.touch('gs-profile')}catch(e){}}
@@ -1555,7 +1567,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     if(st.error&&!st.user)h+='<p class="small acstat" role="alert">'+esc(st.error)+'</p>';
     return h+'</div>';
   }
-  window.gsSyncChanged=function(){try{if(S.menu&&S.mt==='settings')keepSheet(render)}catch(e){}};
+  window.gsSyncChanged=function(){try{if(!PROF){PROF=load('gs-profile',null);render()}else if(S.menu&&S.mt==='settings')keepSheet(render)}catch(e){}};
   function menuSheet(){
     if(!S.menu)return '';
     var h='<div class="backdrop" data-a="mbg"><div class="sheet" role="dialog" aria-modal="true" aria-label="Menu"><div class="between"><h2 style="font-size:24px">Menu</h2><button class="x" data-a="mclose" aria-label="Close menu">&times;</button></div>';
@@ -1706,6 +1718,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     hact:function(b){var k=b.dataset.v;S.chat.open=false;chatRender();if(A[k])A[k](b);else render()},
     cretry:function(){var t=S.chat.retry;if(!t)return;var m=S.chat.msgs;if(m.length&&m[m.length-1].r==='u'&&m[m.length-1].t===t)m.pop();chatSend(t)},
     wskip:function(){saveProf({});render()},
+    welskip:function(){S.welInfo=true;render()},
     dexport:function(){
       var o={app:'gentle-start',version:1,saved:new Date().toISOString(),data:{}};
       try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k.indexOf('gs-')===0)o.data[k]=localStorage.getItem(k)}}catch(e){}
