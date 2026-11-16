@@ -460,8 +460,8 @@
   function curSeason(){if(S.season!=='auto')return S.season;var m=new Date().getMonth();return (m<2||m===11)?'winter':m<5?'spring':m<8?'summer':'autumn'}
   function creature(){return S.logic==='mammal'}
   function lowMode(){return S.logic==='low'||(S.logic==='mammal'&&S.mood==='slow')}
-  UI0.lot='Parking lot';UI0.parkIt='Park it';UI0.back='Back to the parking lot';UI0.charge='Recharge Battery';UI0.chargeSub='Gentle ideas for when your battery is low. None of these are tasks.';
-  UIALT.mammal.lot='The stash';UIALT.mammal.parkIt='Stash it';UIALT.mammal.back='Back to the stash';UIALT.mammal.charge='Curl-up ideas';UIALT.mammal.chargeSub='Gentle ways to rest in the den. None of these are tasks.';
+  UI0.lot='Parking lot';UI0.parkIt='Park it';UI0.back='Back to the parking lot';UI0.charge='Recharge Battery';UI0.chargeSub='Gentle ideas for when your battery is low. Always suggestions, not requirements.';
+  UIALT.mammal.lot='The stash';UIALT.mammal.parkIt='Stash it';UIALT.mammal.back='Back to the stash';UIALT.mammal.charge='Curl-up ideas';UIALT.mammal.chargeSub='Gentle ways to rest in the den. Always suggestions, not requirements.';
   UI0.plinko='Plinko';UI0.plbtn='Let the ball choose';UIALT.mammal.plinko='Acorn drop';UIALT.mammal.plbtn='Let the acorn choose';
   UIALT.mammal.greet=function(l){return 'Good '+l.toLowerCase()+', '+WHO[S.mood][critterIdx()]+'.'};
 
