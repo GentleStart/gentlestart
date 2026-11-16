@@ -458,10 +458,11 @@
   S.mood=load('gs-mood','balanced');if(!MOODS[S.mood])S.mood='balanced';
   S.season=load('gs-season','auto');if(!SEASONS[S.season])S.season='auto';
   function curSeason(){if(S.season!=='auto')return S.season;var m=new Date().getMonth();return (m<2||m===11)?'winter':m<5?'spring':m<8?'summer':'autumn'}
+  function lotThe(){var l=U().lot.toLowerCase();return l.indexOf('the ')===0?l:'the '+l}
   function creature(){return S.logic==='mammal'}
   function lowMode(){return S.logic==='low'||(S.logic==='mammal'&&S.mood==='slow')}
-  UI0.lot='Parking lot';UI0.parkIt='Park it';UI0.back='Back to the parking lot';UI0.charge='Recharge Battery';UI0.chargeSub='Gentle ideas for when your battery is low. Always suggestions, not requirements.';
-  UIALT.mammal.lot='The stash';UIALT.mammal.parkIt='Stash it';UIALT.mammal.back='Back to the stash';UIALT.mammal.charge='Curl-up ideas';UIALT.mammal.chargeSub='Gentle ways to rest in the den. Always suggestions, not requirements.';
+  UI0.lot='Parking lot';UI0.parkIt='Park it';UI0.parked='Parked';UI0.back='Back to the parking lot';UI0.charge='Recharge Battery';UI0.chargeSub='Gentle ideas for when your battery is low. Always suggestions, not requirements.';
+  UIALT.mammal.lot='The stash';UIALT.mammal.parkIt='Stash it';UIALT.mammal.parked='Stashed';UIALT.mammal.back='Back to the stash';UIALT.mammal.charge='Curl-up ideas';UIALT.mammal.chargeSub='Gentle ways to rest in the den. Always suggestions, not requirements.';
   UI0.plinko='Plinko';UI0.plbtn='Let the ball choose';UIALT.mammal.plinko='Acorn drop';UIALT.mammal.plbtn='Let the acorn choose';
   UIALT.mammal.greet=function(l){return 'Good '+l.toLowerCase()+', '+WHO[S.mood][critterIdx()]+'.'};
 
@@ -1256,7 +1257,7 @@
       h+='<details class="card lcard"'+(li===0||ed?' open':'')+' data-id="'+L.id+'"><summary><span>'+esc(L.name)+'</span><span class="count">'+n+' item'+(n===1?'':'s')+'</span></summary><ul class="items">'+(ed?'<li class="item"><input class="lsedit ltitle" type="text" data-l="'+li+'" value="'+esc(L.name)+'" maxlength="40" aria-label="List name"></li>':'');
       L.items.forEach(function(it,ii){
         if(ed){h+='<li class="item"><input class="lsedit" type="text" data-l="'+li+'" data-i="'+ii+'" value="'+esc(it.t)+'" maxlength="120" aria-label="Item"><button class="x" aria-label="Delete item" data-a="del" data-l="'+li+'" data-i="'+ii+'">&times;</button></li>';return}
-        h+='<li class="item'+(it.done?' done':'')+'"><button class="check" role="checkbox" aria-checked="'+it.done+'" aria-label="'+esc(it.t)+'" data-a="tick" data-l="'+li+'" data-i="'+ii+'">'+(it.done?CK:'')+'</button><span class="t">'+esc(it.t)+'</span>'+(it.done?'':'<button class="lpk'+(it.parked?' on':'')+'" aria-pressed="'+!!it.parked+'" aria-label="'+(it.parked?'Parked. Tap to take it back out of the '+esc(U().lot.toLowerCase()):'Move to the '+esc(U().lot.toLowerCase()))+'" data-a="lpark" data-l="'+li+'" data-i="'+ii+'">'+(it.parked?'Parked':esc(U().parkIt))+'</button>')+'</li>';
+        h+='<li class="item'+(it.done?' done':'')+'"><button class="check" role="checkbox" aria-checked="'+it.done+'" aria-label="'+esc(it.t)+'" data-a="tick" data-l="'+li+'" data-i="'+ii+'">'+(it.done?CK:'')+'</button><span class="t">'+esc(it.t)+'</span>'+(it.done?'':'<button class="lpk'+(it.parked?' on':'')+'" aria-pressed="'+!!it.parked+'" aria-label="'+(it.parked?esc(U().parked)+'. Tap to take it back out of '+esc(lotThe()):'Move to '+esc(lotThe()))+'" data-a="lpark" data-l="'+li+'" data-i="'+ii+'">'+(it.parked?esc(U().parked):esc(U().parkIt))+'</button>')+'</li>';
       });
       h+='</ul>'+(ed?'<button class="quiet ldel" data-a="ldellist" data-l="'+li+'">Delete this list</button>':'<form class="add" data-a="additem" data-l="'+li+'"><input type="text" id="add-'+L.id+'" placeholder="Add to '+esc(L.name)+'" aria-label="Add to '+esc(L.name)+'"><button type="submit">Add</button></form>')+'</details>';
     });
@@ -2164,8 +2165,8 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     ustext:function(){sendOut(usText(),null,'Copied. Paste it anywhere.')},
     uslink:function(){sendOut('',usLink(),'Link copied.')},
     lpark:function(b){var L=S.lists[+b.dataset.l],it=L.items[+b.dataset.i];if(!it)return;
-      if(it.parked){S.tasks=S.tasks.filter(function(t){return t.id!==it.tid||t.done});it.parked=false;it.tid=null;saveTasks();save('gs-lists',S.lists);toast('Taken back out of the '+U().lot.toLowerCase()+'.');keepOpen();return}
-      var id='t'+Date.now();S.tasks.unshift({id:id,title:it.t,h:'week',nr:false,fun:false,work:[],mins:0,w:'med',due:'',steps:[],done:false,created:Date.now()});it.parked=true;it.tid=id;saveTasks();save('gs-lists',S.lists);toast('Parked in the '+U().lot.toLowerCase()+'.');keepOpen()},
+      if(it.parked){S.tasks=S.tasks.filter(function(t){return t.id!==it.tid||t.done});it.parked=false;it.tid=null;saveTasks();save('gs-lists',S.lists);toast('Taken back out of '+lotThe()+'.');keepOpen();return}
+      var id='t'+Date.now();S.tasks.unshift({id:id,title:it.t,h:'week',nr:false,fun:false,work:[],mins:0,w:'med',due:'',steps:[],done:false,created:Date.now()});it.parked=true;it.tid=id;saveTasks();save('gs-lists',S.lists);toast(creature()?'Stashed away.':'Parked in the parking lot.');keepOpen()},
     del:function(b){S.lists[+b.dataset.l].items.splice(+b.dataset.i,1);save('gs-lists',S.lists);keepOpen()}
   };
 
@@ -2240,7 +2241,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     }else if(f.dataset.a==='tkquick'){
       if(S.lpFired)return;
       S.tasks.unshift({g:f.dataset.g||undefined,id:'t'+Date.now(),title:v,h:f.dataset.h||'week',nr:false,fun:false,work:[],mins:0,w:'med',due:'',steps:[],done:false,created:Date.now()});saveTasks();render();
-      var q=document.getElementById('tkq');if(q)q.focus();toast('Parked. It can wait there.');
+      var q=document.getElementById('tkq');if(q)q.focus();toast(U().parked+'. It can wait there.');
     }else if(f.dataset.a==='newlist'){
       S.lists.push({id:'l'+Date.now(),name:v,items:[]});save('gs-lists',S.lists);render();reopen(ids);
       var all=document.querySelectorAll('details.lcard');if(all.length)all[all.length-1].open=true;
