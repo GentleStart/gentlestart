@@ -1427,7 +1427,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   function signedIn(){return !!(window.GSSync&&window.GSSync.state.user)}
   function publishLive(){
     if(!signedIn()||S.pv||!(PROF&&PROF.partner))return;
-    var body={n:(PROF&&PROF.name)||'',d:liveDays(),f:flexTasks()},js=JSON.stringify(body);
+    var body={n:(PROF&&PROF.name)||'',d:liveDays()},js=JSON.stringify(body);
     if(js===publishLive.last)return;
     clearTimeout(publishLive.t);publishLive.t=setTimeout(function(){publishLive.last=js;try{window.GSSync.publishLive(liveId(),body)}catch(e){}},2000);
   }
@@ -1468,7 +1468,6 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       var h='<div class="pv"><h1>'+(D.n?esc(D.n)+'&rsquo;s schedule':'Schedule')+'</h1><p class="small">Live. This page updates by itself whenever plans change.'+(D.up?' Last change '+esc(new Date(D.up).toLocaleString(undefined,{weekday:'short',hour:'numeric',minute:'2-digit'}))+'.':'')+'</p>';
       if(!days.length)h+='<div class="card"><p class="small">Nothing shared for the next couple of weeks.</p></div>';
       days.forEach(function(g){h+='<div class="dayhead">'+(g.k===tk?'Today':g.k===tm?'Tomorrow':esc(dayLabel(g.k)))+'</div><div class="card">';g.l.forEach(function(l){h+='<div class="him"><b>'+esc(l)+'</b></div>'});h+='</div>'});
-      if(D.f&&D.f.length)h+=flexHtml(D.f);
       return h+'</div>';
     }
     var h='<div class="pv"><h1>'+(o.n?esc(o.n)+'&rsquo;s plans':'Plans')+'</h1><p class="small">A snapshot of what was shared. It does not update by itself, so ask for a fresh link any time.</p>';
@@ -1505,7 +1504,6 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     });
     if(!any)h+='<div class="card"><p class="small">Nothing shared for the next few days.</p></div>';
     if(hidden)h+='<p class="small">'+hidden+' private plan'+(hidden===1?'':'s')+' not shown to §P.</p>';
-    h+=flexHtml(flexTasks());
     h+='<p class="small">Shared plans, like dinner out, appear once for both of you.</p>';
     h+='<div class="card"><h3>Send this to §P</h3><p class="small">A plain bulleted list of the next week, using what you chose to share.</p><div class="chips sm"><button data-a="ustext">'+(navigator.share?'Share as text':'Copy as text')+'</button></div></div>';
     h+='<div class="card"><h3>Live schedule link</h3>'+(signedIn()?'<p class="small">A private link to a page that always shows your shared plans for the next two weeks, updating by itself. No sign-in needed to view it.</p><div class="chips sm"><button data-a="uslive">'+(navigator.share?'Share live link':'Copy live link')+'</button></div>':'<p class="small">Sign in from Settings to get a private link that always shows your latest shared plans.</p>')+'</div>';
