@@ -281,7 +281,7 @@
     clothes:{t:'Out of pajamas',s:'Same trip upstairs, then down you go.',c:'Done'},
     muffin:{t:"§C's breakfast",s:'Feeding §C gets you into the kitchen.',c:'Fed',floor:true},
     water:{t:'A glass of water',s:'Just one, wherever you are.',c:'Done',floor:true},
-    meal:{t:'Your turn',s:'§C is sorted. What are you having?',meal:true,floor:true},
+    meal:{t:'Your turn',s:'§C §is sorted. What are you having?',meal:true,floor:true},
     lunch:{t:'Lunch',s:'§P is usually free around 12:30. Want to eat together?',lunch:true,floor:true},
     jobs:{t:'One small project step',s:'Twenty minutes. Just the starting, not the finishing.',c:'Done'},
     pt:{t:'Stretches or exercises',s:'The smaller round counts if your energy is low.',c:'Done'},
@@ -312,6 +312,7 @@
   /* personal names are filled in at display time, so none of them live in the code */
   var PROF=(function(){try{return JSON.parse(localStorage.getItem('gs-profile'))}catch(e){return null}})();
   function fxWith(s,html){
+    s=String(s).replace(/§is/g,(PROF&&PROF.pets&&PROF.pets.length>1)?'are':'is');
     var p=PROF||{},dflt={'§N':'friend','§P':'your partner','§C':'your pet'},val={'§N':p.name,'§P':p.partner,'§C':p.pet};
     return String(s).replace(/(^|[.!?>] ?)?(§[NPC])/g,function(m,pre,tok){
       var w=(val[tok]||'').trim(),fb=!w;if(fb)w=dflt[tok];
@@ -382,7 +383,7 @@
       clothes:{t:'Shed the sleep fur',s:'Out of pajamas. Same trip upstairs, then down you go.'},
       muffin:{t:'Feed §C, the other small one',s:'The bowl gets you into the kitchen.',c:'Fed'},
       water:{t:'Drink at the stream',s:'Just one glass, wherever you are.'},
-      meal:{t:'Forage for your own food',s:'§C is sorted. What is worth gathering?'},
+      meal:{t:'Forage for your own food',s:'§C §is sorted. What is worth gathering?'},
       lunch:{t:'Midday forage',s:'§P is usually free around 12:30. Forage together?'},
       jobs:{t:'Scout one small trail',s:'Twenty minutes. Just the scouting, not the finishing.'},
       pt:{t:'Stretch the old muscles',s:'Your stretches or exercises. The smaller round counts if your energy is low.'},
@@ -1479,11 +1480,21 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     return h;
   }
 
+  var INCL=[['partner','My partner'],['pets','My pet/s'],['kids','My kids'],['others','Someone else']];
+  function inclOf(p){p=p||{};var o={};o.partner=!!p.partner;o.pets=!!((p.pets&&p.pets.length)||p.pet);o.kids=!!(p.kids&&p.kids.length);o.others=!!(p.others&&p.others.length);if(p.incl)for(var k in p.incl)o[k]=o[k]||!!p.incl[k];return o}
+  function listStr(a){return (a||[]).join(', ')}
   function nameFields(p){
-    p=p||{};
-    return '<label class="lab" for="pf-name">What should I call you?</label><input class="field" type="text" id="pf-name" maxlength="30" autocomplete="given-name" value="'+esc(p.name||'')+'">'
-      +'<label class="lab" for="pf-partner" style="margin-top:10px">Partner&rsquo;s name (optional)</label><input class="field" type="text" id="pf-partner" maxlength="30" value="'+esc(p.partner||'')+'">'
-      +'<label class="lab" for="pf-pet" style="margin-top:10px">A pet&rsquo;s name (optional)</label><input class="field" type="text" id="pf-pet" maxlength="30" value="'+esc(p.pet||'')+'">';
+    p=p||{};if(!S.incl)S.incl=inclOf(p);var I=S.incl;
+    var h='<label class="lab" for="pf-name">What should I call you?</label><input class="field" type="text" id="pf-name" maxlength="30" autocomplete="given-name" value="'+esc(p.name||'')+'">';
+    h+='<div class="lab" style="margin-top:12px">I&rsquo;d like to include</div><div class="chips sm" role="group" aria-label="I would like to include">';
+    INCL.forEach(function(o){h+='<button type="button" data-a="incl" data-v="'+o[0]+'" aria-pressed="'+!!I[o[0]]+'">'+o[1]+'</button>'});
+    h+='</div>';
+    if(I.partner)h+='<label class="lab" for="pf-partner" style="margin-top:10px">Partner&rsquo;s name</label><input class="field" type="text" id="pf-partner" maxlength="30" value="'+esc(p.partner||'')+'">';
+    if(I.pets)h+='<label class="lab" for="pf-pets" style="margin-top:10px">Pet names</label><input class="field" type="text" id="pf-pets" maxlength="80" placeholder="e.g. Muffin, Bean" value="'+esc(listStr(p.pets||(p.pet?[p.pet]:[])))+'"><p class="small">Separate names with commas. Feeding steps show up in your routine, and you can rename or hide them in Settings.</p>';
+    if(I.kids)h+='<label class="lab" for="pf-kids" style="margin-top:10px">Kids&rsquo; names</label><input class="field" type="text" id="pf-kids" maxlength="80" placeholder="e.g. Lily, Sam" value="'+esc(listStr(p.kids))+'">';
+    if(I.others)h+='<label class="lab" for="pf-others" style="margin-top:10px">Who else?</label><input class="field" type="text" id="pf-others" maxlength="80" placeholder="e.g. Mom, Alex" value="'+esc(listStr(p.others))+'">';
+    if(I.kids||I.others)h+='<p class="small">For now these are saved for later, when you can choose who sees your day and add your own steps for them in Settings, Routine.</p>';
+    return h;
   }
   function welcomeSheet(){
     if(PROF)return '';
@@ -1499,9 +1510,11 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       }
       return h+'<button class="quiet" data-a="welskip">Skip for now</button></div></div>';
     }
-    return '<div class="backdrop" style="z-index:40"><div class="sheet" role="dialog" aria-modal="true" aria-label="Welcome"><h2 style="font-size:26px">Welcome</h2><p class="small">A few names make this feel like yours. All of it is optional, it stays on this device, and you can change it any time in the menu.</p><form id="welcomeform" style="display:flex;flex-direction:column;gap:4px">'+nameFields({})+'<button class="btn" type="submit" style="margin-top:14px">Start</button></form><button class="quiet" data-a="wskip">Skip for now</button></div></div>';
+    return '<div class="backdrop" style="z-index:40"><div class="sheet" role="dialog" aria-modal="true" aria-label="Welcome"><h2 style="font-size:26px">Welcome</h2><p class="small">A few names make this feel like yours. All of it is optional, and you can change it any time in the menu.</p><form id="welcomeform" style="display:flex;flex-direction:column;gap:4px">'+nameFields({})+'<button class="btn" type="submit" style="margin-top:14px">Start</button></form><button class="quiet" data-a="wskip">Skip for now</button></div></div>';
   }
-  function saveProf(o){PROF={name:(o.name||'').trim(),partner:(o.partner||'').trim(),pet:(o.pet||'').trim()};try{localStorage.setItem('gs-profile',JSON.stringify(PROF))}catch(e){}try{window.GSSync&&window.GSSync.touch('gs-profile')}catch(e){}}
+  function splitNames(s){return String(s||'').split(',').map(function(x){return x.trim()}).filter(Boolean).slice(0,8)}
+  function joinNames(a){return a.length<2?(a[0]||''):a.slice(0,-1).join(', ')+' and '+a[a.length-1]}
+  function saveProf(o){var I=S.incl||{},pets=I.pets?splitNames(o.pets):[];PROF={name:(o.name||'').trim(),partner:I.partner?(o.partner||'').trim():'',pets:pets,pet:joinNames(pets),kids:I.kids?splitNames(o.kids):[],others:I.others?splitNames(o.others):[],incl:{partner:!!I.partner,pets:!!I.pets,kids:!!I.kids,others:!!I.others}};try{localStorage.setItem('gs-profile',JSON.stringify(PROF))}catch(e){}try{window.GSSync&&window.GSSync.touch('gs-profile')}catch(e){}}
 
   /* ---- Routine tab: daily steps and repeating tasks ---- */
   var DAYN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -1719,6 +1732,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     cretry:function(){var t=S.chat.retry;if(!t)return;var m=S.chat.msgs;if(m.length&&m[m.length-1].r==='u'&&m[m.length-1].t===t)m.pop();chatSend(t)},
     wskip:function(){saveProf({});render()},
     welskip:function(){S.welInfo=true;render()},
+    incl:function(b){keepSheet(function(){keepAll(function(){S.incl=S.incl||{};S.incl[b.dataset.v]=!S.incl[b.dataset.v];render()})})},
     dexport:function(){
       var o={app:'gentle-start',version:1,saved:new Date().toISOString(),data:{}};
       try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k.indexOf('gs-')===0)o.data[k]=localStorage.getItem(k)}}catch(e){}
@@ -2294,7 +2308,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       'Tone example (not a script): if she says "I\'m struggling to get out of bed", you might reply "Oh no! What\'s getting in the way? Just really cozy, or something else?" and if she says "so cozy", "Let\'s take the cozy with you. A sweater, a cup of tea and slippers can help."',
       'If she cannot choose between tasks, help narrow it to one: ask what is most time-sensitive or what is weighing on her, then pick one for her, say why in a sentence, and name the first two-minute action.',
       'If she says anything suggesting she may hurt herself or is in crisis, set tasks aside, respond with warmth, and encourage her to reach someone near her or a crisis line (988 in the US).',
-      'App context: it is the '+S.part+' (about '+fmt(SIM[S.part])+'). Next routine step: '+(nx?stepOf(nx).t:'none left')+'. Plans today: '+evs+'. Parking lot (tasks with no set time): '+pk+'. '+(PROF&&PROF.partner?' Her partner is §P.':'')+(PROF&&PROF.pet?' Her pet is §C.':'')+' Voice for this reply: '+L.voice+(S.logic==='mammal'?' Today\'s mood: '+MOODS[S.mood].name+' ('+MOODS[S.mood].desc+').'+(S.mood==='dreamy'?' Remind her gently that fun things will still be there later, that doing the hard thing first is worth celebrating, and that she is never not allowed to have fun.':''):''),
+      'App context: it is the '+S.part+' (about '+fmt(SIM[S.part])+'). Next routine step: '+(nx?stepOf(nx).t:'none left')+'. Plans today: '+evs+'. Parking lot (tasks with no set time): '+pk+'. '+(PROF&&PROF.partner?' Her partner is §P.':'')+(PROF&&PROF.pet?' Her pets: §C.':'')+' Voice for this reply: '+L.voice+(S.logic==='mammal'?' Today\'s mood: '+MOODS[S.mood].name+' ('+MOODS[S.mood].desc+').'+(S.mood==='dreamy'?' Remind her gently that fun things will still be there later, that doing the hard thing first is worth celebrating, and that she is never not allowed to have fun.':''):''),
       'Only use the app context if it is relevant; do not recite it.'].join('\n\n'));
   }
   function bub(r,t,busy,fresh){return '<div class="bub '+r+(busy?' dots':'')+(fresh?' in':'')+'">'+(busy?'<span></span><span></span><span></span>':esc(t))+'</div>'}
@@ -2393,7 +2407,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   document.addEventListener('submit',function(e){
     var f=e.target;if(!f||(f.id!=='welcomeform'&&f.id!=='profform'))return;e.preventDefault();
     function g(i){var x=document.getElementById(i);return x?x.value:''}
-    saveProf({name:g('pf-name'),partner:g('pf-partner'),pet:g('pf-pet')});
+    saveProf({name:g('pf-name'),partner:g('pf-partner'),pets:g('pf-pets'),kids:g('pf-kids'),others:g('pf-others')});
     if(f.id==='profform'){S.dataMsg='Saved.';keepSheet(render)}else render();
   });
   document.addEventListener('change',function(e){
