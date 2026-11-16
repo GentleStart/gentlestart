@@ -1217,6 +1217,7 @@
       var dn=(DONEALT[S.logic]&&DONEALT[S.logic][S.part])||P.done;
       h+='<section class="hero"><div class="kicker">'+esc(u.allset)+'</div><h2>'+esc(dn.t)+'</h2><p class="sub">'+esc(dn.s)+'</p>'+roughRow(u)+'</section>';
     }
+    h+=dailyCard();
     if(S.logic!=='clock')h+=plans();
     if(!id&&!S.doing)h+=parkCard();
     if(S.logic==='clock'){h+=plannerCard()}else{
@@ -1417,6 +1418,30 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     d.forEach(function(g){t+='\n'+g[0]+'\n';g[1].forEach(function(l){t+='\u2022 '+fxt(l)+'\n'})});
     return t.trim();
   }
+  function shareLine(ev){return fmtRange(tmin(ev.time),ev.dur)+': '+(ev.share==='generic'?'Appointment':ev.title+(ev.place?', '+ev.place:''))+(ev.withJ?' (together)':'')}
+  function liveDays(){var out=[];for(var n=0;n<14;n++){var k=ymd(addDays(new Date(),n)),ls=[];evsOn(k).forEach(function(ev){if(ev.by==='p'||ev.share==='hidden'||ev.ex)return;ls.push(fxt(shareLine(ev)))});if(ls.length)out.push({k:k,l:ls})}return out}
+  function liveId(){var id=load('gs-share-id','');if(!id){var a='abcdefghijkmnpqrstuvwxyz23456789';id='';for(var i=0;i<20;i++)id+=a[Math.floor(Math.random()*a.length)];save('gs-share-id',id)}return id}
+  function liveUrl(){return location.href.split('#')[0]+'#live='+liveId()}
+  function signedIn(){return !!(window.GSSync&&window.GSSync.state.user)}
+  function publishLive(){
+    if(!signedIn()||S.pv||!(PROF&&PROF.partner))return;
+    var body={n:(PROF&&PROF.name)||'',d:liveDays()},js=JSON.stringify(body);
+    if(js===publishLive.last)return;
+    clearTimeout(publishLive.t);publishLive.t=setTimeout(function(){publishLive.last=js;try{window.GSSync.publishLive(liveId(),body)}catch(e){}},2000);
+  }
+  function dailyText(){
+    var k=ymd(new Date()),ls=[];evsOn(k).forEach(function(ev){if(ev.by==='p'||ev.share==='hidden'||ev.ex)return;ls.push(fxt(shareLine(ev)))});
+    var t=ls.length?fxt('§N\u2019s plans today:')+'\n'+ls.map(function(l){return '\u2022 '+l}).join('\n'):'Nothing on my schedule today.';
+    if(signedIn())t+='\n\n'+fxt('See §N\u2019s live schedule here: ')+liveUrl();
+    return t;
+  }
+  function smsHref(body){var ios=/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)&&('ontouchend' in document);return 'sms:'+(ios?'&':'?')+'body='+encodeURIComponent(body)}
+  S.dtx=load('gs-dtx',{on:true,time:'09:00'});
+  function dailyCard(){
+    if(!(PROF&&PROF.partner)||!S.dtx.on||load('gs-dtx-day','')===ymd(new Date()))return '';
+    var now=new Date(),cur=now.getHours()*60+now.getMinutes();if(cur<tmin(S.dtx.time||'09:00'))return '';
+    return '<div class="card dtx"><div class="between"><h3>Send today&rsquo;s plans to §P</h3></div><p class="small">One tap opens Messages with your day written out'+(signedIn()?' and a link to your live schedule':'')+'.</p><div class="row"><a class="btn grow" href="'+esc(smsHref(dailyText()))+'" data-a="dtxsent">Send to §P</a><button class="btn alt grow" data-a="dtxskip">Not today</button></div></div>';
+  }
   function usLink(){
     var o={n:(PROF&&PROF.name)||'',d:usDays().map(function(g){return [g[0],g[1].map(fxt)]})};
     var b=btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
@@ -1429,10 +1454,20 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     else toast('Could not copy on this browser.');
   }
   function pvParse(){
+    var lv=/^#live=([a-z0-9]{8,40})$/.exec(location.hash||'');if(lv)return {live:lv[1],loading:true};
     var m=/^#share=([\w-]+)$/.exec(location.hash||'');if(!m)return null;
     try{var s=m[1].replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';var o=JSON.parse(decodeURIComponent(escape(atob(s))));return o&&Array.isArray(o.d)?o:null}catch(e){return null}
   }
   function pvHtml(o){
+    if(o.live){
+      if(o.loading)return '<div class="pv"><h1>Loading&hellip;</h1><p class="small">'+(o.slow?'Could not reach the schedule just now. Check your connection and refresh.':'Getting the latest schedule.')+'</p></div>';
+      var D=o.data;if(!D)return '<div class="pv"><h1>Schedule not found</h1><p class="small">This link is not active. Ask for a new one.</p></div>';
+      var tk=ymd(new Date()),tm=ymd(addDays(new Date(),1)),days=(D.d||[]).filter(function(x){return x.k>=tk});
+      var h='<div class="pv"><h1>'+(D.n?esc(D.n)+'&rsquo;s schedule':'Schedule')+'</h1><p class="small">Live. This page updates by itself whenever plans change.'+(D.up?' Last change '+esc(new Date(D.up).toLocaleString(undefined,{weekday:'short',hour:'numeric',minute:'2-digit'}))+'.':'')+'</p>';
+      if(!days.length)h+='<div class="card"><p class="small">Nothing shared for the next couple of weeks.</p></div>';
+      days.forEach(function(g){h+='<div class="dayhead">'+(g.k===tk?'Today':g.k===tm?'Tomorrow':esc(dayLabel(g.k)))+'</div><div class="card">';g.l.forEach(function(l){h+='<div class="him"><b>'+esc(l)+'</b></div>'});h+='</div>'});
+      return h+'</div>';
+    }
     var h='<div class="pv"><h1>'+(o.n?esc(o.n)+'&rsquo;s plans':'Plans')+'</h1><p class="small">A snapshot of what was shared. It does not update by itself, so ask for a fresh link any time.</p>';
     if(!o.d.length)h+='<div class="card"><p class="small">Nothing shared for the next few days.</p></div>';
     o.d.forEach(function(g){h+='<div class="dayhead">'+esc(g[0])+'</div><div class="card">';g[1].forEach(function(l){h+='<div class="him"><b>'+esc(l)+'</b></div>'});h+='</div>'});
@@ -1469,7 +1504,8 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     if(hidden)h+='<p class="small">'+hidden+' private plan'+(hidden===1?'':'s')+' not shown to §P.</p>';
     h+='<div class="card"><details class="tuck"><summary>Flexible today (3)</summary><ul><li>Chores</li><li>Project work</li><li>Art project</li></ul></details></div>';
     h+='<p class="small">Shared plans, like dinner out, appear once for both of you.</p>';
-    h+='<div class="card"><h3>Send this to §P</h3><p class="small">A plain bulleted list of the next week, using what you chose to share. The link opens a simple read-only page, with no sign-in and no questions. It is a snapshot from right now.</p><div class="chips sm"><button data-a="ustext">'+(navigator.share?'Share as text':'Copy as text')+'</button><button data-a="uslink">'+(navigator.share?'Share a link':'Copy a link')+'</button></div></div>';
+    h+='<div class="card"><h3>Send this to §P</h3><p class="small">A plain bulleted list of the next week, using what you chose to share. The link opens a simple read-only page, with no sign-in and no questions. It is a snapshot from right now.</p><div class="chips sm"><button data-a="ustext">'+(navigator.share?'Share as text':'Copy as text')+'</button><button data-a="uslink">'+(navigator.share?'Share a snapshot link':'Copy a snapshot link')+'</button></div></div>';
+    h+='<div class="card"><h3>Live schedule link</h3>'+(signedIn()?'<p class="small">A private link to a page that always shows your shared plans for the next two weeks, updating by itself. No sign-in needed to view it.</p><div class="chips sm"><button data-a="uslive">'+(navigator.share?'Share live link':'Copy live link')+'</button></div>':'<p class="small">Sign in from Settings to get a private link that always shows your latest shared plans.</p>')+'</div>';
     if(PROF&&PROF.partner){
       h+='<div class="card"><div class="between"><h3>§P&rsquo;s schedule</h3><button class="addbtn" data-a="evnewp">+ Add</button></div><p class="small">Things on §P&rsquo;s day you want to plan around, like a lunch break or a late shift. Only you see these, and they show up on your Overview.</p>';
       var pr='';
@@ -1634,7 +1670,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       [['plinko','Plinko','A ball drops through the pegs and lands on one of your picks.','<circle cx="10" cy="8" r="2"/><circle cx="22" cy="8" r="2"/><circle cx="16" cy="15" r="2"/><circle cx="16" cy="25" r="3"/>'],['wheel','Spin wheel','Spin once. It slows and lands on one of the things that fit.','<circle cx="16" cy="16" r="11"/><path d="M16 5v22M5 16h22M8.5 8.5l15 15M23.5 8.5l-15 15"/>'],['coin','Coin flip','Two of your things, one flip. Quick and decisive.','<circle cx="16" cy="16" r="11"/><path d="M14 12.5l2.5-1.5v10"/>']].forEach(function(o){
         h+='<button class="opt" data-a="rnd" data-v="'+o[0]+'" aria-pressed="'+(S.rnd===o[0])+'">'+SVGO.replace('class="sprig"','class="mini"')+o[3]+'</svg><span><b>'+o[1]+'</b><span class="small">'+o[2]+'</span></span></button>';
       });
-      h+='</div><div class="grp" id="musgrp"><div class="lab">Music buttons</div><p class="small">Pick which buttons show on Today. Turn them all off to hide the music section.</p><div class="chips sm"><button data-a="mustog" data-v="sp" aria-pressed="'+!!S.mus.sp+'">Spotify</button><button data-a="mustog" data-v="am" aria-pressed="'+!!S.mus.am+'">Apple Music</button><button data-a="mustog" data-v="yt" aria-pressed="'+!!S.mus.yt+'">YouTube playlist</button></div></div><div class="grp"><div class="lab">YouTube playlist</div><p class="small">The playlist button on Today opens a playlist Nicole made, which you are welcome to use. Paste a link to your own playlist to swap it, or use the button to link to all of your youtube playlists.</p><form class="add" data-a="ytsave"><input type="text" id="ytlink" inputmode="url" placeholder="https://youtube.com/playlist?list=..." value="'+esc(S.ytl)+'" aria-label="YouTube playlist link"><button type="submit">Save</button></form><div class="chips sm"><button data-a="ytpl">Link to all playlists</button>'+(S.ytl?'<button data-a="ytreset">Back to the original</button>':'')+'</div></div><div class="grp"><div class="lab">Plan tags</div><p class="small">The tags you can pick when adding a plan. Tap one to remove it.</p><div class="chips sm">'+S.evtags.map(function(q,i){return '<button data-a="evtagdel" data-v="'+i+'" aria-label="Remove tag '+esc(q)+'">'+esc(q)+' &times;</button>'}).join('')+'</div><form class="add" data-a="evtagadd"><input type="text" id="evtagnew" maxlength="24" placeholder="New tag, e.g. Gym" aria-label="New plan tag"><button type="submit">Add</button></form></div><div class="grp"><div class="lab">Calendar</div><div class="chips sm"><button data-a="holtog" aria-pressed="'+!!S.hol+'">Show major US holidays</button></div><p class="small">They appear on Overview and at the top of Plans on the day. They are not plans, so nothing is ever due.</p></div>';
+      h+='</div><div class="grp" id="musgrp"><div class="lab">Music buttons</div><p class="small">Pick which buttons show on Today. Turn them all off to hide the music section.</p><div class="chips sm"><button data-a="mustog" data-v="sp" aria-pressed="'+!!S.mus.sp+'">Spotify</button><button data-a="mustog" data-v="am" aria-pressed="'+!!S.mus.am+'">Apple Music</button><button data-a="mustog" data-v="yt" aria-pressed="'+!!S.mus.yt+'">YouTube playlist</button></div></div><div class="grp"><div class="lab">YouTube playlist</div><p class="small">The playlist button on Today opens a playlist Nicole made, which you are welcome to use. Paste a link to your own playlist to swap it, or use the button to link to all of your youtube playlists.</p><form class="add" data-a="ytsave"><input type="text" id="ytlink" inputmode="url" placeholder="https://youtube.com/playlist?list=..." value="'+esc(S.ytl)+'" aria-label="YouTube playlist link"><button type="submit">Save</button></form><div class="chips sm"><button data-a="ytpl">Link to all playlists</button>'+(S.ytl?'<button data-a="ytreset">Back to the original</button>':'')+'</div></div><div class="grp"><div class="lab">Daily text to your partner</div><p class="small">At this time each day, Today shows a card that opens Messages with your plans for the day'+(signedIn()?' and your live schedule link':'')+'. You tap send.</p><div class="chips sm"><button data-a="dtxtog" aria-pressed="'+!!S.dtx.on+'">'+(S.dtx.on?'On':'Off')+'</button></div><input class="field" type="time" id="dtxtime" value="'+esc(S.dtx.time||'09:00')+'" aria-label="Daily text time" style="margin-top:8px;max-width:180px"></div><div class="grp"><div class="lab">Plan tags</div><p class="small">The tags you can pick when adding a plan. Tap one to remove it.</p><div class="chips sm">'+S.evtags.map(function(q,i){return '<button data-a="evtagdel" data-v="'+i+'" aria-label="Remove tag '+esc(q)+'">'+esc(q)+' &times;</button>'}).join('')+'</div><form class="add" data-a="evtagadd"><input type="text" id="evtagnew" maxlength="24" placeholder="New tag, e.g. Gym" aria-label="New plan tag"><button type="submit">Add</button></form></div><div class="grp"><div class="lab">Calendar</div><div class="chips sm"><button data-a="holtog" aria-pressed="'+!!S.hol+'">Show major US holidays</button></div><p class="small">They appear on Overview and at the top of Plans on the day. They are not plans, so nothing is ever due.</p></div>';
       h+='<div class="sethead">Routine</div>'+routineTab();
     }else{
       h+='<div class="grp"><div class="lab mid">What&rsquo;s your mindset today?</div><p class="small">This changes how the app thinks.</p>';
@@ -1702,6 +1738,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     document.getElementById('sheetRoot').innerHTML=fx(roughSheet()+menuSheet()+evSheet()+skipSheet()+forgotSheet()+catSheet()+seSheet()+reSheet()+nameSheet()+tkSheet()+lotSheet()+plSheet()+fab()+welcomeSheet());
     document.querySelectorAll('#sheetRoot .sheet[aria-label]').forEach(function(s){var k=s.getAttribute('aria-label');if(_sc[k])s.scrollTop=_sc[k]});
     var _l2=document.querySelector('.lot');if(_l2)_l2.scrollTop=_st;
+    try{publishLive()}catch(e){}
     try{meadowFrames()}catch(e){}
   }
 
@@ -1875,6 +1912,10 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       }).then(function(){S.tkBusy=false;if(S.tk===T){syncTk();keepSheet(render)}});
     },
     menu:function(){S.menu=true;S.profSaved=false;render()},
+    uslive:function(){publishLive.last=null;publishLive();sendOut('',liveUrl(),'Live link copied.')},
+    dtxsent:function(b,e){save('gs-dtx-day',ymd(new Date()));setTimeout(render,400)},
+    dtxskip:function(){save('gs-dtx-day',ymd(new Date()));render()},
+    dtxtog:function(){S.dtx.on=!S.dtx.on;save('gs-dtx',S.dtx);keepSheet(render)},
     usadd:function(){S.menu=true;S.mt='settings';S.incl=inclOf(PROF);S.incl.partner=true;render();var f=document.getElementById('pf-partner');if(f){f.scrollIntoView({block:'center'});f.focus()}},
     acgoogle:function(){window.GSSync&&window.GSSync.google()},
     acout:function(){if(window.GSSync&&confirm('Sign out? Everything stays on this device; it just stops syncing.'))window.GSSync.signOut()},
@@ -2411,7 +2452,9 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   document.addEventListener('keydown',function(e){if(e.key!=='Escape')return;if(D&&D.active){endDrag(false);return}if(S.chat.open){chatClose();return}if(S.pl){A.plclose();return}if(S.rp||S.menu||S.ev||S.ns||S.tk){closeSheets();render();return}if(S.lot){S.lot=false;render()}});
   try{var _mq=window.matchMedia('(prefers-color-scheme: dark)');var _fn=function(){applyLook()};if(_mq.addEventListener)_mq.addEventListener('change',_fn)}catch(e){}
   S.pv=pvParse();
-  window.addEventListener('hashchange',function(){S.pv=pvParse();render()});
+  function startLive(tries){if(!S.pv||!S.pv.live)return;if(window.GSSync&&window.GSSync.watchLive){window.GSSync.watchLive(S.pv.live,function(d){if(!S.pv)return;S.pv.loading=false;S.pv.data=d;render()});return}if((tries||0)>40){S.pv.slow=true;render();return}setTimeout(function(){startLive((tries||0)+1)},300)}
+  startLive(0);
+  window.addEventListener('hashchange',function(){S.pv=pvParse();startLive(0);render()});
   seedSamples();
   try{applyLook()}catch(e){}
   render();
@@ -2479,6 +2522,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     var wv=t.closest('.deco .wv');
     if(wv){var sv=wv.ownerSVGElement;sv.classList.remove('drift');void sv.getBoundingClientRect();sv.classList.add('drift');setTimeout(function(){sv.classList.remove('drift')},1700)}
   });
+  document.addEventListener('change',function(e){if(e.target&&e.target.id==='dtxtime'&&e.target.value){S.dtx.time=e.target.value;save('gs-dtx',S.dtx)}});
   document.addEventListener('input',function(e){if(S.profSaved&&e.target.closest&&e.target.closest('#profform')){S.profSaved=false;var b=document.getElementById('profsave');if(b){b.textContent='Save names';b.classList.remove('saved')}}});
   getSample().then(function(f){if(!f){S.noAI=true;render()}});
 })();

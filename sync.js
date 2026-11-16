@@ -141,6 +141,13 @@ window.GSSync = {
     } catch (e) { state.error = 'Could not send the link. Check the address and try again.'; ui() }
   },
   async signOut() { await flush(); await signOut(auth); localStorage.removeItem('gs-sync-uid') },
-  flush
+  flush,
+  async publishLive(id, body) {
+    if (!state.user) return;
+    try { await setDoc(doc(db, 'shares', id), { owner: state.user.uid, n: body.n || '', d: body.d || [], up: Date.now() }) } catch (e) {}
+  },
+  watchLive(id, cb) {
+    return onSnapshot(doc(db, 'shares', id), s => cb(s.exists() ? s.data() : null), () => cb(null));
+  }
 };
 ui();
