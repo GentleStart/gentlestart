@@ -545,8 +545,14 @@
   var CARE0=['Drink a full glass of water','Make a cup of tea','Take a warm shower','Step outside for five minutes','Stretch your neck and shoulders','Lie down with your eyes closed for ten minutes','Put on a favorite album','Sit with §C for a few minutes','Wrap up in something soft','Eat something small and easy'];
   S.care=load('gs-care',null);if(!Array.isArray(S.care)||!S.care.length)S.care=CARE0.slice();
   S.careIdx=Math.floor(Math.random()*S.care.length);
+  /* Woodland wording for the built-in ideas; your own ideas show as you wrote them */
+  var CAREW={'Drink a full glass of water':'Drink from the stream: one full glass of water','Make a cup of tea':'Steep something warm for the den','Take a warm shower':'Soak in a warm spring (a warm shower counts)','Step outside for five minutes':'Poke your nose outside for five minutes','Stretch your neck and shoulders':'Have a long, slow stretch like a bear waking up','Lie down with your eyes closed for ten minutes':'Curl up and close your eyes for ten minutes','Put on a favorite album':'Fill the den with a favorite album','Sit with §C for a few minutes':'Nestle in with §C for a few minutes','Wrap up in something soft':'Burrow into the softest blanket you have','Eat something small and easy':'Nibble something small and easy'};
+  function careList(){
+    var pet=!!(PROF&&PROF.pet);
+    return S.care.filter(function(x){return pet||String(x).indexOf('§C')<0}).map(function(x){return creature()&&CAREW[x]?CAREW[x]:x});
+  }
   function careCard(){
-    var u=U(),c=S.care[S.careIdx%S.care.length];
+    var u=U(),L=careList(),c=L.length?L[S.careIdx%L.length]:'Rest for a few minutes';
     return '<div class="card"><h3>'+esc(u.charge)+'</h3><div class="sugg"><b>'+esc(c)+'</b><span class="small">'+esc(u.chargeSub)+'</span></div><div class="row"><button class="btn grow" data-a="caredid">I did this</button><button class="btn alt grow" data-a="carenext">Another one</button></div><details class="tuck"><summary>Add your own</summary><form class="add" data-a="careadd"><input type="text" id="careq" placeholder="e.g. Water the plants slowly" aria-label="Add a self care idea"><button type="submit">Add</button></form></details></div>';
   }
   function suggBlock(pk,u,startLabel,soft,bare,kick){
@@ -1839,8 +1845,8 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     ovday:function(b){S.ovDay=S.ovDay===b.dataset.k?null:b.dataset.k;render()},
     evnewon:function(b){var k=b.dataset.v;S.ev=newEv();S.ev.dk=k===ymd(new Date())?'today':k===ymd(addDays(new Date(),1))?'tomorrow':'other';S.ev.dateVal=k;render()},
     ptog:function(b){var id=b.dataset.v;if(S.status[id]==='done')delete S.status[id];else S.status[id]='done';render()},
-    caredid:function(){toast('That counts. Resting is the task.');S.careIdx=(S.careIdx+1)%S.care.length;render()},
-    carenext:function(){S.careIdx=(S.careIdx+1)%S.care.length;render()},
+    caredid:function(){toast('That counts. Resting is the task.');S.careIdx=(S.careIdx+1)%Math.max(1,careList().length);render()},
+    carenext:function(){S.careIdx=(S.careIdx+1)%Math.max(1,careList().length);render()},
     tkopen:function(b){
       var t=taskById(b.dataset.v);if(!t)return;
       S.tk={g:t.g||'',rpt:(function(){var r=t.rep&&S.reps.filter(function(x){return x.id===t.rep})[0];return r?rptCopy(r):rptNew()})(),repId:t.rep||null,id:t.id,title:t.title,h:t.h||'week',nr:!!t.nr,fun:!!t.fun,bd:!!t.bd,work:(t.work||[]).slice(),mins:t.mins||0,w:t.w||'med',due:dueOf(t),steps:t.steps.map(function(x){return {t:x.t,done:x.done}}),newStep:'',err:''};render();
@@ -2229,7 +2235,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       if(S.evtags.length<16&&S.evtags.indexOf(v)<0){S.evtags.push(v.slice(0,24));save('gs-evtags',S.evtags)}
       keepSheet(render);var en=document.getElementById('evtagnew');if(en)en.focus();
     }else if(f.dataset.a==='careadd'){
-      S.care.push(v);save('gs-care',S.care);S.careIdx=S.care.length-1;render();toast('Added.');
+      S.care.push(v);save('gs-care',S.care);S.careIdx=careList().length-1;render();toast('Added.');
     }else if(f.dataset.a==='tkquick'){
       if(S.lpFired)return;
       S.tasks.unshift({g:f.dataset.g||undefined,id:'t'+Date.now(),title:v,h:f.dataset.h||'week',nr:false,fun:false,work:[],mins:0,w:'med',due:'',steps:[],done:false,created:Date.now()});saveTasks();render();
