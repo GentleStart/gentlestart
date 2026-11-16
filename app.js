@@ -1189,7 +1189,7 @@
       var simT=SIM[S.part];
       h+='<div class="sim"><small>Prototype control: see the day at <b id="simlbl">'+fmt(simT)+'</b><span id="simpart"> ('+PARTS[S.part].label.toLowerCase()+')</span></small><input type="range" id="simslider" min="360" max="1380" step="15" value="'+simT+'" aria-label="Time of day, for testing" aria-valuetext="'+fmt(simT)+'"><div class="simticks" aria-hidden="true"><span>6 AM</span><span>12 PM</span><span>6 PM</span><span>11 PM</span></div><small>For app testing only. The finished app follows your real clock.</small></div>';
     }
-    if(lowMode())h+='<div class="note">'+esc(u.lowNote)+'</div>';
+    if(lowMode())h+='<div class="note">'+esc(u.lowNote).replace('Bear minimum','<em class="pun">Bear</em> minimum')+'</div>';
     var id=nextId(),ue=urgentEv();
     if(ue){
       var ust=tmin(ue.time),when=ue.travel?'Leave by '+fmt(leaveBy(ue))+' to be there at '+fmt(ust)+(ue.place?', '+ue.place:'')+'.':'Starts at '+fmt(ust)+(ue.place?', '+ue.place:'')+'.';
@@ -1577,14 +1577,14 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       var ids=S.rtn.parts[p[0]].filter(function(id){return !offId(id)});
       h+='<div class="grp"><div class="lab">'+p[1]+'</div><ul class="rtl">';
       ids.forEach(function(id,i){
-        h+='<li data-id="'+esc(id)+'" data-p="'+p[0]+'"><div class="rtbox"><button class="rtn" data-a="rtedit" data-v="'+esc(id)+'"><span>'+esc(nmOf(id))+'</span></button><button class="fpill'+(isFloor(id)?' on':'')+'" data-a="flrtog" data-v="'+esc(id)+'" aria-pressed="'+isFloor(id)+'">'+(creature()?(isFloor(id)?'Bear minimum \u2713':'Bear minimum'):(isFloor(id)?'Anchored':'Anchor it'))+'</button></div><span class="grip" role="button" tabindex="0" aria-label="Drag to reorder '+esc(nmOf(id))+'. Arrow keys also move it." data-p="'+p[0]+'" data-v="'+esc(id)+'"><svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true"><rect x="3" y="4" width="12" height="2" rx="1"/><rect x="3" y="8" width="12" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg></span></li>';
+        h+='<li data-id="'+esc(id)+'" data-p="'+p[0]+'"><div class="rtbox"><button class="rtn" data-a="rtedit" data-v="'+esc(id)+'"><span>'+esc(nmOf(id))+'</span></button><button class="fpill'+(isFloor(id)?' on':'')+'" data-a="flrtog" data-v="'+esc(id)+'" aria-pressed="'+isFloor(id)+'">'+(creature()?(isFloor(id)?'<em class="pun">Bear</em> minimum \u2713':'<em class="pun">Bear</em> minimum'):(isFloor(id)?'Anchored':'Anchor it'))+'</button></div><span class="grip" role="button" tabindex="0" aria-label="Drag to reorder '+esc(nmOf(id))+'. Arrow keys also move it." data-p="'+p[0]+'" data-v="'+esc(id)+'"><svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true"><rect x="3" y="4" width="12" height="2" rx="1"/><rect x="3" y="8" width="12" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg></span></li>';
       });
       h+='</ul>';
       var hid=S.rtn.hidden.filter(function(id){return defPart(id)===p[0]&&!offId(id)});
       if(hid.length){h+='<div class="chips sm" style="margin-top:6px"><span class="small">Hidden, tap to put back:</span>';hid.forEach(function(id){h+='<button data-a="rtback" data-v="'+esc(id)+'">'+esc(NAMES[id])+'</button>'});h+='</div>'}
       h+='<form class="add" data-a="rtadd" data-p="'+p[0]+'" style="margin-top:8px"><input type="text" id="rtadd-'+p[0]+'" placeholder="Add a step" aria-label="Add a step to '+p[1]+'" maxlength="50"><button type="submit">Add</button></form></div>';
     });
-    h+='<div class="grp"><div class="lab">'+(creature()?'Bear minimum':'Anchor it')+'</div><p class="small">Pick the things that always count. They never get a skip button, and they are what shows '+(creature()?'on bear minimum days':'in low battery mode')+'.</p><p class="small">A gentle reminder: picking too many is a lot to ask of your low battery self, so keep it to the few that truly matter.</p>';
+    h+='<div class="grp"><div class="lab">'+(creature()?'<em class="pun">Bear</em> minimum':'Anchor it')+'</div><p class="small">Pick the things that always count. They never get a skip button, and they are what shows '+(creature()?'on bear minimum days':'in low battery mode')+'.</p><p class="small">A gentle reminder: picking too many is a lot to ask of your low battery self, so keep it to the few that truly matter.</p>';
     h+='</div><div class="grp"><div class="lab mid">Repeating tasks</div><p class="small">Things that aren\u2019t in your daily routine, but come up every week or month. If one slips by, it just resets for next time. It never piles up.</p>';
     var rplans=S.events.filter(function(ev){return ev.rpt&&ev.by!=='p'});
     if(rplans.length){h+='<div class="evlist">';rplans.forEach(function(ev){h+='<button class="ev nt" data-a="evedit" data-v="'+esc(ev.id)+'"><span class="bd"><b>'+esc(ev.title)+'</b><span class="small">'+esc(repLabel({rep:ev.rpt.rep,days:ev.rpt.days,dom:ev.rpt.dom,mode:ev.rpt.mode,nth:ev.rpt.nth,dow:ev.rpt.dow,as:'ev',time:ev.time}))+'</span></span></button>'});h+='</div>'}
