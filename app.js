@@ -287,17 +287,19 @@
     pt:{t:'Stretches or exercises',s:'The smaller round counts if your energy is low.',c:'Done'},
     archery:{t:'Hobby time',s:'Pack your gear first, then go.',c:'Done'},
     muffinpm:{t:"§C's dinner",s:'The evening bowl.',c:'Fed',floor:true},
+    kidsam:{t:'Get §K ready for the day',s:'Clothes, teeth, shoes. One small step at a time is plenty.',c:'Ready'},
+    checkin:{t:'Check in with §O',s:'A quick text or call counts.',c:'Done'},
     dinner:{t:'Dinner',s:'What sounds doable tonight?',meal:true,floor:true},
     tidy:{t:'One small tidy',s:'Ten minutes, one spot. The kitchen counter is a good one.',c:'Done'},
     tomorrow:{t:'Glance at tomorrow',s:'Just the fixed things, and one easy place to start.',c:'Done'}
   };
-  var NAMES={dailymeds:'Morning medications',teeth:'Teeth and face',clothes:'Out of pajamas',muffin:"§C's breakfast",water:'Water',meal:'Breakfast',lunch:'Lunch',jobs:'One small project step',pt:'Stretches or exercises',archery:'Archery, 3 PM',muffinpm:"§C's dinner",dinner:'Dinner',tidy:'One small tidy',tomorrow:'Glance at tomorrow'};
+  var NAMES={dailymeds:'Morning medications',teeth:'Teeth and face',clothes:'Out of pajamas',muffin:"§C's breakfast",kidsam:'Get §K ready',checkin:'Check in with §O',water:'Water',meal:'Breakfast',lunch:'Lunch',jobs:'One small project step',pt:'Stretches or exercises',archery:'Archery, 3 PM',muffinpm:"§C's dinner",dinner:'Dinner',tidy:'One small tidy',tomorrow:'Glance at tomorrow'};
   var PARTS={
-    morning:{label:'Morning',steps:['dailymeds','teeth','clothes','muffin','meal'],done:{t:'The basics are covered.',s:'Everything after this is a bonus. Pick some music, or see what the day wants.'}},
+    morning:{label:'Morning',steps:['dailymeds','teeth','clothes','muffin','kidsam','meal'],done:{t:'The basics are covered.',s:'Everything after this is a bonus. Pick some music, or see what the day wants.'}},
     afternoon:{label:'Afternoon',steps:['lunch','jobs','pt'],done:{t:'Afternoon handled.',s:'Whatever happened, the afternoon is done. Evening is its own thing.'}},
-    evening:{label:'Evening',steps:['muffinpm','dinner','tidy','tomorrow'],done:{t:'That is the day.',s:'Rest counts. Nothing carries over as overdue.'}}
+    evening:{label:'Evening',steps:['muffinpm','dinner','tidy','checkin','tomorrow'],done:{t:'That is the day.',s:'Rest counts. Nothing carries over as overdue.'}}
   };
-  var FLOORALL={morning:['dailymeds','teeth','clothes','muffin','water','meal'],afternoon:['lunch','jobs','pt'],evening:['muffinpm','dinner','tidy','tomorrow']};
+  var FLOORALL={morning:['dailymeds','teeth','clothes','muffin','kidsam','water','meal'],afternoon:['lunch','jobs','pt'],evening:['muffinpm','checkin','dinner','tidy','tomorrow']};
   var FLOORDEF=['dailymeds','muffin','water','meal','lunch','muffinpm','dinner'];
   var BASE_CHIPS=['Migraine','Rough morning','Slept badly','Good hobby session','Watered plants'];
   /* tile groups: a chip that opens a panel of more options. Migraine is the first one; more can be added later. */
@@ -313,8 +315,8 @@
   var PROF=(function(){try{return JSON.parse(localStorage.getItem('gs-profile'))}catch(e){return null}})();
   function fxWith(s,html){
     s=String(s).replace(/§is/g,(PROF&&PROF.pets&&PROF.pets.length>1)?'are':'is');
-    var p=PROF||{},dflt={'§N':'friend','§P':'your partner','§C':'your pet'},val={'§N':p.name,'§P':p.partner,'§C':p.pet};
-    return String(s).replace(/(^|[.!?>] ?)?(§[NPC])/g,function(m,pre,tok){
+    var p=PROF||{},dflt={'§N':'friend','§P':'your partner','§C':'your pet','§K':'the kids','§O':'someone you love'},val={'§N':p.name,'§P':p.partner,'§C':p.pet,'§K':joinNames(p.kids||[]),'§O':joinNames(p.others||[])};
+    return String(s).replace(/(^|[.!?>] ?)?(§[NPCKO])/g,function(m,pre,tok){
       var w=(val[tok]||'').trim(),fb=!w;if(fb)w=dflt[tok];
       if(fb&&(pre!==undefined)&&pre!==''){w=w.charAt(0).toUpperCase()+w.slice(1)}else if(fb&&pre===undefined&&false){}
       return (pre||'')+(html?esc(w):w);
@@ -337,6 +339,7 @@
   BASE_CHIPS.forEach(function(c,i){if(S.colors[c]===undefined)S.colors[c]=i});
   S.floorIds=load('gs-floor',null);if(!Array.isArray(S.floorIds))S.floorIds=FLOORDEF.slice();
   S.rtn=load('gs-rtn',null);if(!S.rtn||!S.rtn.parts)S.rtn={parts:{morning:PARTS.morning.steps.slice(),afternoon:PARTS.afternoon.steps.slice(),evening:PARTS.evening.steps.slice()},hidden:[],names:{}};
+  [['kidsam','morning','meal'],['checkin','evening','tomorrow']].forEach(function(x){var all=[].concat(S.rtn.parts.morning,S.rtn.parts.afternoon,S.rtn.parts.evening,S.rtn.hidden||[]);if(all.indexOf(x[0])>=0)return;var a=S.rtn.parts[x[1]],i=a.indexOf(x[2]);if(i<0)a.push(x[0]);else a.splice(i,0,x[0])});
   S.cust=load('gs-cust',[]);S.reps=load('gs-reps',[]);S.repSeen=load('gs-repseen',{});S.se=null;S.re=null;
   S.cats=load('gs-cats',null);if(!S.cats)S.cats=BASE_CHIPS.filter(function(c){return c!=='Migraine'}).concat(S.custom);S.ce=null;S.catEdit=false;S.justOpen=null;
   S.look=load('gs-look','original');if(S.look==='greenhouse')S.look='original';if(!LOOKS[S.look])S.look='original';
@@ -414,7 +417,7 @@
     low:{morning:{t:'The basics are covered.',s:'That is enough for now. Rest counts.'},afternoon:{t:'Lunch handled.',s:'That is enough for the afternoon.'},evening:{t:'That is the day.',s:'Rest counts. Nothing carries over as overdue.'}}
   };
   /* clock mode: start minute and length for each step */
-  var TIMES={dailymeds:[540,5],teeth:[545,10],clothes:[555,10],muffin:[565,10],water:[575,5],meal:[580,30],lunch:[750,45],jobs:[810,20],pt:[840,30],muffinpm:[1050,10],dinner:[1080,45],tidy:[1140,10],tomorrow:[1160,10]};
+  var TIMES={kidsam:[570,15],checkin:[1200,10],dailymeds:[540,5],teeth:[545,10],clothes:[555,10],muffin:[565,10],water:[575,5],meal:[580,30],lunch:[750,45],jobs:[810,20],pt:[840,30],muffinpm:[1050,10],dinner:[1080,45],tidy:[1140,10],tomorrow:[1160,10]};
   syncSteps();
   function isFloor(id){return S.floorIds.indexOf(id)>=0}
   function floorAll(p){var base=FLOORALL[p].filter(function(id){return S.rtn.hidden.indexOf(id)<0});S.rtn.parts[p].forEach(function(id){if(base.indexOf(id)<0&&S.cust.some(function(x){return x.id===id}))base.push(id)});return base}
@@ -985,7 +988,7 @@
 
   function U(){var m=UIALT[S.logic];if(!m)return UI0;var o={},k;for(k in UI0)o[k]=UI0[k];for(k in m)o[k]=m[k];return o}
   function moodAlt(id){if(S.logic!=='mammal'||S.mood!=='dreamy')return null;if(id==='teeth')return {t:'Splash in the birdbath',s:'Teeth and face, before you leave the nest. A little splash and a little preening is plenty.'};if(id==='clothes')return {t:'Preen those feathers',s:'Out of pajamas and into something that feels like you. Same trip upstairs, then down you go.'};return null}
-  function offId(id){return !(PROF&&PROF.pet)&&(id==='muffin'||id==='muffinpm')}
+  function offId(id){if(id==='kidsam')return !(PROF&&PROF.kids&&PROF.kids.length);if(id==='checkin')return !(PROF&&PROF.others&&PROF.others.length);return !(PROF&&PROF.pet)&&(id==='muffin'||id==='muffinpm')}
   function stepOf(id){var b=STEPS[id],a=moodAlt(id)||(ALT[S.logic]&&ALT[S.logic][id]),o={},k;for(k in b)o[k]=b[k];if(a)for(k in a)o[k]=a[k];if(id==='meal'&&!(PROF&&PROF.pet)){if(creature()){o.t='Forage for food';o.s='The forest awaits. What is worth gathering?'}else{o.t='Breakfast';o.s='Fuel for your day. What are you having?'}}
     if(S.rtn.names[id])o.t=S.rtn.names[id];
     if(id==='lunch'&&!(PROF&&PROF.partner)){o.lunch=false;o.meal=true;o.t='Lunch';o.s='Time to eat something. Whatever is easy counts.'}
@@ -1480,20 +1483,20 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     return h;
   }
 
-  var INCL=[['partner','My partner'],['pets','My pet/s'],['kids','My kids'],['others','Someone else']];
+  var INCL=[['partner','My partner'],['pets','My pet(s)'],['kids','My kids'],['others','Someone else']];
   function inclOf(p){p=p||{};var o={};o.partner=!!p.partner;o.pets=!!((p.pets&&p.pets.length)||p.pet);o.kids=!!(p.kids&&p.kids.length);o.others=!!(p.others&&p.others.length);if(p.incl)for(var k in p.incl)o[k]=o[k]||!!p.incl[k];return o}
   function listStr(a){return (a||[]).join(', ')}
-  function nameFields(p){
-    p=p||{};if(!S.incl)S.incl=inclOf(p);var I=S.incl;
-    var h='<label class="lab" for="pf-name">What should I call you?</label><input class="field" type="text" id="pf-name" maxlength="30" autocomplete="given-name" value="'+esc(p.name||'')+'">';
+  function nameFields(p,mode){
+    p=p||{};if(!S.incl)S.incl=inclOf(p);var I=S.incl,h='';
+    if(mode!=='p2'){h+='<label class="lab" for="pf-name">What should I call you?</label><input class="field" type="text" id="pf-name" maxlength="30" autocomplete="given-name" value="'+esc(p.name||'')+'">';
     h+='<div class="lab" style="margin-top:12px">I&rsquo;d like to include</div><div class="chips sm" role="group" aria-label="I would like to include">';
     INCL.forEach(function(o){h+='<button type="button" data-a="incl" data-v="'+o[0]+'" aria-pressed="'+!!I[o[0]]+'">'+o[1]+'</button>'});
-    h+='</div>';
-    if(I.partner)h+='<label class="lab" for="pf-partner" style="margin-top:10px">Partner&rsquo;s name</label><input class="field" type="text" id="pf-partner" maxlength="30" value="'+esc(p.partner||'')+'">';
+    h+='</div>';}
+    if(mode==='p1')return h;
+    if(I.partner)h+='<label class="lab" for="pf-partner" style="margin-top:10px">Partner name(s)</label><input class="field" type="text" id="pf-partner" maxlength="80" placeholder="e.g. Jason" value="'+esc(listStr(p.partners||(p.partner?[p.partner]:[])))+'"><p class="small">Plans you add with them become joint activities that show up for both of you, and the Us tab lets you see each other&rsquo;s agenda at a glance. Separate names with commas.</p>';
     if(I.pets)h+='<label class="lab" for="pf-pets" style="margin-top:10px">Pet names</label><input class="field" type="text" id="pf-pets" maxlength="80" placeholder="e.g. Muffin, Bean" value="'+esc(listStr(p.pets||(p.pet?[p.pet]:[])))+'"><p class="small">Separate names with commas. Feeding steps show up in your routine, and you can rename or hide them in Settings.</p>';
-    if(I.kids)h+='<label class="lab" for="pf-kids" style="margin-top:10px">Kids&rsquo; names</label><input class="field" type="text" id="pf-kids" maxlength="80" placeholder="e.g. Lily, Sam" value="'+esc(listStr(p.kids))+'">';
-    if(I.others)h+='<label class="lab" for="pf-others" style="margin-top:10px">Who else?</label><input class="field" type="text" id="pf-others" maxlength="80" placeholder="e.g. Mom, Alex" value="'+esc(listStr(p.others))+'">';
-    if(I.kids||I.others)h+='<p class="small">For now these are saved for later, when you can choose who sees your day and add your own steps for them in Settings, Routine.</p>';
+    if(I.kids)h+='<label class="lab" for="pf-kids" style="margin-top:10px">Kids&rsquo; names</label><input class="field" type="text" id="pf-kids" maxlength="80" placeholder="e.g. Lily, Sam" value="'+esc(listStr(p.kids))+'"><p class="small">Separate names with commas. An example step, getting them ready for the day, shows up in your morning. Rename it, hide it, or add your own in Settings.</p>';
+    if(I.others)h+='<label class="lab" for="pf-others" style="margin-top:10px">Who else?</label><input class="field" type="text" id="pf-others" maxlength="80" placeholder="e.g. Mom, Alex" value="'+esc(listStr(p.others))+'"><p class="small">Separate names with commas. An example step, checking in with them, shows up in your evening. Rename it, hide it, or add your own in Settings.</p>';
     return h;
   }
   function welcomeSheet(){
@@ -1510,11 +1513,11 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       }
       return h+'<button class="quiet" data-a="welskip">Skip for now</button></div></div>';
     }
-    return '<div class="backdrop" style="z-index:40"><div class="sheet" role="dialog" aria-modal="true" aria-label="Welcome"><h2 style="font-size:26px">Welcome</h2><p class="small">A few names make this feel like yours. All of it is optional, and you can change it any time in the menu.</p><form id="welcomeform" style="display:flex;flex-direction:column;gap:4px">'+nameFields({})+'<button class="btn" type="submit" style="margin-top:14px">Start</button></form><button class="quiet" data-a="wskip">Skip for now</button></div></div>';
+    return '<div class="backdrop" style="z-index:40"><div class="sheet" role="dialog" aria-modal="true" aria-label="Welcome"><h2 style="font-size:26px">Welcome</h2>'+(S.welP2?'<p class="small">A name or two for each, so the app can talk about them the way you do.</p><form id="welcomeform" style="display:flex;flex-direction:column;gap:4px"><input type="hidden" id="pf-name" value="'+esc(S.welName||'')+'">'+nameFields({},'p2')+'<button class="btn" type="submit" style="margin-top:14px">Start</button></form><button class="quiet" data-a="welback">&larr; Back</button>':'<p class="small">A few names make this feel like yours. All of it is optional, and you can change it any time in the menu.</p><form id="welcomeform" style="display:flex;flex-direction:column;gap:4px">'+nameFields({name:S.welName||''},'p1')+'<button class="btn" type="'+(S.incl&&(S.incl.partner||S.incl.pets||S.incl.kids||S.incl.others)?'button" data-a="welnext':'submit')+'" style="margin-top:14px">'+(S.incl&&(S.incl.partner||S.incl.pets||S.incl.kids||S.incl.others)?'Next':'Start')+'</button></form><button class="quiet" data-a="wskip">Skip for now</button>')+'</div></div>';
   }
   function splitNames(s){return String(s||'').split(',').map(function(x){return x.trim()}).filter(Boolean).slice(0,8)}
   function joinNames(a){return a.length<2?(a[0]||''):a.slice(0,-1).join(', ')+' and '+a[a.length-1]}
-  function saveProf(o){var I=S.incl||{},pets=I.pets?splitNames(o.pets):[];PROF={name:(o.name||'').trim(),partner:I.partner?(o.partner||'').trim():'',pets:pets,pet:joinNames(pets),kids:I.kids?splitNames(o.kids):[],others:I.others?splitNames(o.others):[],incl:{partner:!!I.partner,pets:!!I.pets,kids:!!I.kids,others:!!I.others}};try{localStorage.setItem('gs-profile',JSON.stringify(PROF))}catch(e){}try{window.GSSync&&window.GSSync.touch('gs-profile')}catch(e){}}
+  function saveProf(o){var I=S.incl||{},pets=I.pets?splitNames(o.pets):[];var partners=I.partner?splitNames(o.partner):[];PROF={name:(o.name||'').trim(),partners:partners,partner:joinNames(partners),pets:pets,pet:joinNames(pets),kids:I.kids?splitNames(o.kids):[],others:I.others?splitNames(o.others):[],incl:{partner:!!I.partner,pets:!!I.pets,kids:!!I.kids,others:!!I.others}};try{localStorage.setItem('gs-profile',JSON.stringify(PROF))}catch(e){}try{window.GSSync&&window.GSSync.touch('gs-profile')}catch(e){}}
 
   /* ---- Routine tab: daily steps and repeating tasks ---- */
   var DAYN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -1732,6 +1735,8 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     cretry:function(){var t=S.chat.retry;if(!t)return;var m=S.chat.msgs;if(m.length&&m[m.length-1].r==='u'&&m[m.length-1].t===t)m.pop();chatSend(t)},
     wskip:function(){saveProf({});render()},
     welskip:function(){S.welInfo=true;render()},
+    welnext:function(){var n=document.getElementById('pf-name');S.welName=n?n.value:'';S.welP2=true;render();var f=document.querySelector('#welcomeform input:not([type=hidden])');if(f)f.focus()},
+    welback:function(){S.welP2=false;render()},
     incl:function(b){keepSheet(function(){keepAll(function(){S.incl=S.incl||{};S.incl[b.dataset.v]=!S.incl[b.dataset.v];render()})})},
     dexport:function(){
       var o={app:'gentle-start',version:1,saved:new Date().toISOString(),data:{}};
