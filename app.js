@@ -329,10 +329,12 @@
   function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML.replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
 
   var DEFAULT_LISTS=[
-    {id:'xmas',name:'Christmas',items:[{t:'Wrapping paper (sample item)',done:false}]},
-    {id:'movies',name:'Movies to watch',items:[{t:'Add the ones you keep forgetting (sample item)',done:false}]},
-    {id:'hobbies',name:'Hobbies to try',items:[{t:'Something with plants (sample item)',done:false}]},
-    {id:'groc',name:'Grocery run',items:[{t:'Easy breakfast foods (sample item)',done:false}]}
+    {id:'groc',name:'Groceries',items:[{t:'Oat milk (sample item)',done:false},{t:'Eggs (sample item)',done:false},{t:'Bananas (sample item)',done:true},{t:'Coffee (sample item)',done:false},{t:'Easy breakfast foods (sample item)',done:false},{t:'Something for dinner Thursday (sample item)',done:false}]},
+    {id:'holiday',name:'Holiday prep',items:[{t:'Wrapping paper (sample item)',done:false},{t:'Cards to send (sample item)',done:false},{t:'Plan the menu (sample item)',done:false},{t:'Find the string lights (sample item)',done:true}]},
+    {id:'gifts',name:'Gift ideas',items:[{t:'Cozy socks (sample item)',done:false},{t:'A plant for a new apartment (sample item)',done:false},{t:'A nice notebook (sample item)',done:false}]},
+    {id:'movies',name:'Movies to watch',items:[{t:'Something cozy for a rainy day (sample item)',done:false},{t:'The one everyone keeps recommending (sample item)',done:false},{t:'A classic you have never seen (sample item)',done:false}]},
+    {id:'books',name:'Books to read',items:[{t:'Book club pick (sample item)',done:false},{t:'A good mystery (sample item)',done:false},{t:'That cookbook from the library (sample item)',done:true}]},
+    {id:'places',name:'Places to try',items:[{t:'The new ramen place (sample item)',done:false},{t:'Botanical garden (sample item)',done:false},{t:'Weekend farmers market (sample item)',done:false}]}
   ];
   var S={tab:'today',part:'morning',status:{},lists:load('gs-lists',DEFAULT_LISTS),log:load('gs-log',[]),custom:load('gs-custom',[]),
     colors:load('gs-colors',{}),hide:{},mo:0,day:null,lv:'everyday',filt:false,rp:null,menu:false,
@@ -1446,7 +1448,7 @@
   }
 
   /* sample lists: the starter lists and their marked items. Anything you added yourself is kept. */
-  var SAMPLE_LISTS=['xmas','movies','hobbies','groc'];
+  var SAMPLE_LISTS=['xmas','movies','hobbies','groc','holiday','gifts','books','places'];
   function sampleItem(it){return /\(sample item\)$/.test(it.t)||it.t==='Gift idea for §P'}
   function itTxt(it){return S.demo?String(it.t).replace(/ \(sample item\)$/,''):it.t}
   function hasSampleLists(){return S.lists.some(function(L){return L.items.some(sampleItem)||(SAMPLE_LISTS.indexOf(L.id)>=0&&!L.items.length)})}
