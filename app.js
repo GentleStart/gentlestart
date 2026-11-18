@@ -1287,8 +1287,6 @@
     if(!S.ce)return '';
     return '<div class="backdrop mid" data-a="cebg"><div class="sheet" role="dialog" aria-modal="true" aria-label="Edit category"><h2 style="font-size:22px;text-align:center">Edit category</h2><input class="field" type="text" id="ce-name" maxlength="40" value="'+esc(S.ce.name)+'" aria-label="Category name"><button class="btn" data-a="cesave">Save name</button><button class="quiet" style="text-align:center" data-a="cedel">Take this category away</button><button class="quiet" style="text-align:center" data-a="cecancel">Cancel</button></div></div>';
   }
-  /* the joke skip popups on teeth and getting dressed are just for the app's maker */
-  function isMe(){return !!(PROF&&/^nicole$/i.test(String(PROF.name||'').trim()))}
   function skipSheet(){
     if(!S.sq)return '';
     var q=S.sq.id==='clothes'?SQ[0]:SQ[S.sq.n];
@@ -2098,7 +2096,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     tab:function(b){S.tab=b.dataset.v;render();window.scrollTo(0,0)},
     part:function(b){S.part=b.dataset.v;S.shift=0;render()},
     done:function(b){S.status[b.dataset.v]='done';render()},
-    skip:function(b){var sid=b.dataset.v;if(U().sq||(S.logic==='gentle'&&isMe()&&(sid==='teeth'||sid==='clothes'))){S.sq={id:b.dataset.v,n:0};render();return}S.status[b.dataset.v]='skip';render();toast('Marked as skipped.')},
+    skip:function(b){var sid=b.dataset.v;if(U().sq){S.sq={id:b.dataset.v,n:0};render();return}S.status[b.dataset.v]='skip';render();toast('Marked as skipped.')},
     sqyes:function(){
       var q=S.sq;if(!q)return;
       if(q.id==='clothes'){S.status[q.id]='skip';S.sq=null;render();toast("It's no fun if EVERY task has friction \ud83d\ude42");return}
