@@ -1928,7 +1928,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       v+='<button class="btn alt" data-a="rtedmode" style="margin:4px 0 8px">Edit routine</button>';
       return v+repeatingGrp();
     }
-    var h='<p class="small">Drag a step by its handle to reorder it or move it to another part of the day. Tap a name to rename or remove it, and add your own below each part.</p><button class="btn" data-a="rtedmode" style="margin:4px 0 8px">Done editing</button>';
+    var h='<p class="small">Drag a step by its handle to reorder it or move it to another part of the day. Tap a name to rename or remove it, and add your own below each part.</p>';
     PS.forEach(function(p){
       var ids=S.rtn.parts[p[0]].filter(function(id){return !offId(id)});
       h+='<div class="grp"><div class="lab">'+p[1]+'</div><ul class="rtl" data-p="'+p[0]+'" aria-label="'+p[1]+'">';
