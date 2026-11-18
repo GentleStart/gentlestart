@@ -1128,7 +1128,19 @@
   if(!Array.isArray(S.events))S.events=[
     {id:'e1',title:'Walk with a friend',ex:true,off:0,time:'12:00',dur:120,place:'',travel:20,prep:'Pack your gear',withJ:false,share:'full'},
     {id:'e2',title:'Dentist',ex:true,off:0,time:'15:00',dur:60,place:'Main Street clinic',travel:45,prep:'Bring your insurance card',withJ:false,share:'full'},
-    {id:'e3',title:'Dinner out',ex:true,off:1,time:'19:00',dur:90,place:'',travel:15,prep:'',withJ:true,share:'full'}
+    {id:'e3',title:'Dinner out',ex:true,off:1,time:'19:00',dur:90,place:'',travel:15,prep:'',withJ:true,share:'full'},
+    {id:'e4',title:'Farmers market',ex:true,off:-5,time:'09:00',dur:90,place:'',travel:10,prep:'Bring a tote bag',withJ:false,share:'full'},
+    {id:'e5',title:'Yoga class',ex:true,off:-2,time:'18:00',dur:60,place:'Community center',travel:10,prep:'Bring a mat',withJ:false,share:'full'},
+    {id:'e6',title:'Haircut',ex:true,off:3,time:'11:00',dur:60,place:'Salon on 5th',travel:15,prep:'',withJ:false,share:'full'},
+    {id:'e7',title:'Call with family',ex:true,off:5,time:'19:30',dur:30,place:'',travel:0,prep:'',withJ:false,share:'full'},
+    {id:'e8',title:'Book club',ex:true,off:8,time:'19:00',dur:90,place:'Library',travel:15,prep:'Finish the last chapter',withJ:false,share:'full'},
+    {id:'e9',title:'Library books due',ex:true,off:9,time:'17:00',dur:15,place:'Library',travel:15,prep:'',withJ:false,share:'full'},
+    {id:'e10',title:'Doctor follow-up',ex:true,off:11,time:'10:30',dur:45,place:'Health center',travel:25,prep:'Bring your list of questions',withJ:false,share:'full'},
+    {id:'e11',title:'Coffee with a friend',ex:true,off:14,time:'10:00',dur:60,place:'Corner cafe',travel:10,prep:'',withJ:false,share:'full'},
+    {id:'e12',title:'Oil change',ex:true,off:17,time:'13:00',dur:60,place:'Auto shop',travel:15,prep:'',withJ:false,share:'full'},
+    {id:'e13',title:'Movie night',ex:true,off:20,time:'20:00',dur:150,place:'',travel:0,prep:'Pick the movie ahead of time',withJ:false,share:'full'},
+    {id:'e14',title:'Pick up prescription',ex:true,off:23,time:'16:00',dur:20,place:'Pharmacy',travel:10,prep:'',withJ:false,share:'full'},
+    {id:'e15',title:'Birthday dinner',ex:true,off:25,time:'18:30',dur:120,place:'Italian place downtown',travel:20,prep:'Bring the card',withJ:false,share:'full'}
   ];
   S.ev=null;S.evReady={};S.evHide={};
   function evDate(ev){return ev.ex?ymd(addDays(new Date(),ev.off||0)):ev.date}
@@ -1373,7 +1385,7 @@
     var P=PARTS[S.part];
     var h=head({eyebrow:d,title:u.greet(P.label),def:1});
     if(creature()){h+='<div class="sim"><small>How are you feeling today?</small><div class="seg mood">';Object.keys(MOODS).forEach(function(k){h+='<button data-a="mood" data-v="'+k+'" aria-pressed="'+(S.mood===k)+'">'+MOODS[k].name+'</button>'});h+='</div></div>'}
-    if(!lowMode()){
+    if(!lowMode()&&!S.demo){
       var simT=SIM[S.part];
       h+='<div class="sim"><small>Prototype control: see the day at <b id="simlbl">'+fmt(simT)+'</b><span id="simpart"> ('+PARTS[S.part].label.toLowerCase()+')</span></small><input type="range" id="simslider" min="360" max="1380" step="15" value="'+simT+'" aria-label="Time of day, for testing" aria-valuetext="'+fmt(simT)+'"><div class="simticks" aria-hidden="true"><span>6 AM</span><span>12 PM</span><span>6 PM</span><span>11 PM</span></div><small>For app testing only. The finished app follows your real clock.</small></div>';
     }
