@@ -329,10 +329,10 @@
   function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML.replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
 
   var DEFAULT_LISTS=[
+    {id:'books',name:'Books to read',items:[{t:'Book club pick (sample item)',done:false},{t:'A good mystery (sample item)',done:false},{t:'Try a recipe from the library cookbook (sample item)',done:false,parked:true,tid:'t10'}]},
     {id:'groc',name:'Groceries',items:[{t:'Oat milk (sample item)',done:false},{t:'Eggs (sample item)',done:false},{t:'Bananas (sample item)',done:true},{t:'Coffee (sample item)',done:false},{t:'Easy breakfast foods (sample item)',done:false},{t:'Something for dinner Thursday (sample item)',done:false}]},
     {id:'gifts',name:'Gift ideas',items:[{t:'Cozy socks (sample item)',done:false},{t:'A plant for a new apartment (sample item)',done:false},{t:'A nice notebook (sample item)',done:false}]},
     {id:'movies',name:'Movies to watch',items:[{t:'Something cozy for a rainy day (sample item)',done:false},{t:'The one everyone keeps recommending (sample item)',done:false},{t:'A classic you have never seen (sample item)',done:false,parked:true,tid:'t13'}]},
-    {id:'books',name:'Books to read',items:[{t:'Book club pick (sample item)',done:false},{t:'A good mystery (sample item)',done:false},{t:'Try a recipe from the library cookbook (sample item)',done:false,parked:true,tid:'t10'}]},
     {id:'places',name:'Places to try',items:[{t:'The new ramen place (sample item)',done:false,parked:true,tid:'t11'},{t:'Botanical garden (sample item)',done:false},{t:'Weekend farmers market (sample item)',done:false}]}
   ];
   var S={tab:'today',part:'morning',status:{},lists:load('gs-lists',DEFAULT_LISTS),log:load('gs-log',[]),custom:load('gs-custom',[]),
