@@ -938,4 +938,4 @@ em.pun{font-style:italic;font-weight:inherit;letter-spacing:.01em}
 .defn b{color:var(--ink);font-weight:600;letter-spacing:.01em}
 .defn .ipa{font-family:var(--font-body);font-size:13px;opacity:.85}
 .defn i{font-style:italic}
-.head .top:has(.defn) > .emblem{align-self:flex-start;margin-top:14px}
+.deco + .defn{margin-top:-10px}

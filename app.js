@@ -260,8 +260,8 @@
   };
   function deco(){var f=DECO[lookKey()];return f?'<div class="deco" aria-hidden="true"'+(S.logic==='mammal'?' data-a="critter"':'')+'>'+f()+'</div>':''}
   function head(o){
-    return '<header class="head"><div class="top"><div>'+(o.eyebrow?'<div class="date">'+esc(o.eyebrow)+'</div>':'')+'<h1 class="hello">'+esc(o.title)+'</h1>'+(o.sub?'<div class="date">'+esc(o.sub)+'</div>':'')+(o.def&&lookKey()==='nook'?'<p class="defn"><b>with\u00b7y</b> <span class="ipa">/\u02c8w\u026a\u00f0.i/</span> <i>noun</i> &mdash; <b>1.</b>&nbsp;a flexible willow shoot, woven to bind things together. <b>2.</b>&nbsp;<i>(informal)</i> something that bends without breaking.</p>':'')+'</div>'
-      +(EMBS[lookKey()]?'<button class="emblem fancy" data-a="menu" aria-label="Open menu" aria-haspopup="dialog">'+emblemSvg(lookKey())+'</button>':'<button class="emblem" data-a="menu" aria-label="Open menu" aria-haspopup="dialog">'+motif()+'</button>')+'</div>'+deco()+'</header>';
+    return '<header class="head"><div class="top"><div>'+(o.eyebrow?'<div class="date">'+esc(o.eyebrow)+'</div>':'')+'<h1 class="hello">'+esc(o.title)+'</h1>'+(o.sub?'<div class="date">'+esc(o.sub)+'</div>':'')+'</div>'
+      +(EMBS[lookKey()]?'<button class="emblem fancy" data-a="menu" aria-label="Open menu" aria-haspopup="dialog">'+emblemSvg(lookKey())+'</button>':'<button class="emblem" data-a="menu" aria-label="Open menu" aria-haspopup="dialog">'+motif()+'</button>')+'</div>'+deco()+(o.def&&lookKey()==='nook'?'<p class="defn"><b>with\u00b7y</b> <span class="ipa">/\u02c8w\u026a\u00f0.i/</span> <i>noun</i> &mdash; <b>1.</b>&nbsp;a flexible willow shoot, woven to bind things together. <b>2.</b>&nbsp;<i>(informal)</i> something that bends without breaking.</p>':'')+'</header>';
   }
 
   var ICON={
