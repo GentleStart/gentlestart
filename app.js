@@ -2022,6 +2022,8 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   window.addEventListener('resize',function(){clearTimeout(meadowFrames.t);meadowFrames.t=setTimeout(meadowFrames,120)});
   document.addEventListener('toggle',function(){meadowFrames()},true);
   function render(){
+    var tk=ymd(new Date());if(S.statusDay!==tk){S.status={};S.statusDay=tk}
+    var js=JSON.stringify(S.status);if(js!==S.statusSaved){S.statusSaved=js;save('gs-status',{d:tk,s:S.status})}
     if(S.pv){document.getElementById('app').innerHTML=pvHtml(S.pv);document.getElementById('tabs').innerHTML='';document.getElementById('sheetRoot').innerHTML='';return}
     if(lowRevert()){S.shift=0;S.skipPark=[];try{applyLook()}catch(e){}}
     genReps();
@@ -2802,6 +2804,11 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   startLive(0);
   window.addEventListener('hashchange',function(){S.pv=pvParse();startLive(0);render()});
   seedSamples();
+  /* today's done and skipped steps survive a refresh (and sync between devices); a new day starts fresh */
+  (function(){var st=load('gs-status',null),tk=ymd(new Date());S.status=(st&&st.d===tk&&st.s)?st.s:{};S.statusDay=tk;S.statusSaved=JSON.stringify(S.status)})();
+  /* open at the real time of day */
+  (function(){var n=new Date(),m=Math.min(1380,Math.max(360,n.getHours()*60+n.getMinutes())),o=S.dayOff||0;
+    SIM.morning=SIM.afternoon=SIM.evening=m;S.part=m<720+o?'morning':m<1020+o?'afternoon':'evening'})();
   try{applyLook()}catch(e){}
   (function(){try{var q=new URLSearchParams(location.search),st=[q.get('title'),q.get('text'),q.get('url')].filter(Boolean).join(' ').trim();
     if(st){history.replaceState(null,'',location.pathname+location.hash);S.tab='today';S.ev=newEv();fillFromText(st)}}catch(e){}})();
