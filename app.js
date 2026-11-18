@@ -1990,7 +1990,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
 
     }else if(S.mt==='settings'){
       h+='<div class="sethead first">About you</div>'+accountUI();
-      h+='<form id="profform" class="grp" style="display:flex;flex-direction:column;gap:4px">'+nameFields(PROF)+'<button class="btn alt'+(S.profSaved?' saved':'')+'" type="submit" style="margin-top:10px" id="profsave">'+(S.profSaved?'Saved \u2713':'Save names')+'</button></form>';
+      h+='<form id="profform" class="grp" style="display:flex;flex-direction:column;gap:4px">'+nameFields(PROF)+'</form>';
       h+='<div class="sethead">General</div>';
       h+='<div class="grp"><div class="lab">How should chance pick for you?</div><p class="small">This is what happens when you tap the button to let chance choose from the things that fit your time. It never picks anything that is not already a good fit.</p>';
       [['plinko','Plinko','A ball drops through the pegs and lands on one of your picks.','<circle cx="10" cy="8" r="2"/><circle cx="22" cy="8" r="2"/><circle cx="16" cy="15" r="2"/><circle cx="16" cy="25" r="3"/>'],['wheel','Spin wheel','Spin once. It slows and lands on one of the things that fit.','<circle cx="16" cy="16" r="11"/><path d="M16 5v22M5 16h22M8.5 8.5l15 15M23.5 8.5l-15 15"/>'],['coin','Coin flip','Two of your things, one flip. Quick and decisive.','<circle cx="16" cy="16" r="11"/><path d="M14 12.5l2.5-1.5v10"/>']].forEach(function(o){
@@ -2141,7 +2141,8 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     demoend:function(){resetForSetup();S.demo=false;save('gs-demo',false);S.tab='today';S.menu=false;S.setup=suNew();render();window.scrollTo(0,0)},
     welnext:function(){var n=document.getElementById('pf-name');S.welName=n?n.value:'';S.welP2=true;render();var f=document.querySelector('#welcomeform input:not([type=hidden])');if(f)f.focus()},
     welback:function(){S.welP2=false;render()},
-    incl:function(b){S.profSaved=false;keepSheet(function(){keepAll(function(){S.incl=S.incl||{};S.incl[b.dataset.v]=!S.incl[b.dataset.v];render()})})},
+    incl:function(b){keepSheet(function(){keepAll(function(){S.incl=S.incl||{};S.incl[b.dataset.v]=!S.incl[b.dataset.v];render()})});
+      if(document.getElementById('profform')){var v=profVals();saveProfVals(v,b.dataset.v==='health'&&!S.incl.health)}},
     dexport:function(){
       var o={app:'gentle-start',version:1,saved:new Date().toISOString(),data:{}};
       try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k.indexOf('gs-')===0)o.data[k]=localStorage.getItem(k)}}catch(e){}
@@ -2861,7 +2862,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     function g(i){var x=document.getElementById(i);return x?x.value:''}
     saveProf({name:g('pf-name'),partner:g('pf-partner'),pets:g('pf-pets'),kids:g('pf-kids'),others:g('pf-others')});
     setTrk((S.incl&&S.incl.health)?splitNames(g('pf-health')):[]);
-    if(f.id==='profform'){S.profSaved=true;keepSheet(render)}else{afterWelcome();render()}
+    if(f.id==='profform'){keepSheet(render)}else{afterWelcome();render()}
   });
   document.addEventListener('change',function(e){
     var ls=e.target;if(ls&&ls.classList&&ls.classList.contains('lsedit')){
@@ -2922,6 +2923,14 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     if(wv){var sv=wv.ownerSVGElement;sv.classList.remove('drift');void sv.getBoundingClientRect();sv.classList.add('drift');setTimeout(function(){sv.classList.remove('drift')},1700)}
   });
   document.addEventListener('change',function(e){if(e.target&&e.target.id==='dtxtime'&&e.target.value){S.dtx.time=e.target.value;save('gs-dtx',S.dtx)}});
-  document.addEventListener('input',function(e){if(S.profSaved&&e.target.closest&&e.target.closest('#profform')){S.profSaved=false;var b=document.getElementById('profsave');if(b){b.textContent='Save names';b.classList.remove('saved')}}});
+  /* the names in Settings save as you type, like every other setting */
+  function profVals(){function g(i){var x=document.getElementById(i);return x?x.value:null}return {name:g('pf-name'),partner:g('pf-partner'),pets:g('pf-pets'),kids:g('pf-kids'),others:g('pf-others'),health:g('pf-health')}}
+  function saveProfVals(v,dropTrk){
+    var p=PROF||{};
+    saveProf({name:v.name!==null?v.name:(p.name||''),partner:v.partner!==null?v.partner:listStr(p.partners||[]),pets:v.pets!==null?v.pets:listStr(p.pets||[]),kids:v.kids!==null?v.kids:listStr(p.kids||[]),others:v.others!==null?v.others:listStr(p.others||[])});
+    if(dropTrk)setTrk([]);else if(v.health!==null&&v.health.trim())setTrk(splitNames(v.health));
+  }
+  var profTimer=null;
+  document.addEventListener('input',function(e){if(e.target.closest&&e.target.closest('#profform')){var v=profVals();clearTimeout(profTimer);profTimer=setTimeout(function(){saveProfVals(v,false)},400)}});
   getSample().then(function(f){if(!f){S.noAI=true;render()}});
 })();
