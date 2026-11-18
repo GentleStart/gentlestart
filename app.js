@@ -303,7 +303,7 @@
   };
   var FLOORALL={morning:['getup','dailymeds','teeth','clothes','muffin','kidsam','water','meal'],afternoon:['lunch','jobs','pt'],evening:['muffinpm','checkin','dinner','tidy','tomorrow']};
   var FLOORDEF=['getup','dailymeds','muffin','water','meal','lunch','muffinpm','dinner'];
-  var BASE_CHIPS=['Migraine','Rough day','Slept badly','Good hobby session','Watered plants'];
+  var BASE_CHIPS=['Migraine','Rough day','Slept badly','Went to the gym','Watered plants'];
   /* tile groups: a chip that opens a panel of more options. Migraine is the first one; more can be added later. */
   var GROUPS={Migraine:{title:'Migraine details'}};
   var SEVS=['Mild','Moderate','Severe'];
@@ -1040,7 +1040,7 @@
   /* ---- sample entries so the log calendar has something to show ---- */
   function seedSamples(){
     if(load('gs-seeded',false))return;
-    var now=new Date(),add=[],every=['Rough day','Slept badly','Good hobby session','Watered plants'];
+    var now=new Date(),add=[],every=['Rough day','Slept badly','Went to the gym','Watered plants'];
     function pick(a){return a[Math.floor(Math.random()*a.length)]}
     function many(a,n){var c=a.slice(),o=[];while(o.length<n&&c.length)o.push(c.splice(Math.floor(Math.random()*c.length),1)[0]);return o}
     [-1,0].forEach(function(mo){
@@ -1080,6 +1080,8 @@
     S.trk.slice().reverse().forEach(function(t){var st=stackById(t.id);if(!st)S.stacks.unshift({id:t.id,name:t.name,builtin:true,kids:[]});else st.name=t.name});
   }
   syncTrkStacks();
+  /* the Good hobby session button became Went to the gym; past entries keep their name */
+  (function(){var i=S.cats.indexOf('Good hobby session');if(i>=0){if(S.cats.indexOf('Went to the gym')<0)S.cats[i]='Went to the gym';else S.cats.splice(i,1);save('gs-cats',S.cats)}})();
   /* "Rough morning" was renamed "Rough day": carry old entries, colors and stacks over */
   (function(){var O='Rough morning',N='Rough day',ch=false;
     S.log.forEach(function(e){if(e.label===O){e.label=N;ch=true}});
