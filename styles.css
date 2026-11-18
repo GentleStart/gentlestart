@@ -976,3 +976,15 @@ em.pun{font-style:italic;font-weight:inherit;letter-spacing:.01em}
 html,body{overflow-x:hidden;overscroll-behavior-x:none}
 @supports (overflow:clip){html,body{overflow-x:clip}}
 body{touch-action:pan-y pinch-zoom}
+
+/* lists: swipe left to delete */
+.items li.item{position:relative;overflow:hidden;--sx:0px}
+.items li.item > *:not(.swdel){transform:translateX(var(--sx));transition:transform .2s ease}
+.items li.item.dragging > *:not(.swdel),.items li.item.dragging .swdel{transition:none}
+.swdel{display:none;position:absolute;top:3px;bottom:3px;right:0;width:calc(-1 * var(--sx));border:0;border-radius:10px;background:#b8473a;color:#fff;font:inherit;font-weight:600;font-size:14px;overflow:hidden;white-space:nowrap;padding:0;transition:width .2s ease;cursor:pointer}
+.items li.item.swp .swdel{display:block}
+
+/* Meadow: frames on list cards sit inside the summary so closed lists keep their box */
+:root[data-look="meadow"] details.card>summary:not(.mframe){position:static;z-index:auto}
+:root[data-look="meadow"] details.card>summary>*:not(.mframe){position:relative;z-index:1}
+:root[data-look="meadow"] details.card>summary>.mframe{position:absolute;z-index:0}

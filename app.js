@@ -1395,10 +1395,6 @@
     var P=PARTS[S.part];
     var h=head({eyebrow:d,title:u.greet(P.label),def:1});
     if(creature()){h+='<div class="sim"><small>How are you feeling today?</small><div class="seg mood">';Object.keys(MOODS).forEach(function(k){h+='<button data-a="mood" data-v="'+k+'" aria-pressed="'+(S.mood===k)+'">'+MOODS[k].name+'</button>'});h+='</div></div>'}
-    if(!lowMode()&&!S.demo){
-      var simT=SIM[S.part];
-      h+='<div class="sim"><small>Prototype control: see the day at <b id="simlbl">'+fmt(simT)+'</b><span id="simpart"> ('+PARTS[S.part].label.toLowerCase()+')</span></small><input type="range" id="simslider" min="360" max="1380" step="15" value="'+simT+'" aria-label="Time of day, for testing" aria-valuetext="'+fmt(simT)+'"><div class="simticks" aria-hidden="true"><span>6 AM</span><span>12 PM</span><span>6 PM</span><span>11 PM</span></div><small>For app testing only. The finished app follows your real clock.</small></div>';
-    }
     if(lowMode())h+='<div class="note">'+esc(u.lowNote).replace('Bear minimum','<em class="pun">Bear</em> minimum')+'</div>';
     var id=nextId(),ue=urgentEv();
     if(ue){
@@ -1474,7 +1470,7 @@
       h+='<details class="card lcard"'+(li===0||ed?' open':'')+' data-id="'+L.id+'"><summary><span>'+esc(L.name)+'</span><span class="count">'+n+' item'+(n===1?'':'s')+'</span></summary><ul class="items">'+(ed?'<li class="item"><input class="lsedit ltitle" type="text" data-l="'+li+'" value="'+esc(L.name)+'" maxlength="40" aria-label="List name"></li>':'');
       L.items.forEach(function(it,ii){
         if(ed){h+='<li class="item"><input class="lsedit" type="text" data-l="'+li+'" data-i="'+ii+'" value="'+esc(itTxt(it))+'" maxlength="120" aria-label="Item"><button class="x" aria-label="Delete item" data-a="del" data-l="'+li+'" data-i="'+ii+'">&times;</button></li>';return}
-        h+='<li class="item'+(it.done?' done':'')+'"><button class="check" role="checkbox" aria-checked="'+it.done+'" aria-label="'+esc(itTxt(it))+'" data-a="tick" data-l="'+li+'" data-i="'+ii+'">'+(it.done?CK:'')+'</button><span class="t">'+esc(itTxt(it))+'</span>'+(it.done?'':'<button class="lpk'+(it.parked?' on':'')+'" aria-pressed="'+!!it.parked+'" aria-label="'+(it.parked?esc(U().parked)+'. Tap to take it back out of '+esc(lotThe()):'Move to '+esc(lotThe()))+'" data-a="lpark" data-l="'+li+'" data-i="'+ii+'">'+(it.parked?esc(U().parked):esc(U().parkIt))+'</button>')+'</li>';
+        h+='<li class="item'+(it.done?' done':'')+'"><button class="check" role="checkbox" aria-checked="'+it.done+'" aria-label="'+esc(itTxt(it))+'" data-a="tick" data-l="'+li+'" data-i="'+ii+'">'+(it.done?CK:'')+'</button><span class="t">'+esc(itTxt(it))+'</span>'+(it.done?'':'<button class="lpk'+(it.parked?' on':'')+'" aria-pressed="'+!!it.parked+'" aria-label="'+(it.parked?esc(U().parked)+'. Tap to take it back out of '+esc(lotThe()):'Move to '+esc(lotThe()))+'" data-a="lpark" data-l="'+li+'" data-i="'+ii+'">'+(it.parked?esc(U().parked):esc(U().parkIt))+'</button>')+'<button class="swdel" data-a="del" data-l="'+li+'" data-i="'+ii+'" tabindex="-1" aria-hidden="true">Delete</button></li>';
       });
       h+='</ul>'+(ed?'<button class="quiet ldel" data-a="ldellist" data-l="'+li+'">Delete this list</button>':'<form class="add" data-a="additem" data-l="'+li+'"><input type="text" id="add-'+L.id+'" placeholder="Add to '+esc(L.name)+'" aria-label="Add to '+esc(L.name)+'"><button type="submit">Add</button></form>')+'</details>';
     });
@@ -2095,8 +2091,10 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     if(lookKey()!=='meadow')return;
     document.querySelectorAll('#app .card').forEach(function(el){
       var w=el.offsetWidth,h=el.offsetHeight;if(!w||!h)return;
-      var f=el.querySelector(':scope>.mframe');if(f&&f.dataset.sz===w+'x'+h)return;
-      if(!f){f=document.createElement('span');f.className='mframe';f.setAttribute('aria-hidden','true');el.insertBefore(f,el.firstChild)}
+      /* a closed <details> only shows its summary, so its frame lives inside the summary */
+      var host=el.tagName==='DETAILS'?(el.querySelector(':scope>summary')||el):el;
+      var f=host.querySelector(':scope>.mframe');if(f&&f.dataset.sz===w+'x'+h)return;
+      if(!f){f=document.createElement('span');f.className='mframe';f.setAttribute('aria-hidden','true');host.insertBefore(f,host.firstChild)}
       f.dataset.sz=w+'x'+h;var d=wavyPath(w,h,6,3.2,46,22);
       f.innerHTML='<svg width="'+w+'" height="'+h+'"><path d="'+d+'" style="fill:var(--surface);stroke:var(--accent)" stroke-width="5.5" stroke-linejoin="round"/><path d="'+d+'" fill="none" style="stroke:var(--surface)" stroke-width="2"/></svg><i class="bw bl"></i><i class="bw bf"></i>';
     });
@@ -2896,9 +2894,16 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   seedSamples();
   /* today's done and skipped steps survive a refresh (and sync between devices); a new day starts fresh */
   (function(){var st=load('gs-status',null),tk=ymd(new Date());S.status=(st&&st.d===tk&&st.s)?st.s:{};S.statusDay=tk;S.statusSaved=JSON.stringify(S.status)})();
-  /* open at the real time of day */
-  (function(){var n=new Date(),m=Math.min(1380,Math.max(360,n.getHours()*60+n.getMinutes())),o=S.dayOff||0;
-    SIM.morning=SIM.afternoon=SIM.evening=m;S.part=m<720+o?'morning':m<1020+o?'afternoon':'evening'})();
+  /* follow the real time of day: the clock updates every minute, and the part of the day moves on its own */
+  function syncClock(first){
+    var n=new Date(),m=n.getHours()*60+n.getMinutes(),o=S.dayOff||0;
+    SIM.morning=SIM.afternoon=SIM.evening=m;
+    var p=m<720+o?'morning':m<1020+o?'afternoon':'evening';
+    if(first||p!==S.autoPart){var moved=!first;S.autoPart=p;S.part=p;S.shift=0;if(moved&&!S.menu&&!S.ev&&!S.tk&&!S.setup&&!S.lot&&!document.querySelector('.sheet'))render()}
+  }
+  syncClock(true);
+  setInterval(function(){syncClock(false)},60000);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)syncClock(false)});
   try{applyLook()}catch(e){}
   (function(){try{var q=new URLSearchParams(location.search),st=[q.get('title'),q.get('text'),q.get('url')].filter(Boolean).join(' ').trim();
     if(st){history.replaceState(null,'',location.pathname+location.hash);S.tab='today';S.ev=newEv();fillFromText(st)}}catch(e){}})();
@@ -2930,6 +2935,32 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     };
     r.readAsText(f);
   });
+  /* lists: swipe an item left to reveal Delete; a long swipe deletes it straight away */
+  (function(){
+    var SW=null,openLi=null,eat=false;
+    function close(li){li.classList.remove('dragging');li.style.setProperty('--sx','0px');setTimeout(function(){if(li.style.getPropertyValue('--sx')==='0px')li.classList.remove('swp')},220);if(openLi===li)openLi=null}
+    document.addEventListener('pointerdown',function(e){
+      var li=e.target.closest&&e.target.closest('.items li.item');
+      if(openLi&&li!==openLi)close(openLi);
+      if(!li||!li.querySelector('.swdel')||e.target.closest('.swdel'))return;
+      SW={li:li,x:e.clientX,y:e.clientY,id:e.pointerId,base:li===openLi?-84:0,v:li===openLi?-84:0,on:false};
+    });
+    document.addEventListener('pointermove',function(e){
+      if(!SW||e.pointerId!==SW.id)return;
+      var dx=e.clientX-SW.x,dy=e.clientY-SW.y;
+      if(!SW.on){if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)*1.4){SW.on=true;SW.li.classList.add('swp','dragging')}else if(Math.abs(dy)>10){SW=null;return}else return}
+      SW.v=Math.min(0,Math.max(-SW.li.offsetWidth*0.8,SW.base+dx));SW.li.style.setProperty('--sx',SW.v+'px');
+    });
+    function up(e){
+      if(!SW||(e&&e.pointerId!==SW.id))return;var d=SW;SW=null;if(!d.on)return;
+      eat=true;setTimeout(function(){eat=false},400);d.li.classList.remove('dragging');
+      if(d.v<-d.li.offsetWidth*0.45){var b=d.li.querySelector('.swdel');openLi=null;if(b)b.click()}
+      else if(d.v<-50){d.li.style.setProperty('--sx','-84px');openLi=d.li}
+      else close(d.li);
+    }
+    document.addEventListener('pointerup',up);document.addEventListener('pointercancel',up);
+    document.addEventListener('click',function(e){if(eat&&!(e.target.closest&&e.target.closest('.swdel'))){e.stopPropagation();e.preventDefault();eat=false}},true);
+  })();
   /* routine reorder: drag the grab bar (or use arrow keys on it) */
   (function(){
     var G=null;
