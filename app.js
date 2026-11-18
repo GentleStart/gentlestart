@@ -496,11 +496,16 @@
   UIALT.mammal.park='From the stash';UIALT.mammal.start='Start gathering';UIALT.mammal.another='Show another';
   S.tasks=load('gs-tasks',null);
   if(!Array.isArray(S.tasks))S.tasks=[
-    {id:'t1',title:'Return the package',ex:true,h:'week',nr:false,fun:false,work:[],mins:15,w:'small',due:'',offDue:null,steps:[],done:false,created:Date.now()-6*864e5},
+    {id:'t1',title:'Return the package',ex:true,g:'g1',h:'week',nr:false,fun:false,work:[],mins:15,w:'small',due:'',offDue:null,steps:[],done:false,created:Date.now()-6*864e5},
     {id:'t2',title:'Fill out the insurance form',ex:true,h:'week',nr:false,fun:false,work:[],mins:30,w:'med',due:'',offDue:5,steps:[{t:'Find the form',done:false},{t:'Fill in just your name and address',done:false}],done:false,created:Date.now()-2*864e5},
     {id:'t3',title:'Reply to that email',ex:true,h:'week',nr:false,fun:false,work:[],mins:15,w:'big',due:'',offDue:null,steps:[],done:false,created:Date.now()-864e5},
-    {id:'t4',title:'Sort out the plant shelf',ex:true,h:'month',nr:false,fun:false,work:[],mins:60,w:'small',due:'',offDue:null,steps:[],done:false,created:Date.now()-9*864e5},
-    {id:'t5',title:'Sketch something just for fun',ex:true,h:'week',nr:false,fun:true,work:[],mins:30,w:'small',due:'',offDue:null,steps:[],done:false,created:Date.now()-3*864e5}
+    {id:'t4',title:'Sort out the plant shelf',ex:true,g:'g2',h:'month',nr:false,fun:false,work:[],mins:60,w:'small',due:'',offDue:null,steps:[],done:false,created:Date.now()-9*864e5},
+    {id:'t5',title:'Sketch something just for fun',ex:true,g:'g3',h:'week',nr:false,fun:true,work:[],mins:30,w:'small',due:'',offDue:null,steps:[],done:false,created:Date.now()-3*864e5},
+    {id:'t6',title:'Drop off the dry cleaning',ex:true,g:'g1',h:'week',nr:false,fun:false,work:[],mins:15,w:'small',due:'',offDue:null,steps:[],done:false,created:Date.now()-4*864e5},
+    {id:'t7',title:'Pick up stamps',ex:true,g:'g1',h:'month',nr:false,fun:false,work:[],mins:15,w:'small',due:'',offDue:null,steps:[],done:false,created:Date.now()-7*864e5},
+    {id:'t8',title:'Clean out the fridge',ex:true,g:'g2',h:'week',nr:false,fun:false,work:[],mins:30,w:'med',due:'',offDue:null,steps:[{t:'Toss anything expired',done:false},{t:'Wipe one shelf',done:false}],done:false,created:Date.now()-5*864e5},
+    {id:'t9',title:'Swap the winter clothes',ex:true,g:'g2',h:'month',nr:false,fun:false,work:[],mins:60,w:'med',due:'',offDue:null,steps:[],done:false,created:Date.now()-11*864e5},
+    {id:'t10',title:'Try a new recipe',ex:true,g:'g3',h:'month',nr:false,fun:true,work:[],mins:60,w:'small',due:'',offDue:null,steps:[],done:false,created:Date.now()-8*864e5}
   ];
   S.tk=null;S.doing=null;S.askMore=false;S.celeb=null;S.skipPark=[];S.tkBusy=false;S.ovv='week';S.ovMo=0;S.ovDay=null;S.lot=false;S.pl=null;S.lotTab='week';S.lotAnim=false;
   function saveTasks(){save('gs-tasks',S.tasks)}
