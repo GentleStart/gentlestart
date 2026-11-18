@@ -943,3 +943,7 @@ em.pun{font-style:italic;font-weight:inherit;letter-spacing:.01em}
 /* parking lot as its own tab */
 .lot.lotpage{width:auto;height:auto;overflow:visible;border-radius:16px;padding:16px;box-shadow:none;margin-top:4px}
 .lotpage .lottitle{display:none}
+
+/* demo banner */
+.demobar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--accent);color:var(--accent-ink);border-radius:14px;padding:10px 10px 10px 14px;margin:6px 0 10px;font-size:14px;line-height:1.35}
+.demobar .btn{background:var(--accent-ink);color:var(--accent);width:auto;flex:none;padding:9px 14px;font-size:14px;min-height:0}

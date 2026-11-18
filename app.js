@@ -1776,12 +1776,23 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   }
   /* ---- after the welcome: set things up now, or look around with the examples ---- */
   S.startQ=load('gs-startq',false);
+  /* demo: the example-filled app, with a way to wipe it and start setup fresh */
+  S.demo=load('gs-demo',false);
+  function demoBar(){return S.demo?'<div class="demobar" role="note"><span><b>Demo.</b> Everything here is an example. Tap around, nothing counts.</span><button class="btn" data-a="demoend">Set up my own</button></div>':''}
+  function resetForSetup(){
+    S.tasks=[];saveTasks();S.events=[];save('gs-events',S.events);S.log=[];save('gs-log',S.log);S.lists=[];save('gs-lists',S.lists);
+    S.reps=[];S.cust=[];S.rtn={parts:{morning:PARTS.morning.steps.slice(),afternoon:PARTS.afternoon.steps.slice(),evening:PARTS.evening.steps.slice()},hidden:['dailymeds'],names:{}};saveRtn();
+    S.floorIds=FLOORDEF.slice();save('gs-floor',S.floorIds);S.cats=['Rough day'];save('gs-cats',S.cats);
+    S.stacks=[];syncTrkStacks();save('gs-stacks',S.stacks);
+    S.hints={};save('gs-hints',S.hints);S.dayOff=0;save('gs-dayoff',0);S.status={};S.doing=null;
+    S.startDay=ymd(new Date());save('gs-startday',S.startDay);
+  }
   function afterWelcome(){save('gs-rtn',S.rtn);S.startQ=true;save('gs-startq',true);S.startDay=ymd(new Date());save('gs-startday',S.startDay)}
   function startSheet(){
     if(!S.startQ||!PROF)return '';
     return '<div class="backdrop" style="z-index:40"><div class="sheet" role="dialog" aria-modal="true" aria-label="How would you like to start?"><h2 style="font-size:24px">How would you like to start?</h2>'
       +'<button class="opt" data-a="startcust"><span><b>Customize my routine</b><span class="small">Clears the examples and opens your settings, so you can set things up your way.</span></span></button>'
-      +'<button class="opt" data-a="startlook"><span><b>Just let me see how the app works</b><span class="small">Keeps the example tasks, plans and lists for now. You can set up your routine from the menu any time.</span></span></button>'
+      +'<button class="opt" data-a="startlook"><span><b>Just let me see how the app works</b><span class="small">Opens a demo filled with example tasks, plans and lists. Tap around freely. When you are ready, start fresh with your own.</span></span></button>'
       +'</div></div>';
   }
 
@@ -2058,7 +2069,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     var app=document.getElementById('app');
     var _sl=document.getElementById('simslider'),keepSl=(_sl&&document.activeElement===_sl)?_sl:null;
     app.classList.toggle('wide',S.tab==='ov');
-    app.innerHTML=fx(S.tab==='today'?today():S.tab==='ov'?overview():S.tab==='lot'?lotPage():S.tab==='lists'?lists():S.tab==='log'?logview():us());
+    app.innerHTML=fx(demoBar()+(S.tab==='today'?today():S.tab==='ov'?overview():S.tab==='lot'?lotPage():S.tab==='lists'?lists():S.tab==='log'?logview():us()));
     if(keepSl){var _ns=document.getElementById('simslider');if(_ns&&_ns.parentNode)_ns.parentNode.replaceChild(keepSl,_ns)}
     document.getElementById('tabs').innerHTML=fx(tabs());
     var _hh=app.querySelector('.hero h2'),_hk=_hh?_hh.textContent:'';
@@ -2126,7 +2137,8 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     'jg-tog':function(b){var v=b.dataset.v,i=S.jg.indexOf(v);if(i>=0)S.jg.splice(i,1);else S.jg.push(v);render()},
     'jg-save':function(){S.cats=S.jg.slice();save('gs-cats',S.cats);S.jg=null;S.hints.jitlog=1;save('gs-hints',S.hints);render()},
     jitmode:function(b){clearLowTmp();S.logic=b.dataset.v;save('gs-logic',S.logic);S.shift=0;S.skipPark=[];applyLook();S.hints.jitmode=1;save('gs-hints',S.hints);render();toast('Switched. You can change it any time in the menu, under Logic.')},
-    startlook:function(){S.startQ=false;save('gs-startq',false);render()},
+    startlook:function(){S.startQ=false;save('gs-startq',false);S.demo=true;save('gs-demo',true);render();toast('This is a demo. When you are ready, tap Set up my own at the top.')},
+    demoend:function(){resetForSetup();S.demo=false;save('gs-demo',false);S.tab='today';S.menu=false;S.setup=suNew();render();window.scrollTo(0,0)},
     welnext:function(){var n=document.getElementById('pf-name');S.welName=n?n.value:'';S.welP2=true;render();var f=document.querySelector('#welcomeform input:not([type=hidden])');if(f)f.focus()},
     welback:function(){S.welP2=false;render()},
     incl:function(b){S.profSaved=false;keepSheet(function(){keepAll(function(){S.incl=S.incl||{};S.incl[b.dataset.v]=!S.incl[b.dataset.v];render()})})},
