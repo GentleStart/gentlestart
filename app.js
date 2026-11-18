@@ -953,10 +953,10 @@
     return '<button class="wkev'+(ev.withJ||ev.by==='p'?' wj':'')+'" data-a="evedit" data-v="'+esc(ev.id)+'"><small>'+(ev.by==='p'?'§P\u2019s, ':'')+fmt(st)+(ev.dur?' to '+fmt(end):'')+'</small><b>'+esc(ev.title)+'</b>'+(ev.place?'<span class="small">'+esc(ev.place)+'</span>':'')+'</button>';
   }
   function ovAll(){
-    var tk=ymd(new Date()),up=[],past=[],rep=[];
-    S.events.forEach(function(ev){if(ev.by==='p')return;if(ev.rpt){rep.push(ev);return}var k=evDate(ev);(k>=tk?up:past).push({ev:ev,k:k})});
+    var tk=ymd(new Date()),up=[],rep=[];
+    S.events.forEach(function(ev){if(ev.by==='p')return;if(ev.rpt){rep.push(ev);return}var k=evDate(ev);if(k>=tk)up.push({ev:ev,k:k})});
     function byWhen(a,b){return a.k<b.k?-1:a.k>b.k?1:tmin(a.ev.time)-tmin(b.ev.time)}
-    up.sort(byWhen);past.sort(byWhen).reverse();
+    up.sort(byWhen);
     function row(ev,sub){return '<button class="ev nt" data-a="evedit" data-v="'+esc(ev.id)+'"><span class="bd"><b>'+esc(ev.title)+(ev.ex?' <span class="small">(example)</span>':'')+'</b><span class="small">'+esc(sub)+'</span></span></button>'}
     function when(x){var d=kDate(x.k),lbl=x.k===tk?'Today':x.k===ymd(addDays(new Date(),1))?'Tomorrow':d.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'});return lbl+(x.ev.time?', '+fmtRange(tmin(x.ev.time),x.ev.dur):'')+(x.ev.place?', '+x.ev.place:'')}
     var h='<div class="card"><h3>Coming up</h3>';
@@ -967,7 +967,6 @@
       rep.forEach(function(ev){h+=row(ev,repLabel({rep:ev.rpt.rep,days:ev.rpt.days,dom:ev.rpt.dom,mode:ev.rpt.mode,nth:ev.rpt.nth,dow:ev.rpt.dow,as:'ev',time:ev.time}))});
       rr.forEach(function(r){h+='<button class="ev nt" data-a="reedit" data-v="'+esc(r.id)+'"><span class="bd"><b>'+esc(r.t)+'</b><span class="small">'+esc(repLabel(r))+'</span></span></button>'});
       h+='</div></div>'}
-    if(past.length){h+='<details class="card"><summary><b>Past plans</b> <span class="small">'+past.length+'</span></summary><div class="evlist" style="margin-top:10px">';past.slice(0,40).forEach(function(x){h+=row(x.ev,when(x))});h+='</div></details>'}
     return h;
   }
   function ovWeek(){
@@ -1404,6 +1403,10 @@
     return h;
   }
 
+  /* sample lists: the starter lists and their marked items. Anything you added yourself is kept. */
+  var SAMPLE_LISTS=['xmas','movies','hobbies','groc'];
+  function sampleItem(it){return /\(sample item\)$/.test(it.t)||it.t==='Gift idea for §P'}
+  function hasSampleLists(){return S.lists.some(function(L){return L.items.some(sampleItem)||(SAMPLE_LISTS.indexOf(L.id)>=0&&!L.items.length)})}
   function lists(){
     var ed=!!S.lmode;
     var h=head({title:'Lists',sub:'Separate from today. Nothing here is due. Tap Park it on any item and I\u2019ll find space for it in your week.'});
@@ -1414,7 +1417,7 @@
       ['Groceries','Gift ideas','Movies to watch','Books to read','Places to go','Things to buy'].forEach(function(n){h+='<button type="button" data-a="jl-tog" data-v="'+esc(n)+'" aria-pressed="'+(S.jl.indexOf(n)>=0)+'">'+esc(n)+'</button>'});
       h+='</div><div class="row" style="margin-top:12px"><button class="btn grow" data-a="jl-make"'+(S.jl.length?'':' disabled')+'>Make these lists</button></div><button class="quiet" data-a="hintx" data-v="jitlists">Not now</button></div>';
     }
-    if(S.lists.length)h+=hint('lists','note','Sample items are marked. Check them off, park them, or edit them.');
+    if(hasSampleLists())h+=hint('lists','note','Sample items are marked. Check them off, park them, or edit them.');
     var CK='<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7.5l3 3 6-7"/></svg>';
     S.lists.forEach(function(L,li){
       var n=L.items.filter(function(i){return !i.done}).length;
@@ -1426,6 +1429,7 @@
       h+='</ul>'+(ed?'<button class="quiet ldel" data-a="ldellist" data-l="'+li+'">Delete this list</button>':'<form class="add" data-a="additem" data-l="'+li+'"><input type="text" id="add-'+L.id+'" placeholder="Add to '+esc(L.name)+'" aria-label="Add to '+esc(L.name)+'"><button type="submit">Add</button></form>')+'</details>';
     });
     h+='<form class="card" data-a="newlist"><b>Start a new list</b><div class="add" style="margin-top:0"><input type="text" id="newlist" placeholder="e.g. Pet store, Gift ideas" aria-label="New list name"><button type="submit">Create</button></div><button type="button" class="quiet linkbtn" data-a="lmode">'+(ed?'Done editing':'Edit an existing list')+'</button></form>';
+    if(hasSampleLists())h+='<button class="quiet" data-a="clrexl">Clear sample lists</button>';
     return h;
   }
 
@@ -2252,6 +2256,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     tabtog:function(b){keepSheet(function(){var a=tabsOn().slice(),v=b.dataset.v,i=a.indexOf(v);
       if(i>=0)a.splice(i,1);else{if(a.length>=4){toast('Up to four tabs beside Home. Turn one off first.');return}a.push(v)}
       save('gs-tabs',a);render()})},
+    clrexl:function(){S.lists=S.lists.filter(function(L){L.items=L.items.filter(function(it){return !sampleItem(it)});return !(SAMPLE_LISTS.indexOf(L.id)>=0&&!L.items.length)});save('gs-lists',S.lists);render();toast('Sample lists cleared. Anything you added is still here.')},
     clrexev:function(){S.events=S.events.filter(function(e){return !e.ex});save('gs-events',S.events);render();toast('Example plans cleared.')},
     tab:function(b){S.tab=b.dataset.v;render();window.scrollTo(0,0)},
     part:function(b){S.part=b.dataset.v;S.shift=0;render()},
