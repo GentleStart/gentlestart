@@ -960,3 +960,14 @@ em.pun{font-style:italic;font-weight:inherit;letter-spacing:.01em}
 .rtl[data-p]:empty::after{content:'Drag a step here';display:block;padding:13px;font-size:13px;color:var(--ink2);text-align:center}
 
 .expall{border:1.5px solid var(--accent);background:transparent;color:var(--accent);border-radius:12px;padding:0 14px;min-height:40px;font:inherit;font-weight:600;font-size:14px;cursor:pointer;flex:none}
+
+/* week view: a vertical list of days on phones, columns on wide screens */
+@media (max-width:899px){
+  .wkswipe{display:none}
+  .wkrow{flex-direction:column;overflow:visible;scroll-snap-type:none;padding:0;margin:0}
+  .wkday{flex:none;min-height:0;scroll-snap-align:none}
+  .wkhd{flex-direction:row;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .wkday{position:relative;padding-right:84px}
+  .wkday .wkadd{position:absolute;top:10px;right:10px;margin:0}
+  .wkday > *:not(.wkhd):not(.wkadd){margin-right:-72px}
+}

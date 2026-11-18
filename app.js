@@ -1002,10 +1002,10 @@
     return h;
   }
   function ovWeek(){
-    var h='<p class="small">Swipe sideways for the rest of the week.</p><div class="wkrow" role="list">';
+    var h='<p class="small wkswipe">Swipe sideways for the rest of the week.</p><div class="wkrow" role="list">';
     for(var i=0;i<7;i++){
       var d=addDays(new Date(),i),k=ymd(d),evs=evsOn(k);
-      h+='<div class="wkday'+(i===0?' today':'')+'" role="listitem"><div class="wkhd"><b>'+esc(dayLabel(k))+'</b><span class="small">'+esc(d.toLocaleDateString(undefined,{month:'short',day:'numeric'}))+'</span>'+holidaysOn(k).map(function(n){return '<span class="holtag">'+esc(n)+'</span>'}).join('')+'</div>';
+      h+='<div class="wkday'+(i===0?' today':'')+'" role="listitem"><div class="wkhd"><b>'+esc(dayLabel(k))+'</b>'+(i<2?'<span class="small">'+esc(d.toLocaleDateString(undefined,{month:'short',day:'numeric'}))+'</span>':'')+holidaysOn(k).map(function(n){return '<span class="holtag">'+esc(n)+'</span>'}).join('')+'</div>';
       if(!evs.length)h+='<p class="small">Open.</p>';
       else evs.forEach(function(ev){h+=wkEv(ev,k)});
       h+='<button class="addbtn wkadd" data-a="evnewon" data-v="'+k+'">+ Add</button></div>';
