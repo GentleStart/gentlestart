@@ -1033,7 +1033,7 @@
     var u=U();
     var hd=head({title:'Overview',sub:'Your plans at a glance.'}),h='';
     h+='<div class="between" style="gap:10px"><div class="subtabs" role="group" aria-label="Overview range" style="flex:1"><button data-a="ovv" data-v="week" aria-pressed="'+(S.ovv==='week')+'">Week</button><button data-a="ovv" data-v="month" aria-pressed="'+(S.ovv==='month')+'">Month</button><button data-a="ovv" data-v="all" aria-pressed="'+(S.ovv==='all')+'">All</button></div><button class="psign" data-a="lot" aria-label="Open '+esc(u.lot)+'"><b>P</b><span>'+esc(u.lot)+'</span></button></div>';
-    if(!S.events.some(function(e){return !e.ex})&&!S.hints.jitplans)h+='<div class="card" style="margin:12px 0"><h3>Anything this week with a set time?</h3><p class="small">Appointments, classes, calls, dinners. Add one and it shows up on the right day, with a heads-up when it is time to get ready.</p><div class="row"><button class="btn grow" data-a="evnew">Add a plan</button></div><button class="quiet" data-a="hintx" data-v="jitplans">Not now</button></div>';
+    if(!S.demo&&!S.events.some(function(e){return !e.ex})&&!S.hints.jitplans)h+='<div class="card" style="margin:12px 0"><h3>Anything this week with a set time?</h3><p class="small">Appointments, classes, calls, dinners. Add one and it shows up on the right day, with a heads-up when it is time to get ready.</p><div class="row"><button class="btn grow" data-a="evnew">Add a plan</button></div><button class="quiet" data-a="hintx" data-v="jitplans">Not now</button></div>';
     return hd+'<div class="ovsplit"><aside class="lot lotside" aria-label="'+esc(u.lot)+'">'+lotInner(true)+'</aside><div class="ovmain">'+h+(S.ovv==='week'?ovWeek():S.ovv==='all'?ovAll():ovMonth())+(S.events.some(function(e){return e.ex})?'<button class="quiet" data-a="clrexev">Clear example plans</button>':'')+'</div></div>';
   }
 
@@ -1357,7 +1357,7 @@
   /* after a few days, offer a look at how the other modes would say the next step */
   S.startDay=load('gs-startday',null);if(PROF&&!S.startDay){S.startDay=ymd(new Date());save('gs-startday',S.startDay)}
   function modeCard(){
-    if(S.hints.jitmode||!S.startDay||S.logic!=='gentle'||lowMode()||S.doing)return '';
+    if(S.demo||S.hints.jitmode||!S.startDay||S.logic!=='gentle'||lowMode()||S.doing)return '';
     if((new Date()-parseKey(S.startDay))/864e5<3)return '';
     var id=nextId()||partSteps(S.part)[0];if(!id)return '';
     var was=S.logic,h='<div class="card"><h3>Want the app to talk differently?</h3><p class="small">Here is how each mode would put your next step. Tap one to try it.</p>';
@@ -1436,7 +1436,7 @@
     var ed=!!S.lmode;
     var h=head({title:'Lists',sub:'Separate from today. Nothing here is due. Tap Park it on any item and I\u2019ll find space for it in your week.'});
     h+='<div class="between" style="justify-content:flex-end"><button class="psign" data-a="lot" aria-label="Open '+esc(U().lot)+'"><b>P</b><span>'+esc(U().lot)+'</span></button></div>';
-    if(!S.lists.length&&!S.hints.jitlists){
+    if(!S.demo&&!S.lists.length&&!S.hints.jitlists){
       S.jl=S.jl||[];
       h+='<div class="card"><h3>What lists do you keep in your Notes app?</h3><p class="small">Pick any and they will be here, ready to fill. Nothing on a list is ever due.</p><div class="chips">';
       ['Groceries','Gift ideas','Movies to watch','Books to read','Places to go','Things to buy'].forEach(function(n){h+='<button type="button" data-a="jl-tog" data-v="'+esc(n)+'" aria-pressed="'+(S.jl.indexOf(n)>=0)+'">'+esc(n)+'</button>'});
@@ -1543,7 +1543,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     var ms=monthStart(),y=ms.getFullYear(),m=ms.getMonth(),tv=trkById(S.lv)?S.lv:(S.lv==='migraine'&&trkById('mig')?'mig':null),T=trkById(tv),mig=!!T;
     var label=ms.toLocaleDateString(undefined,{month:'long',year:'numeric'});
     var h=head({title:'Log',sub:'Optional. Only what you choose to add.'});
-    if(!S.log.some(function(e){return !e.smp})&&!S.hints.jitlog){
+    if(!S.demo&&!S.log.some(function(e){return !e.smp})&&!S.hints.jitlog){
       if(!S.jg)S.jg=S.cats.slice();
       var jo=['Rough day','Slept badly','Workout','Took a walk','Watered plants','Hobby time','Social time','Good day'];S.cats.forEach(function(c){if(jo.indexOf(c)<0)jo.push(c)});
       h+='<div class="card"><h3>What would you like to keep track of?</h3><p class="small">These become one-tap buttons below. Logging is always optional, and you can add or remove buttons any time.</p><div class="chips">';
