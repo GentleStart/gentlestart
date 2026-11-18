@@ -980,7 +980,7 @@
     past.forEach(function(x){h+=plRow(x.ev,'Past: '+plWhen(x))});
     return h+'</div></div>';
   }
-  function plRow(ev,sub){return '<button class="ev nt" data-a="evedit" data-v="'+esc(ev.id)+'"><span class="bd"><b>'+esc(ev.title)+(ev.ex?' <span class="small">(example)</span>':'')+'</b><span class="small">'+esc(sub)+'</span></span></button>'}
+  function plRow(ev,sub){return '<button class="ev nt" data-a="evedit" data-v="'+esc(ev.id)+'"><span class="bd"><b>'+esc(ev.title)+(ev.ex&&!S.demo?' <span class="small">(example)</span>':'')+'</b><span class="small">'+esc(sub)+'</span></span></button>'}
   function plWhen(x){var tk=ymd(new Date()),d=kDate(x.k),lbl=x.k===tk?'Today':x.k===ymd(addDays(new Date(),1))?'Tomorrow':d.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:d.getFullYear()!==new Date().getFullYear()?'numeric':undefined});return lbl+(x.ev.time?', '+fmtRange(tmin(x.ev.time),x.ev.dur):'')+(x.ev.place?', '+x.ev.place:'')}
   function plBody(){
     if(S.pq&&S.pq.trim())return plSearch(S.pq.trim());
@@ -989,8 +989,10 @@
     function byWhen(a,b){return a.k<b.k?-1:a.k>b.k?1:tmin(a.ev.time)-tmin(b.ev.time)}
     up.sort(byWhen);
     var row=plRow,when=plWhen;
+    var wk=ymd(addDays(new Date(),6)),grp=[['Today',up.filter(function(x){return x.k===tk})],['This week',up.filter(function(x){return x.k>tk&&x.k<=wk})],['Further out',up.filter(function(x){return x.k>wk})]];
     var h='<div class="card"><h3>Coming up</h3>';
-    if(up.length){h+='<div class="evlist">';up.forEach(function(x){h+=row(x.ev,when(x))});h+='</div>'}else h+='<p class="small">Nothing planned yet.</p>';
+    if(up.length){grp.forEach(function(g){if(!g[1].length)return;h+='<div class="lab" style="margin-top:12px">'+g[0]+'</div><div class="evlist">';g[1].forEach(function(x){h+=row(x.ev,when(x))});h+='</div>'})}
+    else h+='<p class="small">Nothing planned yet.</p>';
     h+='<button class="addbtn" data-a="evnew" style="margin-top:10px">+ Add a plan</button></div>';
     var rr=S.reps.filter(function(r){return r.as==='ev'});
     if(rep.length||rr.length){h+='<div class="card"><h3>Repeating</h3><div class="evlist">';
