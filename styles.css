@@ -971,3 +971,8 @@ em.pun{font-style:italic;font-weight:inherit;letter-spacing:.01em}
   .wkday .wkadd{position:absolute;top:10px;right:10px;margin:0}
   .wkday > *:not(.wkhd):not(.wkadd){margin-right:-72px}
 }
+
+/* never let the page slide sideways; things that scroll sideways on purpose still do */
+html,body{overflow-x:hidden;overscroll-behavior-x:none}
+@supports (overflow:clip){html,body{overflow-x:clip}}
+body{touch-action:pan-y pinch-zoom}
