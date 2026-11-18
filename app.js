@@ -276,9 +276,10 @@
 
   /* floor items (floor:true) are the basics, so they have no skip button */
   var STEPS={
+    getup:{t:'Get out of bed',s:'Feet on the floor. That is the whole step.',c:'I am up',floor:true},
     dailymeds:{t:'Morning medications',s:'First thing, before anything else.',c:'Taken',floor:true},
-    teeth:{t:'Teeth and face',s:'Before you head downstairs. It rarely happens once you are down there.',c:'Done'},
-    clothes:{t:'Out of pajamas',s:'Same trip upstairs, then down you go.',c:'Done'},
+    teeth:{t:'Teeth and face',s:'',c:'Done'},
+    clothes:{t:'Out of pajamas',s:'',c:'Done'},
     muffin:{t:"§C's breakfast",s:'Feeding §C gets you into the kitchen.',c:'Fed',floor:true},
     water:{t:'A glass of water',s:'Just one, wherever you are.',c:'Done',floor:true},
     meal:{t:'Your turn',s:'§C §is sorted. What are you having?',meal:true,floor:true},
@@ -293,14 +294,14 @@
     tidy:{t:'One small tidy',s:'Ten minutes, one spot. The kitchen counter is a good one.',c:'Done'},
     tomorrow:{t:'Glance at tomorrow',s:'Just the fixed things, and one easy place to start.',c:'Done'}
   };
-  var NAMES={dailymeds:'Morning medications',teeth:'Teeth and face',clothes:'Out of pajamas',muffin:"§C's breakfast",kidsam:'Get §K ready',checkin:'Check in with §O',water:'Water',meal:'Breakfast',lunch:'Lunch',jobs:'One small project step',pt:'Stretches or exercises',archery:'Archery, 3 PM',muffinpm:"§C's dinner",dinner:'Dinner',tidy:'One small tidy',tomorrow:'Glance at tomorrow'};
+  var NAMES={getup:'Get out of bed',dailymeds:'Morning medications',teeth:'Teeth and face',clothes:'Out of pajamas',muffin:"§C's breakfast",kidsam:'Get §K ready',checkin:'Check in with §O',water:'Water',meal:'Breakfast',lunch:'Lunch',jobs:'One small project step',pt:'Stretches or exercises',archery:'Archery, 3 PM',muffinpm:"§C's dinner",dinner:'Dinner',tidy:'One small tidy',tomorrow:'Glance at tomorrow'};
   var PARTS={
-    morning:{label:'Morning',steps:['dailymeds','teeth','clothes','muffin','kidsam','meal'],done:{t:'The basics are covered.',s:'Everything after this is a bonus. Pick some music, or see what the day wants.'}},
+    morning:{label:'Morning',steps:['getup','teeth','clothes','muffin','kidsam','meal'],done:{t:'The basics are covered.',s:'Everything after this is a bonus. Pick some music, or see what the day wants.'}},
     afternoon:{label:'Afternoon',steps:['lunch','jobs','pt'],done:{t:'Afternoon handled.',s:'Whatever happened, the afternoon is done. Evening is its own thing.'}},
     evening:{label:'Evening',steps:['muffinpm','dinner','tidy','checkin','tomorrow'],done:{t:'That is the day.',s:'Rest counts. Nothing carries over as overdue.'}}
   };
-  var FLOORALL={morning:['dailymeds','teeth','clothes','muffin','kidsam','water','meal'],afternoon:['lunch','jobs','pt'],evening:['muffinpm','checkin','dinner','tidy','tomorrow']};
-  var FLOORDEF=['dailymeds','muffin','water','meal','lunch','muffinpm','dinner'];
+  var FLOORALL={morning:['getup','dailymeds','teeth','clothes','muffin','kidsam','water','meal'],afternoon:['lunch','jobs','pt'],evening:['muffinpm','checkin','dinner','tidy','tomorrow']};
+  var FLOORDEF=['getup','dailymeds','muffin','water','meal','lunch','muffinpm','dinner'];
   var BASE_CHIPS=['Migraine','Rough day','Slept badly','Good hobby session','Watered plants'];
   /* tile groups: a chip that opens a panel of more options. Migraine is the first one; more can be added later. */
   var GROUPS={Migraine:{title:'Migraine details'}};
@@ -357,7 +358,9 @@
   function saveOpts(kind,tid){save(optKey(kind,tid),optsOf(kind,tid))}
   function tdOf(tid){return S.f.td[tid]||(S.f.td[tid]={sev:null,meds:[],trig:[],symp:[]})}
   S.floorIds=load('gs-floor',null);if(!Array.isArray(S.floorIds))S.floorIds=FLOORDEF.slice();
-  S.rtn=load('gs-rtn',null);if(!S.rtn||!S.rtn.parts)S.rtn={parts:{morning:PARTS.morning.steps.slice(),afternoon:PARTS.afternoon.steps.slice(),evening:PARTS.evening.steps.slice()},hidden:[],names:{}};
+  S.rtn=load('gs-rtn',null);if(!S.rtn||!S.rtn.parts)S.rtn=PROF?{parts:{morning:['dailymeds','teeth','clothes','muffin','kidsam','meal'],afternoon:PARTS.afternoon.steps.slice(),evening:PARTS.evening.steps.slice()},hidden:[],names:{}}:{parts:{morning:PARTS.morning.steps.slice(),afternoon:PARTS.afternoon.steps.slice(),evening:PARTS.evening.steps.slice()},hidden:['dailymeds'],names:{}};
+  /* Get out of bed was added later: people who already had a routine get it as a hidden step they can put back */
+  (function(){var all=[].concat(S.rtn.parts.morning,S.rtn.parts.afternoon,S.rtn.parts.evening,S.rtn.hidden||[]);if(all.indexOf('getup')<0){S.rtn.hidden=(S.rtn.hidden||[]).concat('getup')}})();
   [['kidsam','morning','meal'],['checkin','evening','tomorrow']].forEach(function(x){var all=[].concat(S.rtn.parts.morning,S.rtn.parts.afternoon,S.rtn.parts.evening,S.rtn.hidden||[]);if(all.indexOf(x[0])>=0)return;var a=S.rtn.parts[x[1]],i=a.indexOf(x[2]);if(i<0)a.push(x[0]);else a.splice(i,0,x[0])});
   S.cust=load('gs-cust',[]);S.reps=load('gs-reps',[]);S.repSeen=load('gs-repseen',{});S.se=null;S.re=null;
   S.cats=load('gs-cats',null);if(!S.cats)S.cats=BASE_CHIPS.filter(function(c){return c!=='Migraine'}).concat(S.custom);S.ce=null;S.catEdit=false;S.justOpen=null;
@@ -400,9 +403,10 @@
   };
   var ALT={
     mammal:{
+      getup:{t:'Leave the nest',s:'Paws on the floor. That is the whole step.',c:'Out of the nest'},
       dailymeds:{t:'Morning medicine',s:'First thing, before any foraging.'},
-      teeth:{t:'Freshen your whiskers',s:'Teeth and face, before you leave the loft. It rarely happens once you are in the kitchen burrow.'},
-      clothes:{t:'Shed the sleep fur',s:'Out of pajamas. Same trip upstairs, then down you go.'},
+      teeth:{t:'Freshen your whiskers',s:'Teeth and face.'},
+      clothes:{t:'Shed the sleep fur',s:'Out of pajamas.'},
       muffin:{t:'Feed §C, the other small one',s:'The bowl gets you into the kitchen.',c:'Fed'},
       water:{t:'Drink at the stream',s:'Just one glass, wherever you are.'},
       meal:{t:'Forage for your own food',s:'§C §is sorted. What is worth gathering?'},
@@ -415,6 +419,7 @@
       tomorrow:{t:'Sniff the wind for tomorrow',s:'Just the fixed things, and one easy place to start.'}
     },
     tiny:{
+      getup:{t:'Sit up',s:'Just sit up. Feet on the floor comes next.',c:'Up, done'},
       dailymeds:{t:'Open the medicine cabinet',s:'Just open it. Taking them comes next.'},
       teeth:{t:'Walk to the bathroom',s:'That is the whole step. Brushing usually follows once you are there.',c:'Brushed, done'},
       clothes:{t:'Pick one thing to wear',s:'One piece, from the drawer. Put it on after.',c:'Dressed'},
@@ -436,7 +441,7 @@
     low:{morning:{t:'The basics are covered.',s:'That is enough for now. Rest counts.'},afternoon:{t:'Lunch handled.',s:'That is enough for the afternoon.'},evening:{t:'That is the day.',s:'Rest counts. Nothing carries over as overdue.'}}
   };
   /* clock mode: start minute and length for each step */
-  var TIMES={kidsam:[570,15],checkin:[1200,10],dailymeds:[540,5],teeth:[545,10],clothes:[555,10],muffin:[565,10],water:[575,5],meal:[580,30],lunch:[750,45],jobs:[810,20],pt:[840,30],muffinpm:[1050,10],dinner:[1080,45],tidy:[1140,10],tomorrow:[1160,10]};
+  var TIMES={getup:[535,5],kidsam:[570,15],checkin:[1200,10],dailymeds:[540,5],teeth:[545,10],clothes:[555,10],muffin:[565,10],water:[575,5],meal:[580,30],lunch:[750,45],jobs:[810,20],pt:[840,30],muffinpm:[1050,10],dinner:[1080,45],tidy:[1140,10],tomorrow:[1160,10]};
   syncSteps();
   function isFloor(id){return S.floorIds.indexOf(id)>=0}
   function floorAll(p){var base=FLOORALL[p].filter(function(id){return S.rtn.hidden.indexOf(id)<0});S.rtn.parts[p].forEach(function(id){if(base.indexOf(id)<0&&S.cust.some(function(x){return x.id===id}))base.push(id)});return base}
@@ -1016,7 +1021,7 @@
   }
 
   function U(){var m=UIALT[S.logic];if(!m)return UI0;var o={},k;for(k in UI0)o[k]=UI0[k];for(k in m)o[k]=m[k];return o}
-  function moodAlt(id){if(S.logic!=='mammal'||S.mood!=='dreamy')return null;if(id==='teeth')return {t:'Splash in the birdbath',s:'Teeth and face, before you leave the nest. A little splash and a little preening is plenty.'};if(id==='clothes')return {t:'Preen those feathers',s:'Out of pajamas and into something that feels like you. Same trip upstairs, then down you go.'};return null}
+  function moodAlt(id){if(S.logic!=='mammal'||S.mood!=='dreamy')return null;if(id==='teeth')return {t:'Splash in the birdbath',s:'Teeth and face. A little splash and a little preening is plenty.'};if(id==='clothes')return {t:'Preen those feathers',s:'Out of pajamas and into something that feels like you.'};return null}
   function offId(id){if(id==='kidsam')return !(PROF&&PROF.kids&&PROF.kids.length);if(id==='checkin')return !(PROF&&PROF.others&&PROF.others.length);return !(PROF&&PROF.pet)&&(id==='muffin'||id==='muffinpm')}
   function stepOf(id){var b=STEPS[id],a=moodAlt(id)||(ALT[S.logic]&&ALT[S.logic][id]),o={},k;for(k in b)o[k]=b[k];if(a)for(k in a)o[k]=a[k];if(id==='meal'&&!(PROF&&PROF.pet)){if(creature()){o.t='Forage for food';o.s='The forest awaits. What is worth gathering?'}else{o.t='Breakfast';o.s='Fuel for your day. What are you having?'}}
     if(S.rtn.names[id])o.t=S.rtn.names[id];
@@ -1282,6 +1287,8 @@
     if(!S.ce)return '';
     return '<div class="backdrop mid" data-a="cebg"><div class="sheet" role="dialog" aria-modal="true" aria-label="Edit category"><h2 style="font-size:22px;text-align:center">Edit category</h2><input class="field" type="text" id="ce-name" maxlength="40" value="'+esc(S.ce.name)+'" aria-label="Category name"><button class="btn" data-a="cesave">Save name</button><button class="quiet" style="text-align:center" data-a="cedel">Take this category away</button><button class="quiet" style="text-align:center" data-a="cecancel">Cancel</button></div></div>';
   }
+  /* the joke skip popups on teeth and getting dressed are just for the app's maker */
+  function isMe(){return !!(PROF&&/^nicole$/i.test(String(PROF.name||'').trim()))}
   function skipSheet(){
     if(!S.sq)return '';
     var q=S.sq.id==='clothes'?SQ[0]:SQ[S.sq.n];
@@ -1325,7 +1332,7 @@
       h+=doingHero(taskById(S.doing));
     }else if(id){
       var st=stepOf(id),sc=schedOf(id);
-      h+='<section class="hero" aria-live="polite"><div class="kicker">'+esc(sc?u.next+', '+sc.label:u.next)+'</div><h2>'+esc(st.t)+'</h2><p class="sub">'+esc(st.s)+'</p><div class="row">';
+      h+='<section class="hero" aria-live="polite"><div class="kicker">'+esc(sc?u.next+', '+sc.label:u.next)+'</div><h2>'+esc(st.t)+'</h2>'+(st.s?'<p class="sub">'+esc(st.s)+'</p>':'')+'<div class="row">';
       if(st.meal){
         h+='<button class="btn grow" data-a="done" data-v="'+id+'">'+esc(u.eaten)+'</button><a class="btn alt grow" href="https://www.google.com/search?q=easy+'+(id==='dinner'?'dinner':id==='lunch'?'lunch':'breakfast')+'+ideas" target="_blank" rel="noopener" data-a="recime">'+esc(u.food)+'</a>';
       }else if(st.lunch){
@@ -1694,6 +1701,24 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     }
     return '<div class="backdrop" style="z-index:40"><div class="sheet" role="dialog" aria-modal="true" aria-label="Welcome"><h2 style="font-size:26px">Welcome</h2>'+(S.welP2?'<p class="small">A name or two for each, so the app can talk about them the way you do.</p><form id="welcomeform" style="display:flex;flex-direction:column;gap:4px"><input type="hidden" id="pf-name" value="'+esc(S.welName||'')+'">'+nameFields({},'p2')+'<button class="btn" type="submit" style="margin-top:14px">Start</button></form><button class="quiet" data-a="welback">&larr; Back</button>':'<p class="small">A few names make this feel like yours. All of it is optional, and you can change it any time in the menu.</p><form id="welcomeform" style="display:flex;flex-direction:column;gap:4px">'+nameFields({name:S.welName||''},'p1')+'<button class="btn" type="'+(anyIncl()?'button" data-a="welnext':'submit')+'" style="margin-top:14px">'+(anyIncl()?'Next':'Start')+'</button></form><button class="quiet" data-a="wskip">Skip for now</button>')+'</div></div>';
   }
+  /* ---- after the welcome: set things up now, or look around with the examples ---- */
+  S.startQ=load('gs-startq',false);
+  function startSheet(){
+    if(!S.startQ||!PROF)return '';
+    return '<div class="backdrop" style="z-index:40"><div class="sheet" role="dialog" aria-modal="true" aria-label="How would you like to start?"><h2 style="font-size:24px">How would you like to start?</h2>'
+      +'<button class="opt" data-a="startcust"><span><b>Customize my routine</b><span class="small">Clears the examples and opens your settings, so you can set things up your way.</span></span></button>'
+      +'<button class="opt" data-a="startlook"><span><b>Just let me see how the app works</b><span class="small">Keeps the example tasks, plans and lists for now. You can set up your routine from the menu any time.</span></span></button>'
+      +'</div></div>';
+  }
+  function clearExamples(){
+    S.tasks=S.tasks.filter(function(t){return !t.ex});saveTasks();
+    S.events=S.events.filter(function(e){return !e.ex});save('gs-events',S.events);
+    S.log=S.log.filter(function(e){return !e.smp});save('gs-log',S.log);
+    S.lists=[];save('gs-lists',S.lists);
+    var hid=S.rtn.hidden||[];
+    ['morning','afternoon','evening'].forEach(function(p){S.rtn.parts[p].forEach(function(id){if(hid.indexOf(id)<0&&!S.cust.some(function(x){return x.id===id}))hid.push(id)});S.rtn.parts[p]=[]});
+    S.rtn.hidden=hid;saveRtn();S.status={};
+  }
   function splitNames(s){return String(s||'').split(',').map(function(x){return x.trim()}).filter(Boolean).slice(0,8)}
   function joinNames(a){return a.length<2?(a[0]||''):a.slice(0,-1).join(', ')+' and '+a[a.length-1]}
   function saveProf(o){var I=S.incl||{},pets=I.pets?splitNames(o.pets):[];var partners=I.partner?splitNames(o.partner):[];PROF={name:(o.name||'').trim(),partners:partners,partner:joinNames(partners),pets:pets,pet:joinNames(pets),kids:I.kids?splitNames(o.kids):[],others:I.others?splitNames(o.others):[],incl:{partner:!!I.partner,pets:!!I.pets,kids:!!I.kids,others:!!I.others,health:!!I.health}};try{localStorage.setItem('gs-profile',JSON.stringify(PROF))}catch(e){}try{window.GSSync&&window.GSSync.touch('gs-profile')}catch(e){}}
@@ -1809,7 +1834,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
         h+='<button class="opt" data-a="rnd" data-v="'+o[0]+'" aria-pressed="'+(S.rnd===o[0])+'">'+SVGO.replace('class="sprig"','class="mini"')+o[3]+'</svg><span><b>'+o[1]+'</b><span class="small">'+o[2]+'</span></span></button>';
       });
       h+='</div><div class="grp" id="musgrp"><div class="lab">Music buttons</div><p class="small">Pick which buttons show on Home. Turn them all off to hide the music section.</p><div class="chips sm"><button data-a="mustog" data-v="sp" aria-pressed="'+!!S.mus.sp+'">Spotify</button><button data-a="mustog" data-v="am" aria-pressed="'+!!S.mus.am+'">Apple Music</button><button data-a="mustog" data-v="yt" aria-pressed="'+!!S.mus.yt+'">YouTube playlist</button></div></div><div class="grp"><div class="lab">YouTube playlist</div><p class="small">The playlist button on Home opens a playlist Nicole made, which you are welcome to use. Paste a link to your own playlist to swap it, or use the button to link to all of your youtube playlists.</p><form class="add" data-a="ytsave"><input type="text" id="ytlink" inputmode="url" placeholder="https://youtube.com/playlist?list=..." value="'+esc(S.ytl)+'" aria-label="YouTube playlist link"><button type="submit">Save</button></form><div class="chips sm"><button data-a="ytpl">Link to all playlists</button>'+(S.ytl?'<button data-a="ytreset">Back to the original</button>':'')+'</div></div><div class="grp"><div class="lab">Daily text to your partner</div><p class="small">At this time each day, Home shows a card that opens Messages with your plans for the day'+(signedIn()?' and your live schedule link':'')+'. You tap send.</p><div class="chips sm"><button data-a="dtxtog" aria-pressed="'+!!S.dtx.on+'">'+(S.dtx.on?'On':'Off')+'</button></div><input class="field" type="time" id="dtxtime" value="'+esc(S.dtx.time||'09:00')+'" aria-label="Daily text time" style="margin-top:8px;max-width:180px"></div><div class="grp"><div class="lab">Plan tags</div><p class="small">The tags you can pick when adding a plan. Tap one to remove it.</p><div class="chips sm">'+S.evtags.map(function(q,i){return '<button data-a="evtagdel" data-v="'+i+'" aria-label="Remove tag '+esc(q)+'">'+esc(q)+' &times;</button>'}).join('')+'</div><form class="add" data-a="evtagadd"><input type="text" id="evtagnew" maxlength="24" placeholder="New tag, e.g. Gym" aria-label="New plan tag"><button type="submit">Add</button></form></div><div class="grp"><div class="lab">Calendar</div><div class="chips sm"><button data-a="holtog" aria-pressed="'+!!S.hol+'">Show major US holidays</button></div><p class="small">They appear on Overview and at the top of Plans on the day. They are not plans, so nothing is ever due.</p></div>';
-      h+='<div class="sethead">Routine</div>'+routineTab();
+      h+='<div class="sethead" id="set-routine">Routine</div>'+routineTab();
     }else{
       h+='<div class="grp"><div class="lab mid">What&rsquo;s your mindset today?</div><p class="small">This changes how the app thinks.</p>';
       Object.keys(LOGICS).forEach(function(k){
@@ -1873,7 +1898,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     render.lastHero=_hk;
     var _l=document.querySelector('.lot'),_st=_l?_l.scrollTop:0;
     var _sc={};document.querySelectorAll('#sheetRoot .sheet[aria-label]').forEach(function(s){_sc[s.getAttribute('aria-label')]=s.scrollTop});
-    document.getElementById('sheetRoot').innerHTML=fx(roughSheet()+menuSheet()+evSheet()+skipSheet()+forgotSheet()+catSheet()+seSheet()+reSheet()+nameSheet()+tkSheet()+lotSheet()+plSheet()+fab()+welcomeSheet());
+    document.getElementById('sheetRoot').innerHTML=fx(roughSheet()+startSheet()+menuSheet()+evSheet()+skipSheet()+forgotSheet()+catSheet()+seSheet()+reSheet()+nameSheet()+tkSheet()+lotSheet()+plSheet()+fab()+welcomeSheet());
     document.querySelectorAll('#sheetRoot .sheet[aria-label]').forEach(function(s){var k=s.getAttribute('aria-label');if(_sc[k])s.scrollTop=_sc[k]});
     var _l2=document.querySelector('.lot');if(_l2)_l2.scrollTop=_st;
     try{publishLive()}catch(e){}
@@ -1917,6 +1942,9 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     cretry:function(){var t=S.chat.retry;if(!t)return;var m=S.chat.msgs;if(m.length&&m[m.length-1].r==='u'&&m[m.length-1].t===t)m.pop();chatSend(t)},
     wskip:function(){saveProf({});saveTrk();render()},
     welskip:function(){S.welInfo=true;render()},
+    startcust:function(){clearExamples();S.startQ=false;save('gs-startq',false);S.tab='today';S.menu=true;S.mt='settings';render();
+      setTimeout(function(){var r=document.getElementById('set-routine');if(r)r.scrollIntoView({block:'start'})},60);toast('Examples cleared. Start with your morning.')},
+    startlook:function(){S.startQ=false;save('gs-startq',false);render()},
     welnext:function(){var n=document.getElementById('pf-name');S.welName=n?n.value:'';S.welP2=true;render();var f=document.querySelector('#welcomeform input:not([type=hidden])');if(f)f.focus()},
     welback:function(){S.welP2=false;render()},
     incl:function(b){S.profSaved=false;keepSheet(function(){keepAll(function(){S.incl=S.incl||{};S.incl[b.dataset.v]=!S.incl[b.dataset.v];render()})})},
@@ -2070,7 +2098,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     tab:function(b){S.tab=b.dataset.v;render();window.scrollTo(0,0)},
     part:function(b){S.part=b.dataset.v;S.shift=0;render()},
     done:function(b){S.status[b.dataset.v]='done';render()},
-    skip:function(b){var sid=b.dataset.v;if(U().sq||(S.logic==='gentle'&&(sid==='teeth'||sid==='clothes'))){S.sq={id:b.dataset.v,n:0};render();return}S.status[b.dataset.v]='skip';render();toast('Marked as skipped.')},
+    skip:function(b){var sid=b.dataset.v;if(U().sq||(S.logic==='gentle'&&isMe()&&(sid==='teeth'||sid==='clothes'))){S.sq={id:b.dataset.v,n:0};render();return}S.status[b.dataset.v]='skip';render();toast('Marked as skipped.')},
     sqyes:function(){
       var q=S.sq;if(!q)return;
       if(q.id==='clothes'){S.status[q.id]='skip';S.sq=null;render();toast("It's no fun if EVERY task has friction \ud83d\ude42");return}
@@ -2627,7 +2655,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     function g(i){var x=document.getElementById(i);return x?x.value:''}
     saveProf({name:g('pf-name'),partner:g('pf-partner'),pets:g('pf-pets'),kids:g('pf-kids'),others:g('pf-others')});
     setTrk((S.incl&&S.incl.health)?splitNames(g('pf-health')):[]);
-    if(f.id==='profform'){S.profSaved=true;keepSheet(render)}else render();
+    if(f.id==='profform'){S.profSaved=true;keepSheet(render)}else{save('gs-rtn',S.rtn);S.startQ=true;save('gs-startq',true);render()}
   });
   document.addEventListener('change',function(e){
     var ls=e.target;if(ls&&ls.classList&&ls.classList.contains('lsedit')){
