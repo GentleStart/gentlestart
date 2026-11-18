@@ -1776,6 +1776,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   }
   /* ---- after the welcome: set things up now, or look around with the examples ---- */
   S.startQ=load('gs-startq',false);
+  function afterWelcome(){save('gs-rtn',S.rtn);S.startQ=true;save('gs-startq',true);S.startDay=ymd(new Date());save('gs-startday',S.startDay)}
   function startSheet(){
     if(!S.startQ||!PROF)return '';
     return '<div class="backdrop" style="z-index:40"><div class="sheet" role="dialog" aria-modal="true" aria-label="How would you like to start?"><h2 style="font-size:24px">How would you like to start?</h2>'
@@ -2107,7 +2108,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     chp:function(b){helpPick(b.dataset.v)},
     hact:function(b){var k=b.dataset.v;S.chat.open=false;chatRender();if(A[k])A[k](b);else render()},
     cretry:function(){var t=S.chat.retry;if(!t)return;var m=S.chat.msgs;if(m.length&&m[m.length-1].r==='u'&&m[m.length-1].t===t)m.pop();chatSend(t)},
-    wskip:function(){saveProf({});saveTrk();render()},
+    wskip:function(){saveProf({});saveTrk();afterWelcome();render()},
     welskip:function(){S.welInfo=true;render()},
     startcust:function(){clearExamples();S.startQ=false;save('gs-startq',false);S.tab='today';S.setup=suNew();render()},
     'su-sel':function(b){suRead();keepSheet(function(){var a=S.setup.sel,v=b.dataset.v,i=a.indexOf(v);if(i>=0)a.splice(i,1);else a.push(v);S.setup.floor=null;render()})},
@@ -2848,7 +2849,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     function g(i){var x=document.getElementById(i);return x?x.value:''}
     saveProf({name:g('pf-name'),partner:g('pf-partner'),pets:g('pf-pets'),kids:g('pf-kids'),others:g('pf-others')});
     setTrk((S.incl&&S.incl.health)?splitNames(g('pf-health')):[]);
-    if(f.id==='profform'){S.profSaved=true;keepSheet(render)}else{save('gs-rtn',S.rtn);S.startQ=true;save('gs-startq',true);S.startDay=ymd(new Date());save('gs-startday',S.startDay);render()}
+    if(f.id==='profform'){S.profSaved=true;keepSheet(render)}else{afterWelcome();render()}
   });
   document.addEventListener('change',function(e){
     var ls=e.target;if(ls&&ls.classList&&ls.classList.contains('lsedit')){
