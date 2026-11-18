@@ -329,7 +329,7 @@
   function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML.replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
 
   var DEFAULT_LISTS=[
-    {id:'xmas',name:'Christmas',items:[{t:'Gift idea for §P',done:false},{t:'Wrapping paper (sample item)',done:false}]},
+    {id:'xmas',name:'Christmas',items:[{t:'Wrapping paper (sample item)',done:false}]},
     {id:'movies',name:'Movies to watch',items:[{t:'Add the ones you keep forgetting (sample item)',done:false}]},
     {id:'hobbies',name:'Hobbies to try',items:[{t:'Something with plants (sample item)',done:false}]},
     {id:'groc',name:'Grocery run',items:[{t:'Easy breakfast foods (sample item)',done:false}]}
@@ -1034,7 +1034,7 @@
     var hd=head({title:'Overview',sub:'Your plans at a glance.'}),h='';
     h+='<div class="between" style="gap:10px"><div class="subtabs" role="group" aria-label="Overview range" style="flex:1"><button data-a="ovv" data-v="week" aria-pressed="'+(S.ovv==='week')+'">Week</button><button data-a="ovv" data-v="month" aria-pressed="'+(S.ovv==='month')+'">Month</button><button data-a="ovv" data-v="all" aria-pressed="'+(S.ovv==='all')+'">All</button></div><button class="psign" data-a="lot" aria-label="Open '+esc(u.lot)+'"><b>P</b><span>'+esc(u.lot)+'</span></button></div>';
     if(!S.demo&&!S.events.some(function(e){return !e.ex})&&!S.hints.jitplans)h+='<div class="card" style="margin:12px 0"><h3>Anything this week with a set time?</h3><p class="small">Appointments, classes, calls, dinners. Add one and it shows up on the right day, with a heads-up when it is time to get ready.</p><div class="row"><button class="btn grow" data-a="evnew">Add a plan</button></div><button class="quiet" data-a="hintx" data-v="jitplans">Not now</button></div>';
-    return hd+'<div class="ovsplit"><aside class="lot lotside" aria-label="'+esc(u.lot)+'">'+lotInner(true)+'</aside><div class="ovmain">'+h+(S.ovv==='week'?ovWeek():S.ovv==='all'?ovAll():ovMonth())+(S.events.some(function(e){return e.ex})?'<button class="quiet" data-a="clrexev">Clear example plans</button>':'')+'</div></div>';
+    return hd+'<div class="ovsplit"><aside class="lot lotside" aria-label="'+esc(u.lot)+'">'+lotInner(true)+'</aside><div class="ovmain">'+h+(S.ovv==='week'?ovWeek():S.ovv==='all'?ovAll():ovMonth())+(!S.demo&&S.events.some(function(e){return e.ex})?'<button class="quiet" data-a="clrexev">Clear example plans</button>':'')+'</div></div>';
   }
 
   /* ---- sample entries so the log calendar has something to show ---- */
@@ -1431,6 +1431,7 @@
   /* sample lists: the starter lists and their marked items. Anything you added yourself is kept. */
   var SAMPLE_LISTS=['xmas','movies','hobbies','groc'];
   function sampleItem(it){return /\(sample item\)$/.test(it.t)||it.t==='Gift idea for §P'}
+  function itTxt(it){return S.demo?String(it.t).replace(/ \(sample item\)$/,''):it.t}
   function hasSampleLists(){return S.lists.some(function(L){return L.items.some(sampleItem)||(SAMPLE_LISTS.indexOf(L.id)>=0&&!L.items.length)})}
   function lists(){
     var ed=!!S.lmode;
@@ -1442,19 +1443,19 @@
       ['Groceries','Gift ideas','Movies to watch','Books to read','Places to go','Things to buy'].forEach(function(n){h+='<button type="button" data-a="jl-tog" data-v="'+esc(n)+'" aria-pressed="'+(S.jl.indexOf(n)>=0)+'">'+esc(n)+'</button>'});
       h+='</div><div class="row" style="margin-top:12px"><button class="btn grow" data-a="jl-make"'+(S.jl.length?'':' disabled')+'>Make these lists</button></div><button class="quiet" data-a="hintx" data-v="jitlists">Not now</button></div>';
     }
-    if(hasSampleLists())h+=hint('lists','note','Sample items are marked. Check them off, park them, or edit them.');
+    if(!S.demo&&hasSampleLists())h+=hint('lists','note','Sample items are marked. Check them off, park them, or edit them.');
     var CK='<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7.5l3 3 6-7"/></svg>';
     S.lists.forEach(function(L,li){
       var n=L.items.filter(function(i){return !i.done}).length;
       h+='<details class="card lcard"'+(li===0||ed?' open':'')+' data-id="'+L.id+'"><summary><span>'+esc(L.name)+'</span><span class="count">'+n+' item'+(n===1?'':'s')+'</span></summary><ul class="items">'+(ed?'<li class="item"><input class="lsedit ltitle" type="text" data-l="'+li+'" value="'+esc(L.name)+'" maxlength="40" aria-label="List name"></li>':'');
       L.items.forEach(function(it,ii){
-        if(ed){h+='<li class="item"><input class="lsedit" type="text" data-l="'+li+'" data-i="'+ii+'" value="'+esc(it.t)+'" maxlength="120" aria-label="Item"><button class="x" aria-label="Delete item" data-a="del" data-l="'+li+'" data-i="'+ii+'">&times;</button></li>';return}
-        h+='<li class="item'+(it.done?' done':'')+'"><button class="check" role="checkbox" aria-checked="'+it.done+'" aria-label="'+esc(it.t)+'" data-a="tick" data-l="'+li+'" data-i="'+ii+'">'+(it.done?CK:'')+'</button><span class="t">'+esc(it.t)+'</span>'+(it.done?'':'<button class="lpk'+(it.parked?' on':'')+'" aria-pressed="'+!!it.parked+'" aria-label="'+(it.parked?esc(U().parked)+'. Tap to take it back out of '+esc(lotThe()):'Move to '+esc(lotThe()))+'" data-a="lpark" data-l="'+li+'" data-i="'+ii+'">'+(it.parked?esc(U().parked):esc(U().parkIt))+'</button>')+'</li>';
+        if(ed){h+='<li class="item"><input class="lsedit" type="text" data-l="'+li+'" data-i="'+ii+'" value="'+esc(itTxt(it))+'" maxlength="120" aria-label="Item"><button class="x" aria-label="Delete item" data-a="del" data-l="'+li+'" data-i="'+ii+'">&times;</button></li>';return}
+        h+='<li class="item'+(it.done?' done':'')+'"><button class="check" role="checkbox" aria-checked="'+it.done+'" aria-label="'+esc(itTxt(it))+'" data-a="tick" data-l="'+li+'" data-i="'+ii+'">'+(it.done?CK:'')+'</button><span class="t">'+esc(itTxt(it))+'</span>'+(it.done?'':'<button class="lpk'+(it.parked?' on':'')+'" aria-pressed="'+!!it.parked+'" aria-label="'+(it.parked?esc(U().parked)+'. Tap to take it back out of '+esc(lotThe()):'Move to '+esc(lotThe()))+'" data-a="lpark" data-l="'+li+'" data-i="'+ii+'">'+(it.parked?esc(U().parked):esc(U().parkIt))+'</button>')+'</li>';
       });
       h+='</ul>'+(ed?'<button class="quiet ldel" data-a="ldellist" data-l="'+li+'">Delete this list</button>':'<form class="add" data-a="additem" data-l="'+li+'"><input type="text" id="add-'+L.id+'" placeholder="Add to '+esc(L.name)+'" aria-label="Add to '+esc(L.name)+'"><button type="submit">Add</button></form>')+'</details>';
     });
     h+='<form class="card" data-a="newlist"><b>Start a new list</b><div class="add" style="margin-top:0"><input type="text" id="newlist" placeholder="e.g. Pet store, Gift ideas" aria-label="New list name"><button type="submit">Create</button></div><button type="button" class="quiet linkbtn" data-a="lmode">'+(ed?'Done editing':'Edit an existing list')+'</button></form>';
-    if(hasSampleLists())h+='<button class="quiet" data-a="clrexl">Clear sample lists</button>';
+    if(!S.demo&&hasSampleLists())h+='<button class="quiet" data-a="clrexl">Clear sample lists</button>';
     return h;
   }
 
@@ -1550,7 +1551,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       jo.forEach(function(n){h+='<button type="button" data-a="jg-tog" data-v="'+esc(n)+'" aria-pressed="'+(S.jg.indexOf(n)>=0)+'">'+esc(n)+'</button>'});
       h+='</div><div class="row" style="margin-top:12px"><button class="btn grow" data-a="jg-save">Use these</button></div><button class="quiet" data-a="hintx" data-v="jitlog">Not now</button></div>';
     }
-    if(S.log.some(function(e){return e.smp}))h+=hint('logsample','note','Some entries here are sample data, so the calendar has something to show. <button class="quiet" data-a="rmsample">Remove sample entries</button>');
+    if(!S.demo&&S.log.some(function(e){return e.smp}))h+=hint('logsample','note','Some entries here are sample data, so the calendar has something to show. <button class="quiet" data-a="rmsample">Remove sample entries</button>');
 
     h+='<div class="card"><h3>Log something</h3>';
     if(S.day){var dq=S.day.split('-');h+='<p class="small">Adding to '+esc(new Date(+dq[0],+dq[1]-1,+dq[2]).toLocaleDateString(undefined,{month:'short',day:'numeric'}))+'. Tap the day again to go back to right now.</p>'}
@@ -2554,7 +2555,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     uslink:function(){sendOut('',usLink(),'Link copied.')},
     lpark:function(b){var L=S.lists[+b.dataset.l],it=L.items[+b.dataset.i];if(!it)return;
       if(it.parked){S.tasks=S.tasks.filter(function(t){return t.id!==it.tid||t.done});it.parked=false;it.tid=null;saveTasks();save('gs-lists',S.lists);toast('Taken back out of '+lotThe()+'.');keepOpen();return}
-      var id='t'+Date.now();S.tasks.unshift({id:id,title:it.t,h:'week',nr:false,fun:false,work:[],mins:0,w:'med',due:'',steps:[],done:false,created:Date.now()});it.parked=true;it.tid=id;saveTasks();save('gs-lists',S.lists);toast(creature()?'Stashed away.':'Parked in the parking lot.');keepOpen()},
+      var id='t'+Date.now();S.tasks.unshift({id:id,title:itTxt(it),h:'week',nr:false,fun:false,work:[],mins:0,w:'med',due:'',steps:[],done:false,created:Date.now()});it.parked=true;it.tid=id;saveTasks();save('gs-lists',S.lists);toast(creature()?'Stashed away.':'Parked in the parking lot.');keepOpen()},
     del:function(b){S.lists[+b.dataset.l].items.splice(+b.dataset.i,1);save('gs-lists',S.lists);keepOpen()}
   };
 
