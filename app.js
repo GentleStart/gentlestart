@@ -330,11 +330,10 @@
 
   var DEFAULT_LISTS=[
     {id:'groc',name:'Groceries',items:[{t:'Oat milk (sample item)',done:false},{t:'Eggs (sample item)',done:false},{t:'Bananas (sample item)',done:true},{t:'Coffee (sample item)',done:false},{t:'Easy breakfast foods (sample item)',done:false},{t:'Something for dinner Thursday (sample item)',done:false}]},
-    {id:'holiday',name:'Holiday prep',items:[{t:'Wrapping paper (sample item)',done:false},{t:'Cards to send (sample item)',done:false},{t:'Plan the menu (sample item)',done:false},{t:'Find the string lights (sample item)',done:true}]},
-    {id:'gifts',name:'Gift ideas',items:[{t:'Cozy socks (sample item)',done:false},{t:'A plant for a new apartment (sample item)',done:false},{t:'A nice notebook (sample item)',done:false}]},
-    {id:'movies',name:'Movies to watch',items:[{t:'Something cozy for a rainy day (sample item)',done:false},{t:'The one everyone keeps recommending (sample item)',done:false},{t:'A classic you have never seen (sample item)',done:false}]},
-    {id:'books',name:'Books to read',items:[{t:'Book club pick (sample item)',done:false},{t:'A good mystery (sample item)',done:false},{t:'That cookbook from the library (sample item)',done:true}]},
-    {id:'places',name:'Places to try',items:[{t:'The new ramen place (sample item)',done:false},{t:'Botanical garden (sample item)',done:false},{t:'Weekend farmers market (sample item)',done:false}]}
+    {id:'gifts',name:'Gift ideas',items:[{t:'Cozy socks (sample item)',done:false,parked:true,tid:'t12'},{t:'A plant for a new apartment (sample item)',done:false},{t:'A nice notebook (sample item)',done:false}]},
+    {id:'movies',name:'Movies to watch',items:[{t:'Something cozy for a rainy day (sample item)',done:false},{t:'The one everyone keeps recommending (sample item)',done:false},{t:'A classic you have never seen (sample item)',done:false,parked:true,tid:'t13'}]},
+    {id:'books',name:'Books to read',items:[{t:'Book club pick (sample item)',done:false},{t:'A good mystery (sample item)',done:false},{t:'Try a recipe from the library cookbook (sample item)',done:false,parked:true,tid:'t10'}]},
+    {id:'places',name:'Places to try',items:[{t:'The new ramen place (sample item)',done:false,parked:true,tid:'t11'},{t:'Botanical garden (sample item)',done:false},{t:'Weekend farmers market (sample item)',done:false}]}
   ];
   var S={tab:'today',part:'morning',status:{},lists:load('gs-lists',DEFAULT_LISTS),log:load('gs-log',[]),custom:load('gs-custom',[]),
     colors:load('gs-colors',{}),hide:{},mo:0,day:null,lv:'everyday',filt:false,rp:null,menu:false,
@@ -507,7 +506,10 @@
     {id:'t7',title:'Pick up stamps',ex:true,g:'g1',h:'month',nr:false,fun:false,work:[],mins:15,w:'small',due:'',offDue:null,steps:[],done:false,created:Date.now()-7*864e5},
     {id:'t8',title:'Clean out the fridge',ex:true,g:'g2',h:'week',nr:false,fun:false,work:[],mins:30,w:'med',due:'',offDue:null,steps:[{t:'Toss anything expired',done:false},{t:'Wipe one shelf',done:false}],done:false,created:Date.now()-5*864e5},
     {id:'t9',title:'Swap the winter clothes',ex:true,g:'g2',h:'month',nr:false,fun:false,work:[],mins:60,w:'med',due:'',offDue:null,steps:[],done:false,created:Date.now()-11*864e5},
-    {id:'t10',title:'Try a new recipe',ex:true,g:'g3',h:'month',nr:false,fun:true,work:[],mins:60,w:'small',due:'',offDue:null,steps:[],done:false,created:Date.now()-8*864e5}
+    {id:'t10',title:'Try a recipe from the library cookbook',ex:true,g:'g3',h:'month',nr:false,fun:true,work:[],mins:60,w:'small',due:'',offDue:null,steps:[],done:false,created:Date.now()-8*864e5},
+    {id:'t11',title:'The new ramen place',ex:true,g:'g3',h:'month',nr:false,fun:true,work:[],mins:90,w:'small',due:'',offDue:null,steps:[],done:false,created:Date.now()-2*864e5},
+    {id:'t12',title:'Cozy socks',ex:true,g:'g1',h:'month',nr:false,fun:false,work:[],mins:20,w:'small',due:'',offDue:null,steps:[],done:false,created:Date.now()-6*864e5},
+    {id:'t13',title:'A classic you have never seen',ex:true,h:'month',nr:false,fun:true,work:[],mins:120,w:'small',due:'',offDue:null,steps:[],done:false,created:Date.now()-10*864e5}
   ];
   S.tk=null;S.doing=null;S.askMore=false;S.celeb=null;S.skipPark=[];S.tkBusy=false;S.ovv='week';S.ovMo=0;S.ovDay=null;S.lot=false;S.pl=null;S.lotTab='week';S.lotAnim=false;
   function saveTasks(){save('gs-tasks',S.tasks)}
