@@ -1809,7 +1809,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   var SU_MUS=[['sp','Spotify'],['am','Apple Music'],['yt','YouTube']];
   function suHas(k){return k==='pet'?!!(PROF&&PROF.pet):k==='kids'?!!(PROF&&PROF.kids&&PROF.kids.length):k==='others'?!!(PROF&&PROF.others&&PROF.others.length):true}
   function suDaily(){return SU_DAILY.filter(function(d){return !d[3]||suHas(d[3])})}
-  function suNew(){return {i:0,sel:['getup','teeth','clothes','meals'],own:'',floor:null,tasks:['','',''],start:null,helps:[],mus:[]}}
+  function suNew(){return {i:0,sel:[],own:'',floor:null,tasks:['','',''],start:null,helps:[],mus:[]}}
   function suRead(){var U2=S.setup;if(!U2)return;var o=document.getElementById('su-own');if(o)U2.own=o.value;[0,1,2].forEach(function(i){var t=document.getElementById('su-t'+i);if(t)U2.tasks[i]=t.value})}
   function suOwn(){return splitNames(S.setup.own).slice(0,6)}
   function suPicked(){var a=suDaily().filter(function(d){return S.setup.sel.indexOf(d[0])>=0}).map(function(d){return {id:d[0],t:fxt(d[1])}});suOwn().forEach(function(t){a.push({id:'own:'+t,t:t})});return a}
@@ -1823,7 +1823,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       h+='</div><label class="lab" for="su-own" style="margin-top:12px">Anything else? Separate with commas.</label><input class="field" type="text" id="su-own" maxlength="200" placeholder="e.g. Water the plants, Walk the dog" value="'+esc(U2.own)+'">';
     }else if(U2.i===1){
       var pk=suPicked();
-      if(U2.floor===null)U2.floor=pk.filter(function(x){return x.id==='meals'||FLOORDEF.indexOf(x.id)>=0}).map(function(x){return x.id});
+      if(U2.floor===null)U2.floor=[];
       h+='<h2 style="font-size:23px">Which of those still matter on your worst days?</h2><p class="small">On a rough day, the app shows only these and lets everything else wait. They also never get a skip button.</p>';
       if(pk.length){h+='<div class="chips">';pk.forEach(function(x){h+=suChip('su-floor',x.id,x.t,U2.floor.indexOf(x.id)>=0)});h+='</div>'}
       else h+='<p class="small">You did not pick anything on the last screen, so there is nothing to choose here yet.</p>';
