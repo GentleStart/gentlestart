@@ -301,7 +301,7 @@
   };
   var FLOORALL={morning:['dailymeds','teeth','clothes','muffin','kidsam','water','meal'],afternoon:['lunch','jobs','pt'],evening:['muffinpm','checkin','dinner','tidy','tomorrow']};
   var FLOORDEF=['dailymeds','muffin','water','meal','lunch','muffinpm','dinner'];
-  var BASE_CHIPS=['Migraine','Rough morning','Slept badly','Good hobby session','Watered plants'];
+  var BASE_CHIPS=['Migraine','Rough day','Slept badly','Good hobby session','Watered plants'];
   /* tile groups: a chip that opens a panel of more options. Migraine is the first one; more can be added later. */
   var GROUPS={Migraine:{title:'Migraine details'}};
   var SEVS=['Mild','Moderate','Severe'];
@@ -992,7 +992,7 @@
   /* ---- sample entries so the log calendar has something to show ---- */
   function seedSamples(){
     if(load('gs-seeded',false))return;
-    var now=new Date(),add=[],every=['Rough morning','Slept badly','Good hobby session','Watered plants'];
+    var now=new Date(),add=[],every=['Rough day','Slept badly','Good hobby session','Watered plants'];
     function pick(a){return a[Math.floor(Math.random()*a.length)]}
     function many(a,n){var c=a.slice(),o=[];while(o.length<n&&c.length)o.push(c.splice(Math.floor(Math.random()*c.length),1)[0]);return o}
     [-1,0].forEach(function(mo){
@@ -1032,6 +1032,14 @@
     S.trk.slice().reverse().forEach(function(t){var st=stackById(t.id);if(!st)S.stacks.unshift({id:t.id,name:t.name,builtin:true,kids:[]});else st.name=t.name});
   }
   syncTrkStacks();
+  /* "Rough morning" was renamed "Rough day": carry old entries, colors and stacks over */
+  (function(){var O='Rough morning',N='Rough day',ch=false;
+    S.log.forEach(function(e){if(e.label===O){e.label=N;ch=true}});
+    var ci=S.cats.indexOf(O);if(ci>=0){if(S.cats.indexOf(N)<0)S.cats[ci]=N;else S.cats.splice(ci,1);ch=true}
+    if(S.colors[O]!==undefined){S.colors[N]=S.colors[O];delete S.colors[O];ch=true}
+    S.stacks.forEach(function(x){var k=x.kids.indexOf(O);if(k>=0){if(x.kids.indexOf(N)<0)x.kids[k]=N;else x.kids.splice(k,1);ch=true}});
+    if(ch){save('gs-log',S.log);save('gs-cats',S.cats);save('gs-colors',S.colors);save('gs-stacks',S.stacks)}
+  })();
   S.openStacks=[];S.ns=null;
   function allTiles(){return S.cats}
   function stackById(id){for(var i=0;i<S.stacks.length;i++)if(S.stacks[i].id===id)return S.stacks[i];return null}
@@ -1643,8 +1651,8 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
 
   function roughSheet(){
     if(!S.rp)return '';
-    var n=S.trk.length,tt=n===1?'Rough morning. '+esc(S.trk[0].name)+'?':n?'Rough morning. Any of these?':'Rough morning.';
-    var h='<div class="backdrop" data-a="rbg"><div class="sheet" role="dialog" aria-modal="true" aria-label="Rough morning"><h2 style="font-size:22px">'+tt+'</h2><p class="small">'+(n?'Totally optional. ':'')+'The rough morning gets logged either way, then we switch to '+(creature()?'bear minimum':'low battery mode')+' for the rest of today.'+(n?' You can add symptoms and triggers later in the Log tab.':'')+'</p>';
+    var n=S.trk.length,tt=n===1?'Rough day. '+esc(S.trk[0].name)+'?':n?'Rough day. Any of these?':'Rough day.';
+    var h='<div class="backdrop" data-a="rbg"><div class="sheet" role="dialog" aria-modal="true" aria-label="Rough day"><h2 style="font-size:22px">'+tt+'</h2><p class="small">'+(n?'Totally optional. ':'')+'The rough day gets logged either way, then we switch to '+(creature()?'bear minimum':'low battery mode')+' for the rest of today.'+(n?' You can add symptoms and triggers later in the Log tab.':'')+'</p>';
     if(n){h+='<div class="chips">';S.trk.forEach(function(t){var on=S.rp.t===t.id;h+='<button class="gchip" data-a="rmig" data-v="'+esc(t.id)+'" aria-pressed="'+on+'" aria-expanded="'+on+'">'+STACK+'<span>'+esc(t.name)+'</span>'+CHEV+'</button>'});h+='</div>'}
     else h+='<details class="tuck"><summary>Does this happen to you a lot?</summary><p class="small">Give it a name, like migraine, flare or pain day, and the app will keep track of it for you. Next time, one tap logs it.</p><input class="field" type="text" id="rp-name" maxlength="30" placeholder="What do you call it?" aria-label="Name for what you want to track"></details>';
     if(S.rp.t)h+='<div class="gpanel">'+sevUI(S.rp.sev,'rsev',S.rp.t)+pickUI('meds','rp',S.rp.meds,S.rp.t)+'</div>';
@@ -2098,7 +2106,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     rcancel:function(){S.rp=null;render()},
     rbg:function(b,e){if(e.target===b){S.rp=null;render()}},
     rgo:function(){
-      logIt('Rough morning');
+      logIt('Rough day');
       var rt=S.rp.t&&trkById(S.rp.t);
       if(rt)logIt(rt.name,{trk:rt.id,sev:S.rp.sev,meds:S.rp.meds});
       else if(!S.trk.length){var rn=document.getElementById('rp-name'),rv=rn?rn.value.trim():'';if(rv){var nt=addTrk(rv);logIt(nt.name,{trk:nt.id})}}
@@ -2487,10 +2495,10 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       "The parking lot":{a:"The parking lot holds anything with no set time: things you mean to do this week or this month. Home suggests one when it fits the time you have, and nothing in it is ever overdue. Tap Park it to add something, or hold the button to fill in details first. Groups let you keep errands, house jobs and so on in their own little lots.",act:[]},
       "My routine":{a:"Your routine is the steps for each part of the day. Change it in the menu under Settings, Routine: rename steps, drag the grab bar to reorder, hide what you do not need, or add your own. Mark the steps that matter most with Anchor it, and low battery mode shows only those.",act:[]},
       "Plans and repeats":{a:"Plans are things at a set time, like an appointment or dinner out. Add one with + Add on Home or Overview. A plan can repeat weekly or monthly, and tasks in the parking lot can repeat too. If you change or delete a repeating one, it asks whether you mean just that day or every time.",act:[]},
-      "Modes and moods":{a:"In the menu under Logic you can change how the app thinks: Gentle is the default, On the clock adds times and a day planner, Tiny steps shrinks everything to its first thirty seconds, and Low battery shows only the essentials. A rough morning switches you to low battery until tomorrow.",act:[]},
+      "Modes and moods":{a:"In the menu under Logic you can change how the app thinks: Gentle is the default, On the clock adds times and a day planner, Tiny steps shrinks everything to its first thirty seconds, and Low battery shows only the essentials. A rough day switches you to low battery until tomorrow.",act:[]},
       "Sharing with someone":{a:"The Us tab shows what your partner sees of your day. Each plan can show full details, just Appointment, or stay private. Once you are signed in you can send a live schedule link that updates by itself, and a daily card can open Messages with your plans for the day.",act:[]},
       "Syncing my devices":{a:"Sign in from the menu under Settings, Account, using Google or an email link, then sign in on your other devices. Everything syncs within a few seconds. Without signing in, everything stays on this device, and you can always save a backup file.",act:[]},
-      "The Log":{a:"The Log is an optional, quick way to note things like a rough morning, a medication or watering the plants. If you track something health-related, like migraines or flares, it gets its own tile and its own view, and one tap is a whole entry. Tap what happened and it is saved for that day. Look back by month whenever you like. Nothing is ever required.",act:[]},
+      "The Log":{a:"The Log is an optional, quick way to note things like a rough day, a medication or watering the plants. If you track something health-related, like migraines or flares, it gets its own tile and its own view, and one tap is a whole entry. Tap what happened and it is saved for that day. Look back by month whenever you like. Nothing is ever required.",act:[]},
       "Themes and looks":{a:"Open the menu with the button at the top right. Themes changes the whole look, Colorway changes the colors, and Appearance switches between light and dark. Woodland creatures, under Premium Themes, is a storybook look with moods and seasons.",act:[]}}}
   };
   function helpPick(l){
@@ -2531,7 +2539,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     else if(S.noAI&&c.opts){h+='<div class="chips sm">';Object.keys(c.opts).forEach(function(q){h+='<button data-a="chp" data-v="'+esc(q)+'">'+esc(q)+'</button>'});h+='</div>'}
     else if(S.noAI){
       var acts=(c.act||[]).filter(function(k){return k!=='pl'||plPool().length>=2});
-      if(acts.length){h+='<div class="row">';acts.forEach(function(k){h+='<button class="btn alt grow" data-a="hact" data-v="'+(k==='pl'?'plopen':'rough')+'">'+esc(k==='pl'?u.plbtn:'Rough morning options')+'</button>'});h+='</div>'}
+      if(acts.length){h+='<div class="row">';acts.forEach(function(k){h+='<button class="btn alt grow" data-a="hact" data-v="'+(k==='pl'?'plopen':'rough')+'">'+esc(k==='pl'?u.plbtn:'Rough day options')+'</button>'});h+='</div>'}
       h+='<div class="row">'+(c.appq?'<button class="quiet" data-a="chpapp">Another app question</button>':'')+'<button class="quiet" data-a="cnew">Something else</button></div>';
     }
     if(c.err)h+='<div class="note" role="alert">'+esc(c.err)+(c.retry?' <button class="quiet" data-a="cretry">Try again</button>':'')+'</div>';
