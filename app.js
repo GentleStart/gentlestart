@@ -1912,15 +1912,14 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       v+='<button class="btn alt" data-a="rtedmode" style="margin:4px 0 8px">Edit routine</button>';
       return v+repeatingGrp();
     }
-    var h='<p class="small">Tap Morning, Afternoon or Evening under a step to move it. Drag the handle to reorder, tap a name to rename or remove it, and add your own below each part.</p><button class="btn" data-a="rtedmode" style="margin:4px 0 8px">Done editing</button>';
+    var h='<p class="small">Drag a step by its handle to reorder it or move it to another part of the day. Tap a name to rename or remove it, and add your own below each part.</p><button class="btn" data-a="rtedmode" style="margin:4px 0 8px">Done editing</button>';
     PS.forEach(function(p){
       var ids=S.rtn.parts[p[0]].filter(function(id){return !offId(id)});
-      h+='<div class="grp"><div class="lab">'+p[1]+'</div><ul class="rtl">';
+      h+='<div class="grp"><div class="lab">'+p[1]+'</div><ul class="rtl" data-p="'+p[0]+'" aria-label="'+p[1]+'">';
       ids.forEach(function(id,i){
-        h+='<li data-id="'+esc(id)+'" data-p="'+p[0]+'"><div class="rtbox"><button class="rtn" data-a="rtedit" data-v="'+esc(id)+'"><span>'+esc(nmOf(id))+'</span></button><button class="fpill'+(isFloor(id)?' on':'')+'" data-a="flrtog" data-v="'+esc(id)+'" aria-pressed="'+isFloor(id)+'">'+(creature()?(isFloor(id)?'<em class="pun">Bear</em> minimum \u2713':'<em class="pun">Bear</em> minimum'):(isFloor(id)?'Anchored':'Anchor it'))+'</button></div><span class="grip" role="button" tabindex="0" aria-label="Drag to reorder '+esc(nmOf(id))+'. Arrow keys also move it." data-p="'+p[0]+'" data-v="'+esc(id)+'"><svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true"><rect x="3" y="4" width="12" height="2" rx="1"/><rect x="3" y="8" width="12" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg></span><div class="partseg" role="group" aria-label="Move '+esc(nmOf(id))+' to">'+PS.map(function(q){return '<button data-a="rtmove" data-v="'+esc(id)+'" data-p="'+q[0]+'" aria-pressed="'+(q[0]===p[0])+'">'+q[1]+'</button>'}).join('')+'</div></li>';
+        h+='<li data-id="'+esc(id)+'" data-p="'+p[0]+'"><div class="rtbox"><button class="rtn" data-a="rtedit" data-v="'+esc(id)+'"><span>'+esc(nmOf(id))+'</span></button><button class="fpill'+(isFloor(id)?' on':'')+'" data-a="flrtog" data-v="'+esc(id)+'" aria-pressed="'+isFloor(id)+'">'+(creature()?(isFloor(id)?'<em class="pun">Bear</em> minimum \u2713':'<em class="pun">Bear</em> minimum'):(isFloor(id)?'Anchored':'Anchor it'))+'</button></div><span class="grip" role="button" tabindex="0" aria-label="Drag to reorder '+esc(nmOf(id))+'. Arrow keys also move it." data-p="'+p[0]+'" data-v="'+esc(id)+'"><svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true"><rect x="3" y="4" width="12" height="2" rx="1"/><rect x="3" y="8" width="12" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg></span></li>';
       });
       h+='</ul>';
-      if(!ids.length)h+='<p class="small">Nothing here yet.</p>';
       h+='<form class="add" data-a="rtadd" data-p="'+p[0]+'" style="margin-top:8px"><input type="text" id="rtadd-'+p[0]+'" placeholder="Add a step" aria-label="Add a step to '+p[1]+'" maxlength="50"><button type="submit">Add</button></form></div>';
     });
     h+='<div class="grp"><div class="lab">'+(creature()?'<em class="pun">Bear</em> minimum':'Anchor it')+'</div><p class="small">Pick the things that always count. They never get a skip button, and they are what shows '+(creature()?'on bear minimum days':'in low battery mode')+'.</p><p class="small">A gentle reminder: picking too many is a lot to ask of your low battery self, so keep it to the few that truly matter.</p>';
@@ -2905,10 +2904,10 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   /* routine reorder: drag the grab bar (or use arrow keys on it) */
   (function(){
     var G=null;
-    function saveOrder(ul){
-      var p=ul.firstChild&&ul.firstChild.dataset.p;if(!p)return;
-      var ids=Array.prototype.map.call(ul.children,function(li){return li.dataset.id}),a=S.rtn.parts[p],k=0;
-      for(var i=0;i<a.length;i++)if(!offId(a[i]))a[i]=ids[k++];
+    function saveOrder(){
+      var off={};['morning','afternoon','evening'].forEach(function(p){off[p]=S.rtn.parts[p].filter(function(id){return offId(id)})});
+      document.querySelectorAll('ul.rtl[data-p]').forEach(function(ul){var p=ul.dataset.p;
+        S.rtn.parts[p]=Array.prototype.map.call(ul.children,function(li){li.dataset.p=p;return li.dataset.id}).concat(off[p]||[])});
       saveRtn();
     }
     document.addEventListener('pointerdown',function(e){
@@ -2919,17 +2918,26 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     });
     document.addEventListener('pointermove',function(e){
       if(!G||e.pointerId!==G.id)return;
-      var y=e.clientY,sib=Array.prototype.slice.call(G.ul.children);
-      for(var i=0;i<sib.length;i++){var s=sib[i];if(s===G.li)continue;var r=s.getBoundingClientRect();
-        if(y>r.top&&y<r.bottom){var before=y<r.top+r.height/2;if(before)G.ul.insertBefore(G.li,s);else G.ul.insertBefore(G.li,s.nextSibling);break}}
+      var y=e.clientY,uls=document.querySelectorAll('ul.rtl[data-p]'),tgt=null;
+      for(var u=0;u<uls.length;u++){var ur=uls[u].getBoundingClientRect();if(y>=ur.top-14&&y<=ur.bottom+14){tgt=uls[u];break}}
+      if(tgt){
+        var sib=Array.prototype.slice.call(tgt.children),placed=false;
+        for(var i=0;i<sib.length;i++){var s=sib[i];if(s===G.li)continue;var r=s.getBoundingClientRect();
+          if(y>r.top&&y<r.bottom){if(y<r.top+r.height/2)tgt.insertBefore(G.li,s);else tgt.insertBefore(G.li,s.nextSibling);placed=true;break}}
+        if(!placed&&G.li.parentNode!==tgt){var tr=tgt.getBoundingClientRect();if(y<tr.top+8&&tgt.firstChild)tgt.insertBefore(G.li,tgt.firstChild);else tgt.appendChild(G.li)}
+        G.ul=tgt;
+      }
       var sh=document.querySelector('.sheet');if(sh){var sr=sh.getBoundingClientRect();if(y<sr.top+50)sh.scrollTop-=10;else if(y>sr.bottom-50)sh.scrollTop+=10}
     });
-    function end(e){if(!G||(e&&e.pointerId!==G.id))return;var d=G;G=null;d.li.classList.remove('gripping');saveOrder(d.ul)}
+    function end(e){if(!G||(e&&e.pointerId!==G.id))return;var d=G;G=null;d.li.classList.remove('gripping');saveOrder()}
     document.addEventListener('pointerup',end);document.addEventListener('pointercancel',end);
     document.addEventListener('keydown',function(e){
       var g=e.target.classList&&e.target.classList.contains('grip')?e.target:null;if(!g||(e.key!=='ArrowUp'&&e.key!=='ArrowDown'))return;
-      e.preventDefault();var li=g.closest('li'),ul=li.parentNode,s=e.key==='ArrowUp'?li.previousElementSibling:li.nextElementSibling;if(!s)return;
-      if(e.key==='ArrowUp')ul.insertBefore(li,s);else ul.insertBefore(s,li);saveOrder(ul);g.focus();
+      e.preventDefault();var li=g.closest('li'),ul=li.parentNode,s=e.key==='ArrowUp'?li.previousElementSibling:li.nextElementSibling;
+      if(s){if(e.key==='ArrowUp')ul.insertBefore(li,s);else ul.insertBefore(s,li)}
+      else{var all=Array.prototype.slice.call(document.querySelectorAll('ul.rtl[data-p]')),k=all.indexOf(ul)+(e.key==='ArrowUp'?-1:1);if(k<0||k>=all.length)return;
+        if(e.key==='ArrowUp')all[k].appendChild(li);else all[k].insertBefore(li,all[k].firstChild)}
+      saveOrder();g.focus();
     });
   })();
   /* Ocean header: tap a bubble to pop it, tap the water to make the waves drift */

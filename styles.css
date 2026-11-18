@@ -955,3 +955,6 @@ em.pun{font-style:italic;font-weight:inherit;letter-spacing:.01em}
 .rtl li .partseg{grid-column:1 / -1;display:flex;gap:4px;margin:-2px 0 6px}
 .partseg button{flex:1;font:inherit;font-size:12.5px;padding:5px 4px;border-radius:999px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink2);cursor:pointer}
 .partseg button[aria-pressed="true"]{background:var(--soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+
+.rtl[data-p]:empty{min-height:46px;border:1.5px dashed var(--line);border-radius:12px}
+.rtl[data-p]:empty::after{content:'Drag a step here';display:block;padding:13px;font-size:13px;color:var(--ink2);text-align:center}
