@@ -953,12 +953,34 @@
     return '<button class="wkev'+(ev.withJ||ev.by==='p'?' wj':'')+'" data-a="evedit" data-v="'+esc(ev.id)+'"><small>'+(ev.by==='p'?'§P\u2019s, ':'')+fmt(st)+(ev.dur?' to '+fmt(end):'')+'</small><b>'+esc(ev.title)+'</b>'+(ev.place?'<span class="small">'+esc(ev.place)+'</span>':'')+'</button>';
   }
   function ovAll(){
+    return '<input class="field" type="search" id="plsearch" placeholder="Search plans" aria-label="Search plans" autocomplete="off" value="'+esc(S.pq||'')+'" style="margin:12px 0"><div id="plresults">'+plBody()+'</div>';
+  }
+  function plSearch(q){
+    var tk=ymd(new Date()),ql=q.toLowerCase(),hits=[];
+    function has(){for(var i=0;i<arguments.length;i++)if(arguments[i]&&String(fxt(arguments[i])).toLowerCase().indexOf(ql)>=0)return true;return false}
+    S.events.forEach(function(ev){if(has(ev.title,ev.place,ev.prep,(ev.tags||[]).join(' ')))hits.push(ev)});
+    var rr=S.reps.filter(function(r){return r.as==='ev'&&has(r.t)});
+    var one=hits.filter(function(ev){return !ev.rpt}).map(function(ev){return {ev:ev,k:evDate(ev)}});
+    var up=one.filter(function(x){return x.k>=tk}).sort(function(a,b){return a.k<b.k?-1:a.k>b.k?1:tmin(a.ev.time)-tmin(b.ev.time)});
+    var past=one.filter(function(x){return x.k<tk}).sort(function(a,b){return a.k>b.k?-1:a.k<b.k?1:0});
+    var rep=hits.filter(function(ev){return ev.rpt});
+    if(!up.length&&!past.length&&!rep.length&&!rr.length)return '<div class="card"><p class="small">No plans match \u201c'+esc(q)+'\u201d.</p></div>';
+    var h='<div class="card"><h3>Results</h3><div class="evlist">';
+    up.forEach(function(x){h+=plRow(x.ev,plWhen(x))});
+    rep.forEach(function(ev){h+=plRow(ev,repLabel({rep:ev.rpt.rep,days:ev.rpt.days,dom:ev.rpt.dom,mode:ev.rpt.mode,nth:ev.rpt.nth,dow:ev.rpt.dow,as:'ev',time:ev.time}))});
+    rr.forEach(function(r){h+='<button class="ev nt" data-a="reedit" data-v="'+esc(r.id)+'"><span class="bd"><b>'+esc(r.t)+'</b><span class="small">'+esc(repLabel(r))+'</span></span></button>'});
+    past.forEach(function(x){h+=plRow(x.ev,'Past: '+plWhen(x))});
+    return h+'</div></div>';
+  }
+  function plRow(ev,sub){return '<button class="ev nt" data-a="evedit" data-v="'+esc(ev.id)+'"><span class="bd"><b>'+esc(ev.title)+(ev.ex?' <span class="small">(example)</span>':'')+'</b><span class="small">'+esc(sub)+'</span></span></button>'}
+  function plWhen(x){var tk=ymd(new Date()),d=kDate(x.k),lbl=x.k===tk?'Today':x.k===ymd(addDays(new Date(),1))?'Tomorrow':d.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:d.getFullYear()!==new Date().getFullYear()?'numeric':undefined});return lbl+(x.ev.time?', '+fmtRange(tmin(x.ev.time),x.ev.dur):'')+(x.ev.place?', '+x.ev.place:'')}
+  function plBody(){
+    if(S.pq&&S.pq.trim())return plSearch(S.pq.trim());
     var tk=ymd(new Date()),up=[],rep=[];
     S.events.forEach(function(ev){if(ev.by==='p')return;if(ev.rpt){rep.push(ev);return}var k=evDate(ev);if(k>=tk)up.push({ev:ev,k:k})});
     function byWhen(a,b){return a.k<b.k?-1:a.k>b.k?1:tmin(a.ev.time)-tmin(b.ev.time)}
     up.sort(byWhen);
-    function row(ev,sub){return '<button class="ev nt" data-a="evedit" data-v="'+esc(ev.id)+'"><span class="bd"><b>'+esc(ev.title)+(ev.ex?' <span class="small">(example)</span>':'')+'</b><span class="small">'+esc(sub)+'</span></span></button>'}
-    function when(x){var d=kDate(x.k),lbl=x.k===tk?'Today':x.k===ymd(addDays(new Date(),1))?'Tomorrow':d.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'});return lbl+(x.ev.time?', '+fmtRange(tmin(x.ev.time),x.ev.dur):'')+(x.ev.place?', '+x.ev.place:'')}
+    var row=plRow,when=plWhen;
     var h='<div class="card"><h3>Coming up</h3>';
     if(up.length){h+='<div class="evlist">';up.forEach(function(x){h+=row(x.ev,when(x))});h+='</div>'}else h+='<p class="small">Nothing planned yet.</p>';
     h+='<button class="addbtn" data-a="evnew" style="margin-top:10px">+ Add a plan</button></div>';
@@ -983,6 +1005,7 @@
   function ovMonth(){
     var ms=ovMonthStart(),y=ms.getFullYear(),m=ms.getMonth(),label=ms.toLocaleDateString(undefined,{month:'long',year:'numeric'});
     var h='<div class="monthnav"><button class="navbtn" data-a="ovprev" aria-label="Previous month">&lsaquo;</button><h2>'+esc(label)+'</h2><button class="navbtn" data-a="ovnext" aria-label="Next month">&rsaquo;</button></div>';
+    if(S.ovMo!==0||(S.ovDay&&S.ovDay!==ymd(new Date())))h+='<div class="row" style="justify-content:center;margin:-4px 0 8px"><button class="addbtn" data-a="ovtoday">Back to today</button></div>';
     h+='<div class="cal" role="grid" aria-label="'+esc(label)+'">';
     DOW.forEach(function(d){h+='<div class="dow" aria-hidden="true">'+d+'</div>'});
     var first=new Date(y,m,1).getDay(),dim=new Date(y,m+1,0).getDate(),tk=ymd(new Date());
@@ -1010,7 +1033,7 @@
     var u=U();
     var hd=head({title:'Overview',sub:'Your plans at a glance.'}),h='';
     h+='<div class="between" style="gap:10px"><div class="subtabs" role="group" aria-label="Overview range" style="flex:1"><button data-a="ovv" data-v="week" aria-pressed="'+(S.ovv==='week')+'">Week</button><button data-a="ovv" data-v="month" aria-pressed="'+(S.ovv==='month')+'">Month</button><button data-a="ovv" data-v="all" aria-pressed="'+(S.ovv==='all')+'">All</button></div><button class="psign" data-a="lot" aria-label="Open '+esc(u.lot)+'"><b>P</b><span>'+esc(u.lot)+'</span></button></div>';
-    if(!S.events.some(function(e){return !e.ex})&&!S.hints.jitplans)h+='<div class="card"><h3>Anything this week with a set time?</h3><p class="small">Appointments, classes, calls, dinners. Add one and it shows up on the right day, with a heads-up when it is time to get ready.</p><div class="row"><button class="btn grow" data-a="evnew">Add a plan</button></div><button class="quiet" data-a="hintx" data-v="jitplans">Not now</button></div>';
+    if(!S.events.some(function(e){return !e.ex})&&!S.hints.jitplans)h+='<div class="card" style="margin-top:12px"><h3>Anything this week with a set time?</h3><p class="small">Appointments, classes, calls, dinners. Add one and it shows up on the right day, with a heads-up when it is time to get ready.</p><div class="row"><button class="btn grow" data-a="evnew">Add a plan</button></div><button class="quiet" data-a="hintx" data-v="jitplans">Not now</button></div>';
     return hd+'<div class="ovsplit"><aside class="lot lotside" aria-label="'+esc(u.lot)+'">'+lotInner(true)+'</aside><div class="ovmain">'+h+(S.ovv==='week'?ovWeek():S.ovv==='all'?ovAll():ovMonth())+(S.events.some(function(e){return e.ex})?'<button class="quiet" data-a="clrexev">Clear example plans</button>':'')+'</div></div>';
   }
 
@@ -2156,6 +2179,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     lgback:function(){S.lotGroup=null;render()},
     lgdel:function(b){var id=b.dataset.v,n=S.tasks.filter(function(t){return !t.done&&t.g===id}).length;if(n&&!confirm('Delete this group? Its '+n+' task'+(n===1?'':'s')+' stay in the parking lot, just without a group.'))return;S.groups=S.groups.filter(function(g){return g.id!==id});S.tasks.forEach(function(t){if(t.g===id)delete t.g});save('gs-groups',S.groups);saveTasks();S.lotGroup=null;render()},
     ovv:function(b){S.ovv=b.dataset.v;render()},
+    ovtoday:function(){S.ovMo=0;S.ovDay=ymd(new Date());render()},
     ovprev:function(){S.ovMo-=1;S.ovDay=null;render()},
     ovnext:function(){S.ovMo+=1;S.ovDay=null;render()},
     ovday:function(b){S.ovDay=S.ovDay===b.dataset.k?null:b.dataset.k;render()},
@@ -2506,6 +2530,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   });
   document.addEventListener('keydown',function(e){if((e.key==='Enter'||e.key===' ')&&e.target&&e.target.matches&&e.target.matches('li[data-a="stepclick"]')){e.preventDefault();e.target.click()}});
   document.addEventListener('input',function(e){
+    if(e.target&&e.target.id==='plsearch'){S.pq=e.target.value;var pr=document.getElementById('plresults');if(pr)pr.innerHTML=fx(plBody());return}
     var t=e.target;if(!t||t.id!=='simslider')return;
     var v=+t.value,np=v<720+S.dayOff?'morning':v<1020+S.dayOff?'afternoon':'evening';
     if(np!==S.part){S.part=np;S.shift=0}
