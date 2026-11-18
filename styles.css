@@ -932,3 +932,10 @@ em.pun{font-style:italic;font-weight:inherit;letter-spacing:.01em}
 .pastebox{display:flex;flex-direction:column;gap:6px;padding:12px;border:1.5px dashed var(--line);border-radius:14px;margin-bottom:6px}
 .pastebox .small{margin:0}
 .pastenote details{margin-top:6px}
+
+/* Library: a dictionary entry for the name under the Home header */
+.defn{margin:10px 0 0;font-family:var(--font-display);font-size:15px;line-height:1.45;color:var(--ink2);max-width:34em}
+.defn b{color:var(--ink);font-weight:600;letter-spacing:.01em}
+.defn .ipa{font-family:var(--font-body);font-size:13px;opacity:.85}
+.defn i{font-style:italic}
+.head .top:has(.defn) > .emblem{align-self:flex-start;margin-top:14px}

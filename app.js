@@ -260,7 +260,7 @@
   };
   function deco(){var f=DECO[lookKey()];return f?'<div class="deco" aria-hidden="true"'+(S.logic==='mammal'?' data-a="critter"':'')+'>'+f()+'</div>':''}
   function head(o){
-    return '<header class="head"><div class="top"><div>'+(o.eyebrow?'<div class="date">'+esc(o.eyebrow)+'</div>':'')+'<h1 class="hello">'+esc(o.title)+'</h1>'+(o.sub?'<div class="date">'+esc(o.sub)+'</div>':'')+'</div>'
+    return '<header class="head"><div class="top"><div>'+(o.eyebrow?'<div class="date">'+esc(o.eyebrow)+'</div>':'')+'<h1 class="hello">'+esc(o.title)+'</h1>'+(o.sub?'<div class="date">'+esc(o.sub)+'</div>':'')+(o.def&&lookKey()==='nook'?'<p class="defn"><b>with\u00b7y</b> <span class="ipa">/\u02c8w\u026a\u00f0.i/</span> <i>noun</i> &mdash; a young, flexible willow shoot, bent and woven to bind things together.</p>':'')+'</div>'
       +(EMBS[lookKey()]?'<button class="emblem fancy" data-a="menu" aria-label="Open menu" aria-haspopup="dialog">'+emblemSvg(lookKey())+'</button>':'<button class="emblem" data-a="menu" aria-label="Open menu" aria-haspopup="dialog">'+motif()+'</button>')+'</div>'+deco()+'</header>';
   }
 
@@ -1300,7 +1300,7 @@
   function today(){
     var u=U(),d=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
     var P=PARTS[S.part];
-    var h=head({eyebrow:d,title:u.greet(P.label)});
+    var h=head({eyebrow:d,title:u.greet(P.label),def:1});
     if(creature()){h+='<div class="sim"><small>How are you feeling today?</small><div class="seg mood">';Object.keys(MOODS).forEach(function(k){h+='<button data-a="mood" data-v="'+k+'" aria-pressed="'+(S.mood===k)+'">'+MOODS[k].name+'</button>'});h+='</div></div>'}
     if(!lowMode()){
       var simT=SIM[S.part];
