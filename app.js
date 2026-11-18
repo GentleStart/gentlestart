@@ -1905,7 +1905,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       PS.forEach(function(p){
         var ids=S.rtn.parts[p[0]].filter(function(id){return !offId(id)});
         v+='<div class="grp"><div class="lab">'+p[1]+'</div>';
-        if(ids.length){v+='<ul class="rtv">';ids.forEach(function(id){v+='<li><span>'+esc(nmOf(id))+'</span>'+(isFloor(id)?'<em>'+(creature()?'Bear minimum':'Anchored')+'</em>':'')+'</li>'});v+='</ul>'}
+        if(ids.length){v+='<ul class="rtv">';ids.forEach(function(id){v+='<li><span>'+esc(nmOf(id))+'</span><button class="fpill'+(isFloor(id)?' on':'')+'" data-a="flrtog" data-v="'+esc(id)+'" aria-pressed="'+isFloor(id)+'">'+(creature()?(isFloor(id)?'<em class="pun">Bear</em> minimum \u2713':'<em class="pun">Bear</em> minimum'):(isFloor(id)?'Anchored':'Anchor it'))+'</button></li>'});v+='</ul>'}
         else v+='<p class="small">Nothing here yet.</p>';
         v+='</div>';
       });

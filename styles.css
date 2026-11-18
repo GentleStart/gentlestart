@@ -950,7 +950,7 @@ em.pun{font-style:italic;font-weight:inherit;letter-spacing:.01em}
 
 /* routine: read-only view and part switcher in edit mode */
 .rtv{list-style:none;margin:4px 0 0;padding:0;display:flex;flex-direction:column;gap:5px}
-.rtv li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--bg);font-size:15px}
+.rtv li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 6px 6px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--bg);font-size:15px}
 .rtv em{font-style:normal;font-size:12.5px;color:var(--accent);font-weight:600;flex:none}
 .rtl li .partseg{grid-column:1 / -1;display:flex;gap:4px;margin:-2px 0 6px}
 .partseg button{flex:1;font:inherit;font-size:12.5px;padding:5px 4px;border-radius:999px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink2);cursor:pointer}
