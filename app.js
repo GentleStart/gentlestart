@@ -1452,12 +1452,14 @@
   /* sample lists: the starter lists and their marked items. Anything you added yourself is kept. */
   var SAMPLE_LISTS=['xmas','movies','hobbies','groc','holiday','gifts','books','places'];
   function sampleItem(it){return /\(sample item\)$/.test(it.t)||it.t==='Gift idea for §P'}
+  function syncExp(){var b=document.querySelector('[data-a=lexp]');if(!b)return;var ds=document.querySelectorAll('details.lcard');b.textContent=Array.prototype.some.call(ds,function(d){return !d.open})?'Expand all':'Collapse all'}
+  document.addEventListener('toggle',function(e){if(e.target.classList&&e.target.classList.contains('lcard'))syncExp()},true);
   function itTxt(it){return S.demo?String(it.t).replace(/ \(sample item\)$/,''):it.t}
   function hasSampleLists(){return S.lists.some(function(L){return L.items.some(sampleItem)||(SAMPLE_LISTS.indexOf(L.id)>=0&&!L.items.length)})}
   function lists(){
     var ed=!!S.lmode;
     var h=head({title:'Lists',sub:'Separate from today. Nothing here is due. Tap Park it on any item and I\u2019ll find space for it in your week.'});
-    h+='<div class="between" style="justify-content:flex-end"><button class="psign" data-a="lot" aria-label="Open '+esc(U().lot)+'"><b>P</b><span>'+esc(U().lot)+'</span></button></div>';
+    h+='<div class="between" style="justify-content:flex-end;gap:8px">'+(S.lists.length>1?'<button class="expall" data-a="lexp" aria-label="Expand or collapse all lists">Expand all</button>':'')+'<button class="psign" data-a="lot" aria-label="Open '+esc(U().lot)+'"><b>P</b><span>'+esc(U().lot)+'</span></button></div>';
     if(!S.demo&&!S.lists.length&&!S.hints.jitlists){
       S.jl=S.jl||[];
       h+='<div class="card"><h3>What lists do you keep in your Notes app?</h3><p class="small">Pick any and they will be here, ready to fill. Nothing on a list is ever due.</p><div class="chips">';
@@ -2336,6 +2338,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     tabtog:function(b){keepSheet(function(){var a=tabsOn().slice(),v=b.dataset.v,i=a.indexOf(v);
       if(i>=0)a.splice(i,1);else{if(a.length>=4){toast('Up to four tabs beside Home. Turn one off first.');return}a.push(v)}
       save('gs-tabs',a);render()})},
+    lexp:function(){var ds=document.querySelectorAll('details.lcard'),open=Array.prototype.some.call(ds,function(d){return !d.open});ds.forEach(function(d){d.open=open});syncExp()},
     clrexl:function(){S.lists=S.lists.filter(function(L){L.items=L.items.filter(function(it){return !sampleItem(it)});return !(SAMPLE_LISTS.indexOf(L.id)>=0&&!L.items.length)});save('gs-lists',S.lists);render();toast('Sample lists cleared. Anything you added is still here.')},
     clrexev:function(){S.events=S.events.filter(function(e){return !e.ex});save('gs-events',S.events);render();toast('Example plans cleared.')},
     tab:function(b){S.tab=b.dataset.v;render();window.scrollTo(0,0)},
