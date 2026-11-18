@@ -269,6 +269,7 @@
     lists:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>',
     log:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>',
     ov:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16M15 4v16"/></svg>',
+    lot:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M10 17V8h3a2.5 2.5 0 0 1 0 5h-3"/></svg>',
     us:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9" r="3"/><circle cx="17" cy="10" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 15c3 0 6 1.5 6 5"/></svg>'
   };
   var STACK='<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="9" height="9" rx="2"/><path d="M3 5v8a1 1 0 0 0 1 1h8"/></svg>';
@@ -817,6 +818,7 @@
     var nd=t.steps.filter(function(x){return x.done}).length;
     return '<div class="bay" data-n="'+(doneRow?'':'P'+n)+'"><button class="check" role="checkbox" aria-checked="'+(!!doneRow)+'" aria-label="'+(doneRow?'Move back: ':'Mark done: ')+esc(t.title)+'" data-a="'+(doneRow?'tkundo':'tkdone')+'" data-v="'+esc(t.id)+'">'+chk+'</button><button class="body" data-a="tkopen" data-v="'+esc(t.id)+'"><b'+(doneRow?' style="text-decoration:line-through;opacity:.7"':'')+'>'+esc(t.title)+'</b>'+(doneRow?'':taskTags(t)+(t.steps.length?'<span class="small">'+nd+' of '+t.steps.length+' steps</span>':''))+'</button></div>';
   }
+  function lotPage(){var u=U();return head({title:u.lot,sub:'Anything with no set time yet. Nothing here is ever overdue.'})+'<aside class="lot lotpage" aria-label="'+esc(u.lot)+'">'+lotInner(true)+'</aside>'}
   function lotSheet(){
     if(!S.lot)return '';
     var u=U();
@@ -950,6 +952,24 @@
     var st=tmin(ev.time),end=st+(ev.dur||0);
     return '<button class="wkev'+(ev.withJ||ev.by==='p'?' wj':'')+'" data-a="evedit" data-v="'+esc(ev.id)+'"><small>'+(ev.by==='p'?'§P\u2019s, ':'')+fmt(st)+(ev.dur?' to '+fmt(end):'')+'</small><b>'+esc(ev.title)+'</b>'+(ev.place?'<span class="small">'+esc(ev.place)+'</span>':'')+'</button>';
   }
+  function ovAll(){
+    var tk=ymd(new Date()),up=[],past=[],rep=[];
+    S.events.forEach(function(ev){if(ev.by==='p')return;if(ev.rpt){rep.push(ev);return}var k=evDate(ev);(k>=tk?up:past).push({ev:ev,k:k})});
+    function byWhen(a,b){return a.k<b.k?-1:a.k>b.k?1:tmin(a.ev.time)-tmin(b.ev.time)}
+    up.sort(byWhen);past.sort(byWhen).reverse();
+    function row(ev,sub){return '<button class="ev nt" data-a="evedit" data-v="'+esc(ev.id)+'"><span class="bd"><b>'+esc(ev.title)+(ev.ex?' <span class="small">(example)</span>':'')+'</b><span class="small">'+esc(sub)+'</span></span></button>'}
+    function when(x){var d=kDate(x.k),lbl=x.k===tk?'Today':x.k===ymd(addDays(new Date(),1))?'Tomorrow':d.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'});return lbl+(x.ev.time?', '+fmtRange(tmin(x.ev.time),x.ev.dur):'')+(x.ev.place?', '+x.ev.place:'')}
+    var h='<div class="card"><h3>Coming up</h3>';
+    if(up.length){h+='<div class="evlist">';up.forEach(function(x){h+=row(x.ev,when(x))});h+='</div>'}else h+='<p class="small">Nothing planned yet.</p>';
+    h+='<button class="addbtn" data-a="evnew" style="margin-top:10px">+ Add a plan</button></div>';
+    var rr=S.reps.filter(function(r){return r.as==='ev'});
+    if(rep.length||rr.length){h+='<div class="card"><h3>Repeating</h3><div class="evlist">';
+      rep.forEach(function(ev){h+=row(ev,repLabel({rep:ev.rpt.rep,days:ev.rpt.days,dom:ev.rpt.dom,mode:ev.rpt.mode,nth:ev.rpt.nth,dow:ev.rpt.dow,as:'ev',time:ev.time}))});
+      rr.forEach(function(r){h+='<button class="ev nt" data-a="reedit" data-v="'+esc(r.id)+'"><span class="bd"><b>'+esc(r.t)+'</b><span class="small">'+esc(repLabel(r))+'</span></span></button>'});
+      h+='</div></div>'}
+    if(past.length){h+='<details class="card"><summary><b>Past plans</b> <span class="small">'+past.length+'</span></summary><div class="evlist" style="margin-top:10px">';past.slice(0,40).forEach(function(x){h+=row(x.ev,when(x))});h+='</div></details>'}
+    return h;
+  }
   function ovWeek(){
     var h='<p class="small">Swipe sideways for the rest of the week.</p><div class="wkrow" role="list">';
     for(var i=0;i<7;i++){
@@ -990,9 +1010,9 @@
   function overview(){
     var u=U();
     var hd=head({title:'Overview',sub:'Your plans at a glance.'}),h='';
-    h+='<div class="between" style="gap:10px"><div class="subtabs" role="group" aria-label="Overview range" style="flex:1"><button data-a="ovv" data-v="week" aria-pressed="'+(S.ovv==='week')+'">Week</button><button data-a="ovv" data-v="month" aria-pressed="'+(S.ovv==='month')+'">Month</button></div><button class="psign" data-a="lot" aria-label="Open '+esc(u.lot)+'"><b>P</b><span>'+esc(u.lot)+'</span></button></div>';
+    h+='<div class="between" style="gap:10px"><div class="subtabs" role="group" aria-label="Overview range" style="flex:1"><button data-a="ovv" data-v="week" aria-pressed="'+(S.ovv==='week')+'">Week</button><button data-a="ovv" data-v="month" aria-pressed="'+(S.ovv==='month')+'">Month</button><button data-a="ovv" data-v="all" aria-pressed="'+(S.ovv==='all')+'">All</button></div><button class="psign" data-a="lot" aria-label="Open '+esc(u.lot)+'"><b>P</b><span>'+esc(u.lot)+'</span></button></div>';
     if(!S.events.some(function(e){return !e.ex})&&!S.hints.jitplans)h+='<div class="card"><h3>Anything this week with a set time?</h3><p class="small">Appointments, classes, calls, dinners. Add one and it shows up on the right day, with a heads-up when it is time to get ready.</p><div class="row"><button class="btn grow" data-a="evnew">Add a plan</button></div><button class="quiet" data-a="hintx" data-v="jitplans">Not now</button></div>';
-    return hd+'<div class="ovsplit"><aside class="lot lotside" aria-label="'+esc(u.lot)+'">'+lotInner(true)+'</aside><div class="ovmain">'+h+(S.ovv==='week'?ovWeek():ovMonth())+'</div></div>';
+    return hd+'<div class="ovsplit"><aside class="lot lotside" aria-label="'+esc(u.lot)+'">'+lotInner(true)+'</aside><div class="ovmain">'+h+(S.ovv==='week'?ovWeek():S.ovv==='all'?ovAll():ovMonth())+(S.events.some(function(e){return e.ex})?'<button class="quiet" data-a="clrexev">Clear example plans</button>':'')+'</div></div>';
   }
 
   /* ---- sample entries so the log calendar has something to show ---- */
@@ -1938,6 +1958,10 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
         h+='<button class="opt" data-a="rnd" data-v="'+o[0]+'" aria-pressed="'+(S.rnd===o[0])+'">'+SVGO.replace('class="sprig"','class="mini"')+o[3]+'</svg><span><b>'+o[1]+'</b><span class="small">'+o[2]+'</span></span></button>';
       });
       h+='</div><div class="grp" id="musgrp"><div class="lab">Music buttons</div><p class="small">Pick which buttons show on Home. Turn them all off to hide the music section.</p><div class="chips sm"><button data-a="mustog" data-v="sp" aria-pressed="'+!!S.mus.sp+'">Spotify</button><button data-a="mustog" data-v="am" aria-pressed="'+!!S.mus.am+'">Apple Music</button><button data-a="mustog" data-v="yt" aria-pressed="'+!!S.mus.yt+'">YouTube playlist</button></div></div><div class="grp"><div class="lab">YouTube playlist</div><p class="small">The playlist button on Home opens a playlist Nicole made, which you are welcome to use. Paste a link to your own playlist to swap it, or use the button to link to all of your youtube playlists.</p><form class="add" data-a="ytsave"><input type="text" id="ytlink" inputmode="url" placeholder="https://youtube.com/playlist?list=..." value="'+esc(S.ytl)+'" aria-label="YouTube playlist link"><button type="submit">Save</button></form><div class="chips sm"><button data-a="ytpl">Link to all playlists</button>'+(S.ytl?'<button data-a="ytreset">Back to the original</button>':'')+'</div></div><div class="grp"><div class="lab">Daily text to your partner</div><p class="small">At this time each day, Home shows a card that opens Messages with your plans for the day'+(signedIn()?' and your live schedule link':'')+'. You tap send.</p><div class="chips sm"><button data-a="dtxtog" aria-pressed="'+!!S.dtx.on+'">'+(S.dtx.on?'On':'Off')+'</button></div><input class="field" type="time" id="dtxtime" value="'+esc(S.dtx.time||'09:00')+'" aria-label="Daily text time" style="margin-top:8px;max-width:180px"></div><div class="grp"><div class="lab">Plan tags</div><p class="small">The tags you can pick when adding a plan. Tap one to remove it.</p><div class="chips sm">'+S.evtags.map(function(q,i){return '<button data-a="evtagdel" data-v="'+i+'" aria-label="Remove tag '+esc(q)+'">'+esc(q)+' &times;</button>'}).join('')+'</div><form class="add" data-a="evtagadd"><input type="text" id="evtagnew" maxlength="24" placeholder="New tag, e.g. Gym" aria-label="New plan tag"><button type="submit">Add</button></form></div><div class="grp"><div class="lab">Calendar</div><div class="chips sm"><button data-a="holtog" aria-pressed="'+!!S.hol+'">Show major US holidays</button></div><p class="small">They appear on Overview and at the top of Plans on the day. They are not plans, so nothing is ever due.</p></div>';
+      var ton=tabsOn();
+      h+='<div class="grp"><div class="lab">Tabs</div><p class="small">Pick up to four to sit beside Home at the bottom of the screen.</p><div class="chips sm">';
+      TABS_ALL.forEach(function(t){h+='<button data-a="tabtog" data-v="'+t[0]+'" aria-pressed="'+(ton.indexOf(t[0])>=0)+'">'+esc(t[0]==='lot'?U().lot:t[1])+'</button>'});
+      h+='</div></div>';
       h+='<div class="sethead" id="set-routine">Routine</div>'+routineTab();
       h+='<div class="sethead">Your data</div>';
       h+='<div class="grp"><div class="lab">Back up your data</div><p class="small">Everything lives on this device only for now. A backup is one small file with your tasks, plans, lists, log and settings. Keep it somewhere safe, or use it to move to a new phone.</p><button class="btn" data-a="dexport">Save a backup</button></div>';
@@ -1957,9 +1981,14 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     return h;
   }
 
+  /* tabs: Home stays in the middle; the rest can be turned on or off in Settings.
+     Until someone chooses, Us shows only when a partner is set; otherwise the parking lot takes its place. */
+  var TABS_ALL=[['lists','Lists'],['ov','Overview'],['lot','Parking lot'],['us','Us'],['log','Log']];
+  function tabsOn(){var t=load('gs-tabs',null);if(Array.isArray(t))return t;return (PROF&&PROF.partner)?['lists','ov','us','log']:['lists','ov','lot','log']}
   function tabs(){
-    var h='';
-    [['lists','Lists'],['ov','Overview'],['today','Home'],['us','Us'],['log','Log']].forEach(function(t){
+    var h='',on=tabsOn(),list=TABS_ALL.filter(function(t){return on.indexOf(t[0])>=0}).map(function(t){return t[0]==='lot'?['lot',U().lot]:t});
+    list.splice(Math.floor(list.length/2),0,['today','Home']);
+    list.forEach(function(t){
       h+='<button data-a="tab" data-v="'+t[0]+'"'+(S.tab===t[0]?' aria-current="page"':'')+'>'+ICON[t[0]]+t[1]+'</button>';
     });
     return h;
@@ -1999,7 +2028,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     var app=document.getElementById('app');
     var _sl=document.getElementById('simslider'),keepSl=(_sl&&document.activeElement===_sl)?_sl:null;
     app.classList.toggle('wide',S.tab==='ov');
-    app.innerHTML=fx(S.tab==='today'?today():S.tab==='ov'?overview():S.tab==='lists'?lists():S.tab==='log'?logview():us());
+    app.innerHTML=fx(S.tab==='today'?today():S.tab==='ov'?overview():S.tab==='lot'?lotPage():S.tab==='lists'?lists():S.tab==='log'?logview():us());
     if(keepSl){var _ns=document.getElementById('simslider');if(_ns&&_ns.parentNode)_ns.parentNode.replaceChild(keepSl,_ns)}
     document.getElementById('tabs').innerHTML=fx(tabs());
     var _hh=app.querySelector('.hero h2'),_hk=_hh?_hh.textContent:'';
@@ -2218,6 +2247,10 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     mbg:function(b,e){if(e.target===b){S.menu=false;render()}},
     look:function(b){keepSheet(function(){S.look=b.dataset.v;S.cw=LOOKS[S.look].cw;save('gs-look',S.look);save('gs-cw',S.cw);applyLook();render()})},
     cw:function(b){keepSheet(function(){S.cw=b.dataset.v;save('gs-cw',S.cw);applyLook();render()})},
+    tabtog:function(b){keepSheet(function(){var a=tabsOn().slice(),v=b.dataset.v,i=a.indexOf(v);
+      if(i>=0)a.splice(i,1);else{if(a.length>=4){toast('Up to four tabs beside Home. Turn one off first.');return}a.push(v)}
+      save('gs-tabs',a);render()})},
+    clrexev:function(){S.events=S.events.filter(function(e){return !e.ex});save('gs-events',S.events);render();toast('Example plans cleared.')},
     tab:function(b){S.tab=b.dataset.v;render();window.scrollTo(0,0)},
     part:function(b){S.part=b.dataset.v;S.shift=0;render()},
     done:function(b){S.status[b.dataset.v]='done';render()},
