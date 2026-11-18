@@ -1801,15 +1801,15 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   var SU_DAILY=[
     ['getup','Get out of bed','morning'],['dailymeds','Take medications','morning'],['teeth','Brush teeth','morning'],['clothes','Get dressed','morning'],
     ['c:Shower','Shower','morning'],['muffin','Feed §C','morning','pet'],['kidsam','Get §K ready','morning','kids'],['water','Drink water','morning'],
-    ['meal','Breakfast','morning'],['lunch','Lunch','afternoon'],['jobs','Work or project time','afternoon'],['pt','Stretch or exercise','afternoon'],
-    ['dinner','Dinner','evening'],['tidy','A quick tidy','evening'],['checkin','Check in with §O','evening','others'],['tomorrow','Glance at tomorrow','evening']
+    ['meals','Meals','morning'],['jobs','Work or project time','afternoon'],['pt','Stretch or exercise','afternoon'],
+    ['tidy','A quick tidy','evening'],['checkin','Check in with §O','evening','others'],['tomorrow','Glance at tomorrow','evening']
   ];
   var SU_START=[['early','Early, before 8',-90],['mid','Mid-morning, 8 to 10',0],['late','Late, after 10',150],['varies','It varies',0]];
   var SU_HELP=[['music','Music'],['people','Someone being around'],['drink','A warm drink'],['outside','Getting outside']];
   var SU_MUS=[['sp','Spotify'],['am','Apple Music'],['yt','YouTube']];
   function suHas(k){return k==='pet'?!!(PROF&&PROF.pet):k==='kids'?!!(PROF&&PROF.kids&&PROF.kids.length):k==='others'?!!(PROF&&PROF.others&&PROF.others.length):true}
   function suDaily(){return SU_DAILY.filter(function(d){return !d[3]||suHas(d[3])})}
-  function suNew(){return {i:0,sel:['getup','teeth','clothes','meal','lunch','dinner'],own:'',floor:null,tasks:['','',''],start:null,helps:[],mus:[]}}
+  function suNew(){return {i:0,sel:['getup','teeth','clothes','meals'],own:'',floor:null,tasks:['','',''],start:null,helps:[],mus:[]}}
   function suRead(){var U2=S.setup;if(!U2)return;var o=document.getElementById('su-own');if(o)U2.own=o.value;[0,1,2].forEach(function(i){var t=document.getElementById('su-t'+i);if(t)U2.tasks[i]=t.value})}
   function suOwn(){return splitNames(S.setup.own).slice(0,6)}
   function suPicked(){var a=suDaily().filter(function(d){return S.setup.sel.indexOf(d[0])>=0}).map(function(d){return {id:d[0],t:fxt(d[1])}});suOwn().forEach(function(t){a.push({id:'own:'+t,t:t})});return a}
@@ -1823,7 +1823,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       h+='</div><label class="lab" for="su-own" style="margin-top:12px">Anything else? Separate with commas.</label><input class="field" type="text" id="su-own" maxlength="200" placeholder="e.g. Water the plants, Walk the dog" value="'+esc(U2.own)+'">';
     }else if(U2.i===1){
       var pk=suPicked();
-      if(U2.floor===null)U2.floor=pk.filter(function(x){return FLOORDEF.indexOf(x.id)>=0}).map(function(x){return x.id});
+      if(U2.floor===null)U2.floor=pk.filter(function(x){return x.id==='meals'||FLOORDEF.indexOf(x.id)>=0}).map(function(x){return x.id});
       h+='<h2 style="font-size:23px">Which of those still matter on your worst days?</h2><p class="small">On a rough day, the app shows only these and lets everything else wait. They also never get a skip button.</p>';
       if(pk.length){h+='<div class="chips">';pk.forEach(function(x){h+=suChip('su-floor',x.id,x.t,U2.floor.indexOf(x.id)>=0)});h+='</div>'}
       else h+='<p class="small">You did not pick anything on the last screen, so there is nothing to choose here yet.</p>';
@@ -1854,13 +1854,14 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     suDaily().forEach(function(d){
       if(U2.sel.indexOf(d[0])<0)return;
       if(d[0].indexOf('c:')===0){ownIds[d[0]]=suCust(d[0].slice(2),d[2]);return}
+      if(d[0]==='meals'){[['meal','morning'],['lunch','afternoon'],['dinner','evening']].forEach(function(m){S.rtn.parts[m[1]].push(m[0]);hid=hid.filter(function(x){return x!==m[0]})});return}
       S.rtn.parts[d[2]].push(d[0]);hid=hid.filter(function(x){return x!==d[0]});
       if(d[0]==='muffin'){S.rtn.parts.evening.unshift('muffinpm');hid=hid.filter(function(x){return x!=='muffinpm'})}
     });
     suOwn().forEach(function(t){ownIds['own:'+t]=suCust(t,'morning')});
     S.rtn.hidden=hid;
     /* worst-day anchors */
-    if(U2.floor!==null){S.floorIds=U2.floor.map(function(id){return ownIds[id]||id});if(S.floorIds.indexOf('muffin')>=0)S.floorIds.push('muffinpm');save('gs-floor',S.floorIds)}
+    if(U2.floor!==null){S.floorIds=[];U2.floor.forEach(function(id){if(id==='meals')S.floorIds.push('meal','lunch','dinner');else S.floorIds.push(ownIds[id]||id)});if(S.floorIds.indexOf('muffin')>=0)S.floorIds.push('muffinpm');save('gs-floor',S.floorIds)}
     /* what helps */
     var first=S.rtn.parts.morning.indexOf('getup')>=0?'getup':null;
     if(U2.helps.indexOf('drink')>=0)suCust('Make a warm drink','morning',first);
