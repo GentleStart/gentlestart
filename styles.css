@@ -332,11 +332,6 @@ details.tuck ul{margin:8px 0 0;padding-left:20px;color:var(--ink2);font-size:15p
 @media (min-width:900px){.deco .vlay{max-width:640px}}
 .wrap.wide .deco .vlay{max-width:none}
 /* the birch is three tinted layers (bark, leaves, lines) so it follows each colorway */
-:root[data-look="original"]::before,:root[data-look="original"] body::before,:root[data-look="original"] body::after{content:"";position:fixed;left:0;top:0;bottom:0;width:44px;z-index:-1;pointer-events:none;-webkit-mask-size:44px auto;mask-size:44px auto;-webkit-mask-repeat:repeat-y;mask-repeat:repeat-y;-webkit-mask-position:0 0;mask-position:0 0}
-:root[data-look="original"]::before{background:var(--bark);-webkit-mask-image:url(art/birch-bark.png);mask-image:url(art/birch-bark.png)}
-:root[data-look="original"] body::before{background:var(--bark-leaf);-webkit-mask-image:url(art/birch-leaf.png);mask-image:url(art/birch-leaf.png)}
-:root[data-look="original"] body::after{background:var(--trunk-line,var(--bark-line));-webkit-mask-image:url(art/birch-line.png);mask-image:url(art/birch-line.png)}
-:root[data-look="original"] .tabs{padding-left:max(46px,calc(env(safe-area-inset-left,0px) + 34px))}
 
 /* ===== LOOK: Canvas. Paper-and-ink: canvas weave, ink wash, brush-stroke dividers, ensō step markers. ===== */
 :root[data-look="birch"]{--brush:var(--ink);--brush-fill:var(--ink);--brush-dot:var(--ink);--brush-svg:var(--ink);--sheen:0;--brush-op:.9}
@@ -668,8 +663,7 @@ html:root[data-look] .tabs button[data-v="today"][aria-current="page"]{backgroun
 /* vine follows the colorway */
 :root[data-cw="library"]{--vh:90deg}:root[data-cw="peri"]{--vh:144deg}:root[data-cw="ocean"]{--vh:62deg}:root[data-cw="oak"]{--vh:-83deg}
 /* wide screens: centre the page even with the birch trunk (the trunk may sit under the page) */
-@media (min-width:760px){:root[data-look="original"] body,:root[data-look="original"] .tabs{padding-left:0}}
-:root[data-look="original"]::before,:root[data-look="original"] body::before,:root[data-look="original"] body::after{-webkit-mask-position:-1px 0;mask-position:-1px 0}
+@media (min-width:760px){:root[data-look="original"] body{padding-left:0}}
 /* stuck button: no glow in dark mode, soft drop shadow stays in light mode */
 :root[data-theme="dark"] .fab{box-shadow:none}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .fab{box-shadow:none}}
@@ -1029,3 +1023,14 @@ html:root[data-theme="dark"][data-look] .tabs button[data-v="today"][aria-curren
 :root[data-theme="dark"] .garland .h-pink{background:color-mix(in srgb,var(--wood) 38%,var(--surface))}
 :root[data-theme="dark"] .garland .h-purp{background:color-mix(in srgb,var(--accent) 48%,var(--surface))}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .garland .g-ink,:root:not([data-theme="light"]) .garland .h-ink{background:color-mix(in srgb,var(--ink2) 60%,var(--bg));opacity:1}:root:not([data-theme="light"]) .garland .g-tl,:root:not([data-theme="light"]) .garland .h-tl{opacity:.12}:root:not([data-theme="light"]) .garland .g-leaf,:root:not([data-theme="light"]) .garland .h-leaf{background:color-mix(in srgb,color-mix(in srgb,#7FA678 70%,var(--accent)) 62%,var(--surface))}:root:not([data-theme="light"]) .garland .h-yel{background:color-mix(in srgb,#D8A93A 58%,var(--surface))}:root:not([data-theme="light"]) .garland .h-pink{background:color-mix(in srgb,var(--wood) 38%,var(--surface))}:root:not([data-theme="light"]) .garland .h-purp{background:color-mix(in srgb,var(--accent) 48%,var(--surface))}}
+
+/* Original: the birch scrolls with the page. Its first sprout sits just above the greeting,
+   and the trunk keeps going above the top of the page so pulling down past the top still shows bark. */
+.trunk{display:none}
+:root[data-look="original"] body{position:relative;min-height:100vh;min-height:100dvh}
+:root[data-look="original"] .trunk{display:block;position:absolute;left:0;top:-900px;bottom:0;width:44px;z-index:-1;pointer-events:none}
+.trunk i{position:absolute;inset:0;-webkit-mask-size:44px auto;mask-size:44px auto;-webkit-mask-repeat:repeat-y;mask-repeat:repeat-y;-webkit-mask-position:0 calc(900px + var(--tree-y,40px) - 52px);mask-position:0 calc(900px + var(--tree-y,40px) - 52px)}
+.trunk .t-bark{background:var(--bark);-webkit-mask-image:url(art/birch-bark.png);mask-image:url(art/birch-bark.png)}
+.trunk .t-leaf{background:var(--bark-leaf);-webkit-mask-image:url(art/birch-leaf.png);mask-image:url(art/birch-leaf.png)}
+.trunk .t-line{background:var(--trunk-line,var(--bark-line));-webkit-mask-image:url(art/birch-line.png);mask-image:url(art/birch-line.png)}
+@media (min-width:760px){.trunk i{-webkit-mask-position:-1px calc(900px + var(--tree-y,40px) - 52px);mask-position:-1px calc(900px + var(--tree-y,40px) - 52px)}}

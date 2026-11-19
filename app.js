@@ -2101,6 +2101,15 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   }
   window.addEventListener('resize',function(){clearTimeout(meadowFrames.t);meadowFrames.t=setTimeout(meadowFrames,120)});
   document.addEventListener('toggle',function(){meadowFrames()},true);
+  /* Original: line the birch's first sprout up just above the greeting */
+  function placeTree(){
+    if(lookKey()!=='original')return;
+    var tr=document.querySelector('body>.trunk');if(!tr){tr=document.createElement('div');tr.className='trunk';tr.setAttribute('aria-hidden','true');tr.innerHTML='<i class="t-bark"></i><i class="t-leaf"></i><i class="t-line"></i>';document.body.insertBefore(tr,document.body.firstChild)}
+    var hl=document.querySelector('#app .hello');if(!hl)return;
+    var y=hl.getBoundingClientRect().top-document.body.getBoundingClientRect().top-4;
+    document.documentElement.style.setProperty('--tree-y',Math.round(y)+'px');
+  }
+  window.addEventListener('resize',function(){clearTimeout(placeTree.t);placeTree.t=setTimeout(placeTree,120)});
   function render(){
     var tk=ymd(new Date());if(S.statusDay!==tk){S.status={};S.statusDay=tk}
     var js=JSON.stringify(S.status);if(js!==S.statusSaved){S.statusSaved=js;save('gs-status',{d:tk,s:S.status})}
@@ -2123,6 +2132,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     var _l2=document.querySelector('.lot');if(_l2)_l2.scrollTop=_st;
     try{publishLive()}catch(e){}
     try{meadowFrames()}catch(e){}
+    try{placeTree()}catch(e){}
   }
 
   function logIt(label,extra,onDay){
