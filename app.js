@@ -2694,7 +2694,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     }else if(f.dataset.a==='rtadd'){
       var rp=f.dataset.p,rid='c'+Date.now();
       S.cust.push({id:rid,t:v.slice(0,50)});S.rtn.parts[rp].push(rid);syncSteps();saveRtn();
-      keepSheet(render);var rn=document.getElementById('rtadd-'+rp);if(rn)rn.focus();
+      S.rtAdd=null;keepSheet(render);toast('Added to your '+rp+'.');
     }else if(f.dataset.a==='acemail'){
       if(/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)){window.GSSync&&window.GSSync.emailLink(v)}else toast('That email does not look right.');
     }else if(f.dataset.a==='lgadd'){
