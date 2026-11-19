@@ -1933,23 +1933,29 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
         else v+='<p class="small">Nothing here yet.</p>';
         v+='</div>';
       });
-      v+='<button class="btn alt" data-a="rtedmode" style="margin:4px 0 8px">Edit routine</button>';
+      v+=anchorGrp()+'<button class="btn alt" data-a="rtedmode" style="margin:4px 0 8px">Edit routine</button>';
       return v+repeatingGrp();
     }
-    var h='<p class="small">Drag a step by its handle to reorder it or move it to another part of the day. Tap a name to rename or remove it, and add your own below each part.</p>';
+    var h='<p class="small">Drag a step by its handle <span class="gripmini" aria-hidden="true"></span> to reorder it, or drag it into another part of the day. Swipe a step left to remove it. Tap a name to rename it.</p><div class="rtlanes">';
     PS.forEach(function(p){
       var ids=S.rtn.parts[p[0]].filter(function(id){return !offId(id)});
-      h+='<div class="grp"><div class="lab">'+p[1]+'</div><ul class="rtl" data-p="'+p[0]+'" aria-label="'+p[1]+'">';
+      h+='<div class="grp rtlane"><div class="lab">'+p[1]+'</div><ul class="rtl" data-p="'+p[0]+'" aria-label="'+p[1]+'">';
       ids.forEach(function(id,i){
-        h+='<li data-id="'+esc(id)+'" data-p="'+p[0]+'"><div class="rtbox"><button class="rtn" data-a="rtedit" data-v="'+esc(id)+'"><span>'+esc(nmOf(id))+'</span></button><button class="fpill'+(isFloor(id)?' on':'')+'" data-a="flrtog" data-v="'+esc(id)+'" aria-pressed="'+isFloor(id)+'">'+(creature()?(isFloor(id)?'<em class="pun">Bear</em> minimum \u2713':'<em class="pun">Bear</em> minimum'):(isFloor(id)?'Anchored':'Anchor it'))+'</button></div><span class="grip" role="button" tabindex="0" aria-label="Drag to reorder '+esc(nmOf(id))+'. Arrow keys also move it." data-p="'+p[0]+'" data-v="'+esc(id)+'"><svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true"><rect x="3" y="4" width="12" height="2" rx="1"/><rect x="3" y="8" width="12" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg></span></li>';
+        h+='<li data-id="'+esc(id)+'" data-p="'+p[0]+'"><button class="swdel" data-a="rtswdel" data-v="'+esc(id)+'" tabindex="-1">Remove</button><div class="rtbox"><button class="rtn" data-a="rtedit" data-v="'+esc(id)+'"><span>'+esc(nmOf(id))+'</span></button><button class="fpill'+(isFloor(id)?' on':'')+'" data-a="flrtog" data-v="'+esc(id)+'" aria-pressed="'+isFloor(id)+'">'+(creature()?(isFloor(id)?'<em class="pun">Bear</em> minimum \u2713':'<em class="pun">Bear</em> minimum'):(isFloor(id)?'Anchored':'Anchor it'))+'</button></div><span class="grip" role="button" tabindex="0" aria-label="Drag to reorder '+esc(nmOf(id))+'. Arrow keys also move it." data-p="'+p[0]+'" data-v="'+esc(id)+'"><svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true"><rect x="3" y="4" width="12" height="2" rx="1"/><rect x="3" y="8" width="12" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg></span></li>';
       });
       h+='</ul>';
       h+='<form class="add" data-a="rtadd" data-p="'+p[0]+'" style="margin-top:8px"><input type="text" id="rtadd-'+p[0]+'" placeholder="Add a step" aria-label="Add a step to '+p[1]+'" maxlength="50"><button type="submit">Add</button></form></div>';
     });
-    h+='<div class="grp"><div class="lab">'+(creature()?'<em class="pun">Bear</em> minimum':'Anchor it')+'</div><p class="small">Pick the things that always count. They never get a skip button, and they are what shows '+(creature()?'on bear minimum days':'in low battery mode')+'.</p><p class="small">A gentle reminder: picking too many is a lot to ask of your low battery self, so keep it to the few that truly matter.</p>';
-    h+='</div><button class="btn" data-a="rtedmode" style="margin:4px 0 8px">Done editing</button>';
+    h+='</div>'+anchorGrp()+'<button class="btn" data-a="rtedmode" style="margin:4px 0 8px">Done editing</button>';
     return h+repeatingGrp();
   }
+  function rmStep(id){
+    ['morning','afternoon','evening'].forEach(function(p){S.rtn.parts[p]=S.rtn.parts[p].filter(function(x){return x!==id})});
+    if(S.cust.some(function(x){return x.id===id})){S.cust=S.cust.filter(function(x){return x.id!==id});S.floorIds=S.floorIds.filter(function(x){return x!==id});save('gs-floor',S.floorIds);delete S.rtn.names[id]}
+    else if(S.rtn.hidden.indexOf(id)<0)S.rtn.hidden.push(id);
+    saveRtn();
+  }
+  function anchorGrp(){return '<div class="grp"><div class="lab">'+(creature()?'<em class="pun">Bear</em> minimum':'Anchor it')+'</div><p class="small">Pick the things that always count. They never get a skip button, and they are what shows '+(creature()?'on bear minimum days':'in low battery mode')+'.</p><p class="small">A gentle reminder: picking too many is a lot to ask of your low battery self, so keep it to the few that truly matter.</p></div>'}
   function repeatingGrp(){
     var h='<div class="grp"><div class="lab mid">Repeating tasks</div><p class="small">Things that aren\u2019t in your daily routine, but come up every week or month. If one slips by, it just resets for next time. It never piles up.</p>';
     var rplans=S.events.filter(function(ev){return ev.rpt&&ev.by!=='p'});
@@ -2441,13 +2447,8 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       else if(v===NAMES[se.id])delete S.rtn.names[se.id];else S.rtn.names[se.id]=v;
       syncSteps();saveRtn();S.se=null;render();toast('Saved.')
     },
-    sedel:function(){
-      var se=S.se;if(!se)return;var id=se.id;
-      ['morning','afternoon','evening'].forEach(function(p){S.rtn.parts[p]=S.rtn.parts[p].filter(function(x){return x!==id})});
-      if(S.cust.some(function(x){return x.id===id})){S.cust=S.cust.filter(function(x){return x.id!==id});S.floorIds=S.floorIds.filter(function(x){return x!==id});save('gs-floor',S.floorIds);delete S.rtn.names[id]}
-      else if(S.rtn.hidden.indexOf(id)<0)S.rtn.hidden.push(id);
-      saveRtn();S.se=null;render();toast('Removed from your routine.')
-    },
+    sedel:function(){var se=S.se;if(!se)return;rmStep(se.id);S.se=null;render();toast('Removed from your routine.')},
+    rtswdel:function(b){var id=b.dataset.v;keepSheet(function(){rmStep(id);render()});toast('Removed from your routine.')},
     secancel:function(){S.se=null;render()},
     sebg:function(b,e){if(e.target===b){S.se=null;render()}},
     rtback:function(b){var id=b.dataset.v;S.rtn.hidden=S.rtn.hidden.filter(function(x){return x!==id});var p=defPart(id);if(S.rtn.parts[p].indexOf(id)<0)S.rtn.parts[p].push(id);saveRtn();keepSheet(render)},
@@ -2972,9 +2973,9 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     var SW=null,openLi=null,eat=false;
     function close(li){li.classList.remove('dragging');li.style.setProperty('--sx','0px');setTimeout(function(){if(li.style.getPropertyValue('--sx')==='0px')li.classList.remove('swp')},220);if(openLi===li)openLi=null}
     document.addEventListener('pointerdown',function(e){
-      var li=e.target.closest&&e.target.closest('.items li.item');
+      var li=e.target.closest&&e.target.closest('.items li.item, ul.rtl li');
       if(openLi&&li!==openLi)close(openLi);
-      if(!li||!li.querySelector('.swdel')||e.target.closest('.swdel'))return;
+      if(!li||!li.querySelector('.swdel')||e.target.closest('.swdel')||e.target.closest('.grip'))return;
       SW={li:li,x:e.clientX,y:e.clientY,id:e.pointerId,base:li===openLi?-84:0,v:li===openLi?-84:0,on:false};
     });
     document.addEventListener('pointermove',function(e){
@@ -3002,26 +3003,44 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
         S.rtn.parts[p]=Array.prototype.map.call(ul.children,function(li){li.dataset.p=p;return li.dataset.id}).concat(off[p]||[])});
       saveRtn();
     }
+    function ty(el){var t=getComputedStyle(el).transform;if(!t||t==='none')return 0;try{return new DOMMatrix(t).m42}catch(x){var m=t.match(/matrix\(([^)]+)\)/);return m?+m[1].split(',')[5]||0:0}}
+    function nat(el){var r=el.getBoundingClientRect();return {top:r.top-ty(el),h:r.height}}
+    function lis(){return Array.prototype.slice.call(document.querySelectorAll('ul.rtl[data-p] > li'))}
+    function follow(){if(!G)return;var n=nat(G.li);G.li.style.transform='translateY('+(G.y-G.off-n.top)+'px)'}
+    function place(){
+      var y=G.y,uls=document.querySelectorAll('ul.rtl[data-p]'),tgt=null;
+      for(var u=0;u<uls.length;u++){var ur=uls[u].getBoundingClientRect();if(y>=ur.top-18&&y<=ur.bottom+18){tgt=uls[u];break}}
+      document.querySelectorAll('ul.rtl.droptgt').forEach(function(x){if(x!==tgt)x.classList.remove('droptgt')});
+      if(!tgt)return;tgt.classList.add('droptgt');
+      var sib=Array.prototype.slice.call(tgt.children).filter(function(s){return s!==G.li}),before=null;
+      for(var i=0;i<sib.length;i++){var r=nat(sib[i]);if(y<r.top+r.h/2){before=sib[i];break}}
+      if(G.li.parentNode===tgt&&G.li.nextElementSibling===before)return;
+      if(G.li.parentNode===tgt&&!before&&!G.li.nextElementSibling)return;
+      /* FLIP: remember where everyone was, move, then let them glide from there */
+      var all=lis().filter(function(x){return x!==G.li}),first=all.map(function(x){return x.getBoundingClientRect().top});
+      tgt.insertBefore(G.li,before);G.ul=tgt;
+      all.forEach(function(x,i){x.style.transition='none';x.style.transform='';var d=first[i]-x.getBoundingClientRect().top;if(d){x.style.transform='translateY('+d+'px)'}});
+      void document.body.offsetHeight;
+      all.forEach(function(x){if(x.style.transform){x.style.transition='transform .18s ease';x.style.transform=''}});
+    }
+    var raf=0;
+    function tick(){raf=0;if(!G)return;place();follow();
+      var sh=document.querySelector('.sheet');if(sh){var sr=sh.getBoundingClientRect();if(G.y<sr.top+60){sh.scrollTop-=8;raf=requestAnimationFrame(tick)}else if(G.y>sr.bottom-60){sh.scrollTop+=8;raf=requestAnimationFrame(tick)}}}
     document.addEventListener('pointerdown',function(e){
       var g=e.target.closest&&e.target.closest('.grip');if(!g)return;
-      e.preventDefault();var li=g.closest('li'),ul=li.parentNode;
-      G={li:li,ul:ul,id:e.pointerId,g:g};try{g.setPointerCapture(e.pointerId)}catch(x){}
-      li.classList.add('gripping');
+      e.preventDefault();var li=g.closest('li'),ul=li.parentNode,r=li.getBoundingClientRect();
+      G={li:li,ul:ul,id:e.pointerId,g:g,y:e.clientY,off:e.clientY-r.top};try{g.setPointerCapture(e.pointerId)}catch(x){}
+      li.style.transition='none';li.classList.add('gripping');document.body.classList.add('rtdragging');
     });
     document.addEventListener('pointermove',function(e){
-      if(!G||e.pointerId!==G.id)return;
-      var y=e.clientY,uls=document.querySelectorAll('ul.rtl[data-p]'),tgt=null;
-      for(var u=0;u<uls.length;u++){var ur=uls[u].getBoundingClientRect();if(y>=ur.top-14&&y<=ur.bottom+14){tgt=uls[u];break}}
-      if(tgt){
-        var sib=Array.prototype.slice.call(tgt.children),placed=false;
-        for(var i=0;i<sib.length;i++){var s=sib[i];if(s===G.li)continue;var r=s.getBoundingClientRect();
-          if(y>r.top&&y<r.bottom){if(y<r.top+r.height/2)tgt.insertBefore(G.li,s);else tgt.insertBefore(G.li,s.nextSibling);placed=true;break}}
-        if(!placed&&G.li.parentNode!==tgt){var tr=tgt.getBoundingClientRect();if(y<tr.top+8&&tgt.firstChild)tgt.insertBefore(G.li,tgt.firstChild);else tgt.appendChild(G.li)}
-        G.ul=tgt;
-      }
-      var sh=document.querySelector('.sheet');if(sh){var sr=sh.getBoundingClientRect();if(y<sr.top+50)sh.scrollTop-=10;else if(y>sr.bottom-50)sh.scrollTop+=10}
+      if(!G||e.pointerId!==G.id)return;G.y=e.clientY;if(!raf)raf=requestAnimationFrame(tick);
     });
-    function end(e){if(!G||(e&&e.pointerId!==G.id))return;var d=G;G=null;d.li.classList.remove('gripping');saveOrder()}
+    function end(e){if(!G||(e&&e.pointerId!==G.id))return;var d=G;G=null;if(raf){cancelAnimationFrame(raf);raf=0}
+      document.body.classList.remove('rtdragging');document.querySelectorAll('ul.rtl.droptgt').forEach(function(x){x.classList.remove('droptgt')});
+      d.li.style.transition='transform .18s ease';d.li.style.transform='';
+      setTimeout(function(){d.li.classList.remove('gripping');d.li.style.transition=''},190);
+      lis().forEach(function(x){if(x!==d.li){x.style.transition='';x.style.transform=''}});
+      saveOrder()}
     document.addEventListener('pointerup',end);document.addEventListener('pointercancel',end);
     document.addEventListener('keydown',function(e){
       var g=e.target.classList&&e.target.classList.contains('grip')?e.target:null;if(!g||(e.key!=='ArrowUp'&&e.key!=='ArrowDown'))return;

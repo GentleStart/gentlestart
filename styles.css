@@ -1031,3 +1031,21 @@ html:root[data-theme="dark"][data-look] .tabs button[data-v="today"][aria-curren
 :root[data-look="original"]{background:var(--trunk-img,none) 0 var(--trunk-pos,0) / 44px auto repeat-y,var(--bg)}
 :root[data-look="original"] body{background:transparent;min-height:100vh;min-height:100dvh}
 @media (min-width:760px){:root[data-look="original"]{background-position:-1px var(--trunk-pos,0)}}
+
+/* routine editor: the three parts read as drop lanes, rows swipe left to remove */
+.rtlanes{display:flex;flex-direction:column;gap:4px}
+.rtlane .rtl{padding:6px;margin:0 -6px;border:1.5px dashed color-mix(in srgb,var(--line) 70%,transparent);border-radius:16px;background:color-mix(in srgb,var(--soft) 45%,transparent);transition:border-color .15s,background .15s}
+body.rtdragging .rtlane .rtl{border-color:var(--line)}
+.rtlane .rtl.droptgt,body.rtdragging .rtlane .rtl.droptgt{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 9%,transparent)}
+.rtl[data-p]:empty{min-height:46px}
+ul.rtl li{position:relative;--sx:0px}
+ul.rtl li > *:not(.swdel){transform:translateX(var(--sx));transition:transform .2s ease}
+ul.rtl li.dragging > *:not(.swdel),ul.rtl li.dragging .swdel{transition:none}
+ul.rtl li.swp .swdel{display:block}
+ul.rtl li .swdel{top:0;bottom:0;border-radius:12px}
+ul.rtl li .rtbox{touch-action:pan-y}
+ul.rtl li.gripping{will-change:transform}
+body.rtdragging{-webkit-user-select:none;user-select:none}
+.gripmini{display:inline-block;width:14px;height:10px;vertical-align:-1px;background:linear-gradient(currentColor 0 0) 0 0/100% 2px no-repeat,linear-gradient(currentColor 0 0) 0 4px/100% 2px no-repeat,linear-gradient(currentColor 0 0) 0 8px/100% 2px no-repeat;opacity:.7}
+ul.rtl li.gripping{background:transparent;box-shadow:none;opacity:1}
+ul.rtl li.gripping .rtbox,ul.rtl li.gripping .grip{box-shadow:0 10px 22px -10px rgba(0,0,0,.45);background:var(--surface)}
