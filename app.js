@@ -2105,6 +2105,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   function placeTree(){
     if(lookKey()!=='original')return;
     var tr=document.querySelector('body>.trunk');if(!tr){tr=document.createElement('div');tr.className='trunk';tr.setAttribute('aria-hidden','true');tr.innerHTML='<i class="t-bark"></i><i class="t-leaf"></i><i class="t-line"></i>';document.body.insertBefore(tr,document.body.firstChild)}
+    if(!document.querySelector('body>.trunk-fx')){var fx2=document.createElement('div');fx2.className='trunk-fx';fx2.setAttribute('aria-hidden','true');fx2.innerHTML='<i class="t-bark"></i><i class="t-line"></i>';document.body.insertBefore(fx2,document.body.firstChild)}
     var hl=document.querySelector('#app .head .top .date')||document.querySelector('#app .hello');if(!hl)return;
     var y=hl.getBoundingClientRect().top-document.body.getBoundingClientRect().top-2;
     document.documentElement.style.setProperty('--tree-y',Math.round(y)+'px');
