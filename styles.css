@@ -1027,8 +1027,9 @@ html:root[data-theme="dark"][data-look] .tabs button[data-v="today"][aria-curren
 /* Original: the birch scrolls with the page. Its first sprout sits just above the greeting,
    and the trunk keeps going above the top of the page so pulling down past the top still shows bark. */
 .trunk{display:none}
-:root[data-look="original"] body{position:relative;min-height:100vh;min-height:100dvh}
-:root[data-look="original"] .trunk{display:block;position:absolute;left:0;top:-900px;bottom:0;width:44px;z-index:-1;pointer-events:none}
+/* the trunk is placed against the whole page (not inside body), so body's sideways clipping never cuts it off at the top */
+:root[data-look="original"] body{min-height:100vh;min-height:100dvh}
+:root[data-look="original"] .trunk{display:block;position:absolute;left:0;top:-900px;height:calc(100vh + 900px);width:44px;z-index:-1;pointer-events:none}
 .trunk i{position:absolute;inset:0;-webkit-mask-size:44px auto;mask-size:44px auto;-webkit-mask-repeat:repeat-y;mask-repeat:repeat-y;-webkit-mask-position:0 calc(900px + var(--tree-y,40px) - 52px);mask-position:0 calc(900px + var(--tree-y,40px) - 52px)}
 .trunk .t-bark{background:var(--bark);-webkit-mask-image:url(art/birch-bark.png);mask-image:url(art/birch-bark.png)}
 .trunk .t-leaf{background:var(--bark-leaf);-webkit-mask-image:url(art/birch-leaf.png);mask-image:url(art/birch-leaf.png)}

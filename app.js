@@ -2107,10 +2107,13 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     var tr=document.querySelector('body>.trunk');if(!tr){tr=document.createElement('div');tr.className='trunk';tr.setAttribute('aria-hidden','true');tr.innerHTML='<i class="t-bark"></i><i class="t-leaf"></i><i class="t-line"></i>';document.body.insertBefore(tr,document.body.firstChild)}
     if(!document.querySelector('body>.trunk-fx')){var fx2=document.createElement('div');fx2.className='trunk-fx';fx2.setAttribute('aria-hidden','true');fx2.innerHTML='<i class="t-bark"></i><i class="t-line"></i>';document.body.insertBefore(fx2,document.body.firstChild)}
     var hl=document.querySelector('#app .head .top .date')||document.querySelector('#app .hello');if(!hl)return;
-    var y=hl.getBoundingClientRect().top-document.body.getBoundingClientRect().top-2;
+    var y=hl.getBoundingClientRect().top+window.scrollY-2;
     document.documentElement.style.setProperty('--tree-y',Math.round(y)+'px');
+    var end=document.body.getBoundingClientRect().bottom+window.scrollY;
+    tr.style.height=Math.max(Math.round(end),window.innerHeight)+900+'px';
   }
   window.addEventListener('resize',function(){clearTimeout(placeTree.t);placeTree.t=setTimeout(placeTree,120)});
+  try{new ResizeObserver(function(){clearTimeout(placeTree.t);placeTree.t=setTimeout(placeTree,60)}).observe(document.body)}catch(e){}
   function render(){
     var tk=ymd(new Date());if(S.statusDay!==tk){S.status={};S.statusDay=tk}
     var js=JSON.stringify(S.status);if(js!==S.statusSaved){S.statusSaved=js;save('gs-status',{d:tk,s:S.status})}
