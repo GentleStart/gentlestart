@@ -1002,3 +1002,20 @@ body{touch-action:pan-y pinch-zoom}
 :root[data-look="meadow"] details.card>summary:not(.mframe){position:static;z-index:auto}
 :root[data-look="meadow"] details.card>summary>*:not(.mframe){position:relative;z-index:1}
 :root[data-look="meadow"] details.card>summary>.mframe{position:absolute;z-index:0}
+
+/* dark mode: shadows are real shadows, not glows (light-colored or accent-colored shadows read as a glow on dark backgrounds) */
+:root[data-theme="dark"] .hero{box-shadow:0 10px 26px -18px rgba(0,0,0,.6)}
+:root[data-theme="dark"] .subtabs button[aria-pressed="true"]{box-shadow:0 2px 6px -3px rgba(0,0,0,.55)}
+:root[data-theme="dark"] .dragging{box-shadow:0 14px 24px -10px rgba(0,0,0,.6)}
+:root[data-theme="dark"] .ghost{box-shadow:0 12px 22px -10px rgba(0,0,0,.6)}
+:root[data-theme="dark"] .hero.pulse{animation:none}
+:root[data-theme="dark"][data-look="meadow"] .hero{box-shadow:0 14px 26px -20px rgba(0,0,0,.6)}
+:root[data-theme="dark"][data-look="meadow"] .tabs{box-shadow:0 12px 22px -14px rgba(0,0,0,.6)}
+:root[data-theme="dark"][data-look="meadow"] .mframe svg{filter:drop-shadow(0 6px 10px rgba(0,0,0,.35))}
+:root[data-theme="dark"][data-look="tide"] .hero{box-shadow:0 16px 30px -24px rgba(0,0,0,.6)}
+:root[data-theme="dark"][data-look="tide"] .card{box-shadow:0 10px 22px -18px rgba(0,0,0,.6)}
+:root[data-theme="dark"][data-look="tide"] .tabs{box-shadow:none;filter:drop-shadow(0 -3px 6px rgba(0,0,0,.35))}
+:root[data-theme="dark"][data-look="tide"] .steps li.now .dot{box-shadow:0 0 0 4px var(--soft)}
+html:root[data-theme="dark"][data-look] .tabs button[data-v="today"]{box-shadow:0 8px 16px -10px rgba(0,0,0,.6)}
+html:root[data-theme="dark"][data-look] .tabs button[data-v="today"][aria-current="page"]{box-shadow:0 0 0 3px var(--soft),0 8px 16px -10px rgba(0,0,0,.6)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .hero{box-shadow:0 10px 26px -18px rgba(0,0,0,.6)}:root:not([data-theme="light"]) .subtabs button[aria-pressed="true"]{box-shadow:0 2px 6px -3px rgba(0,0,0,.55)}:root:not([data-theme="light"]) .dragging{box-shadow:0 14px 24px -10px rgba(0,0,0,.6)}:root:not([data-theme="light"]) .ghost{box-shadow:0 12px 22px -10px rgba(0,0,0,.6)}:root:not([data-theme="light"]) .hero.pulse{animation:none}:root:not([data-theme="light"])[data-look="meadow"] .hero{box-shadow:0 14px 26px -20px rgba(0,0,0,.6)}:root:not([data-theme="light"])[data-look="meadow"] .tabs{box-shadow:0 12px 22px -14px rgba(0,0,0,.6)}:root:not([data-theme="light"])[data-look="meadow"] .mframe svg{filter:drop-shadow(0 6px 10px rgba(0,0,0,.35))}:root:not([data-theme="light"])[data-look="tide"] .hero{box-shadow:0 16px 30px -24px rgba(0,0,0,.6)}:root:not([data-theme="light"])[data-look="tide"] .card{box-shadow:0 10px 22px -18px rgba(0,0,0,.6)}:root:not([data-theme="light"])[data-look="tide"] .tabs{box-shadow:none;filter:drop-shadow(0 -3px 6px rgba(0,0,0,.35))}:root:not([data-theme="light"])[data-look="tide"] .steps li.now .dot{box-shadow:0 0 0 4px var(--soft)}html:root:not([data-theme="light"])[data-look] .tabs button[data-v="today"]{box-shadow:0 8px 16px -10px rgba(0,0,0,.6)}html:root:not([data-theme="light"])[data-look] .tabs button[data-v="today"][aria-current="page"]{box-shadow:0 0 0 3px var(--soft),0 8px 16px -10px rgba(0,0,0,.6)}}
