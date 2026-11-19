@@ -1924,7 +1924,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   }
   function routineTab(){
     var PS=[['morning','Morning'],['afternoon','Afternoon'],['evening','Evening']];
-    if(!S.rtEdit){
+    {
       var v='<p class="small">The steps that make up your day. Nothing here ever turns into overdue.</p>';
       PS.forEach(function(p){
         var ids=S.rtn.parts[p[0]].filter(function(id){return !offId(id)});
@@ -1936,24 +1936,31 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       v+=anchorGrp()+'<button class="btn alt" data-a="rtedmode" style="margin:4px 0 8px">Edit routine</button>';
       return v+repeatingGrp();
     }
-    var h='<p class="small">Drag a step by its handle <span class="gripmini" aria-hidden="true"></span> to reorder it, or drag it into another part of the day. Swipe a step left, then tap Remove or swipe it again. Tap a name to rename it.</p><div class="rtlanes">';
-    PS.forEach(function(p){
-      var ids=S.rtn.parts[p[0]].filter(function(id){return !offId(id)});
-      h+='<div class="grp rtlane"><div class="lab">'+p[1]+'</div><ul class="rtl" data-p="'+p[0]+'" aria-label="'+p[1]+'">';
-      ids.forEach(function(id,i){
-        h+='<li data-id="'+esc(id)+'" data-p="'+p[0]+'"><button class="swdel" data-a="rtswdel" data-v="'+esc(id)+'" tabindex="-1">Remove</button><div class="rtbox"><button class="rtn" data-a="rtedit" data-v="'+esc(id)+'"><span>'+esc(nmOf(id))+'</span></button><button class="fpill'+(isFloor(id)?' on':'')+'" data-a="flrtog" data-v="'+esc(id)+'" aria-pressed="'+isFloor(id)+'">'+(creature()?(isFloor(id)?'<em class="pun">Bear</em> minimum \u2713':'<em class="pun">Bear</em> minimum'):(isFloor(id)?'Anchored':'Anchor it'))+'</button></div><span class="grip" role="button" tabindex="0" aria-label="Drag to reorder '+esc(nmOf(id))+'. Arrow keys also move it." data-p="'+p[0]+'" data-v="'+esc(id)+'"><svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true"><rect x="3" y="4" width="12" height="2" rx="1"/><rect x="3" y="8" width="12" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg></span></li>';
-      });
-      h+='</ul>';
-      h+='<form class="add" data-a="rtadd" data-p="'+p[0]+'" style="margin-top:8px"><input type="text" id="rtadd-'+p[0]+'" placeholder="Add a step" aria-label="Add a step to '+p[1]+'" maxlength="50"><button type="submit">Add</button></form></div>';
-    });
-    h+='</div>'+anchorGrp()+'<button class="btn" data-a="rtedmode" style="margin:4px 0 8px">Done editing</button>';
-    return h+repeatingGrp();
   }
+
   function rmStep(id){
     ['morning','afternoon','evening'].forEach(function(p){S.rtn.parts[p]=S.rtn.parts[p].filter(function(x){return x!==id})});
     if(S.cust.some(function(x){return x.id===id})){S.cust=S.cust.filter(function(x){return x.id!==id});S.floorIds=S.floorIds.filter(function(x){return x!==id});save('gs-floor',S.floorIds);delete S.rtn.names[id]}
     else if(S.rtn.hidden.indexOf(id)<0)S.rtn.hidden.push(id);
     saveRtn();
+  }
+  function rtSheet(){
+    if(!S.rtEdit||!S.menu)return '';
+    var PS=[['morning','Morning'],['afternoon','Afternoon'],['evening','Evening']];
+    var h='<p class="small">Drag a step by its handle <span class="gripmini" aria-hidden="true"></span> to reorder it, or drag it into another part of the day. Swipe a step left, then tap Remove or swipe it again. Tap a name to rename it.</p><div class="rtlanes">';
+    PS.forEach(function(p){
+      var ids=S.rtn.parts[p[0]].filter(function(id){return !offId(id)});
+      var adding=S.rtAdd===p[0];
+      h+='<div class="grp rtlane"><div class="between rthead"><div class="lab">'+p[1]+'</div><button class="addbtn" data-a="rtaddopen" data-v="'+p[0]+'" aria-expanded="'+adding+'">'+(adding?'Close':'+ Add')+'</button></div><ul class="rtl" data-p="'+p[0]+'" aria-label="'+p[1]+'">';
+      ids.forEach(function(id,i){
+        h+='<li data-id="'+esc(id)+'" data-p="'+p[0]+'"><button class="swdel" data-a="rtswdel" data-v="'+esc(id)+'" tabindex="-1">Remove</button><div class="rtbox"><button class="rtn" data-a="rtedit" data-v="'+esc(id)+'"><span>'+esc(nmOf(id))+'</span></button><button class="fpill'+(isFloor(id)?' on':'')+'" data-a="flrtog" data-v="'+esc(id)+'" aria-pressed="'+isFloor(id)+'">'+(creature()?(isFloor(id)?'<em class="pun">Bear</em> minimum \u2713':'<em class="pun">Bear</em> minimum'):(isFloor(id)?'Anchored':'Anchor it'))+'</button></div><span class="grip" role="button" tabindex="0" aria-label="Drag to reorder '+esc(nmOf(id))+'. Arrow keys also move it." data-p="'+p[0]+'" data-v="'+esc(id)+'"><svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true"><rect x="3" y="4" width="12" height="2" rx="1"/><rect x="3" y="8" width="12" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg></span></li>';
+      });
+      h+='</ul>';
+      if(adding)h+='<form class="add" data-a="rtadd" data-p="'+p[0]+'" style="margin-top:8px"><input type="text" id="rtadd-'+p[0]+'" placeholder="Add a step to '+p[1].toLowerCase()+'" aria-label="Add a step to '+p[1]+'" maxlength="50"><button type="submit">Add</button></form>';
+      h+='</div>';
+    });
+    h+='</div>'+anchorGrp()+'<button class="btn" data-a="rtedmode" style="margin:4px 0 8px">Done</button>';
+    return '<div class="backdrop" data-a="rtbg"><div class="sheet rtsheet" role="dialog" aria-modal="true" aria-label="Edit routine"><div class="between"><h2 style="font-size:24px">Edit routine</h2><button class="x" data-a="rtedmode" aria-label="Done editing">&times;</button></div>'+h+'</div></div>';
   }
   function anchorGrp(){return '<div class="grp"><div class="lab">'+(creature()?'<em class="pun">Bear</em> minimum':'Anchor it')+'</div><p class="small">Pick the things that always count. They never get a skip button, and they are what shows '+(creature()?'on bear minimum days':'in low battery mode')+'.</p><p class="small">A gentle reminder: picking too many is a lot to ask of your low battery self, so keep it to the few that truly matter.</p></div>'}
   function repeatingGrp(){
@@ -2161,7 +2168,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     render.lastHero=_hk;
     var _l=document.querySelector('.lot'),_st=_l?_l.scrollTop:0;
     var _sc={};document.querySelectorAll('#sheetRoot .sheet[aria-label]').forEach(function(s){_sc[s.getAttribute('aria-label')]=s.scrollTop});
-    document.getElementById('sheetRoot').innerHTML=fx(roughSheet()+startSheet()+setupSheet()+menuSheet()+evSheet()+skipSheet()+forgotSheet()+catSheet()+seSheet()+itSheet()+reSheet()+nameSheet()+tkSheet()+lotSheet()+plSheet()+fab()+welcomeSheet());
+    document.getElementById('sheetRoot').innerHTML=fx(roughSheet()+startSheet()+setupSheet()+menuSheet()+rtSheet()+evSheet()+skipSheet()+forgotSheet()+catSheet()+seSheet()+itSheet()+reSheet()+nameSheet()+tkSheet()+lotSheet()+plSheet()+fab()+welcomeSheet());
     document.querySelectorAll('#sheetRoot .sheet[aria-label]').forEach(function(s){var k=s.getAttribute('aria-label');if(_sc[k])s.scrollTop=_sc[k]});
     var _l2=document.querySelector('.lot');if(_l2)_l2.scrollTop=_st;
     try{publishLive()}catch(e){}
@@ -2376,7 +2383,10 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     mbg:function(b,e){if(e.target===b){S.menu=false;render()}},
     look:function(b){keepSheet(function(){S.look=b.dataset.v;S.cw=LOOKS[S.look].cw;save('gs-look',S.look);save('gs-cw',S.cw);applyLook();render()})},
     cw:function(b){keepSheet(function(){S.cw=b.dataset.v;save('gs-cw',S.cw);applyLook();render()})},
-    rtedmode:function(){keepSheet(function(){S.rtEdit=!S.rtEdit;render()});var r=document.getElementById('set-routine');if(r)r.scrollIntoView({block:'start'})},
+    rtedmode:function(){keepSheet(function(){S.rtEdit=!S.rtEdit;S.rtAdd=null;render()})},
+    rtclose:function(){keepSheet(function(){S.rtEdit=false;S.rtAdd=null;render()})},
+    rtbg:function(b,e){if(e.target===b)keepSheet(function(){S.rtEdit=false;S.rtAdd=null;render()})},
+    rtaddopen:function(b){var p=b.dataset.v;S.rtAdd=S.rtAdd===p?null:p;keepSheet(render);var i=document.getElementById('rtadd-'+p);if(i)i.focus()},
     rtmove:function(b){var id=b.dataset.v,to=b.dataset.p;if(S.rtn.parts[to].indexOf(id)>=0)return;['morning','afternoon','evening'].forEach(function(p){S.rtn.parts[p]=S.rtn.parts[p].filter(function(x){return x!==id})});S.rtn.parts[to].push(id);saveRtn();keepSheet(render)},
     tabtog:function(b){keepSheet(function(){var a=tabsOn().slice(),v=b.dataset.v,i=a.indexOf(v);
       if(i>=0)a.splice(i,1);else{if(a.length>=4){toast('Up to four tabs beside Home. Turn one off first.');return}a.push(v)}
@@ -2925,13 +2935,13 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   document.addEventListener('submit',function(e){if(e.target&&e.target.id==='chatform'){e.preventDefault();var i=document.getElementById('chatin');if(i)chatSend(i.value)}});
 
   /* ---- swipe a sheet down to close it ---- */
-  var SW=null,CLOSERS={mbg:'mclose',rbg:'rcancel',evbg:'evclose',nbg:'ncancel',sqbg:'sqno',cebg:'cecancel',fgbg:'fgbg',cbg:'cclose',tkbg:'tkclose',plbg:'plclose'};
+  var SW=null,CLOSERS={mbg:'mclose',rbg:'rcancel',evbg:'evclose',nbg:'ncancel',sqbg:'sqno',cebg:'cecancel',fgbg:'fgbg',cbg:'cclose',tkbg:'tkclose',plbg:'plclose',rtbg:'rtclose'};
   document.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target&&e.target.id==='tk-step'){e.preventDefault();A.tkstepadd()}});
   document.addEventListener('touchstart',function(e){
     if(D||!e.touches||e.touches.length!==1)return;
     var sh=e.target.closest&&e.target.closest('.sheet');if(!sh)return;
     var bd=sh.parentNode;if(!bd||!bd.dataset||!CLOSERS[bd.dataset.a])return;
-    if(e.target.closest('input,textarea,button.x'))return;
+    if(e.target.closest('input,textarea,button.x,.grip'))return;
     for(var n=e.target;n&&n!==bd;n=n.parentNode){if(n.scrollTop>0)return}
     var y=e.touches[0].clientY;
     if(sh.classList.contains('chatsheet')&&y-sh.getBoundingClientRect().top>72)return;
@@ -3057,7 +3067,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     }
     var raf=0;
     function tick(){raf=0;if(!G)return;place();follow();
-      var sh=document.querySelector('.sheet');if(sh){var sr=sh.getBoundingClientRect();if(G.y<sr.top+60){sh.scrollTop-=8;raf=requestAnimationFrame(tick)}else if(G.y>sr.bottom-60){sh.scrollTop+=8;raf=requestAnimationFrame(tick)}}}
+      var sh=G.li.closest('.sheet');if(sh){var sr=sh.getBoundingClientRect();if(G.y<sr.top+60){sh.scrollTop-=8;raf=requestAnimationFrame(tick)}else if(G.y>sr.bottom-60){sh.scrollTop+=8;raf=requestAnimationFrame(tick)}}}
     document.addEventListener('pointerdown',function(e){
       var g=e.target.closest&&e.target.closest('.grip');if(!g)return;
       e.preventDefault();var li=g.closest('li'),ul=li.parentNode,r=li.getBoundingClientRect();

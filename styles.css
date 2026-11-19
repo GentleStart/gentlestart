@@ -1053,3 +1053,8 @@ ul.rtl li.gripping .rtbox,ul.rtl li.gripping .grip{box-shadow:0 10px 22px -10px 
 /* long press to edit */
 [data-lp]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .lping{transition:transform .45s ease,filter .45s ease;transform:scale(.985);filter:brightness(.97)}
+
+/* routine editor sheet */
+.rthead{align-items:center;margin-bottom:6px}
+.rthead .lab{margin:0}
+ul.rtl li .swdel{width:calc(-1 * var(--sx) - 10px)}
