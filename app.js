@@ -2101,20 +2101,37 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   }
   window.addEventListener('resize',function(){clearTimeout(meadowFrames.t);meadowFrames.t=setTimeout(meadowFrames,120)});
   document.addEventListener('toggle',function(){meadowFrames()},true);
-  /* Original: line the birch's first sprout up just above the date.
-     The trunk lives directly under <html>, outside <body>, so Safari's clipping of body never trims it below the status bar. */
+  /* Original: the birch is painted as the page's own background (drawn once per colorway into an image),
+     so Safari also shows it behind the status bar and in the bounce, where it only paints the page background.
+     Its first sprout lines up just above the date. */
+  var TREE={imgs:null,key:'',url:''};
+  function treeImgs(cb){
+    if(TREE.imgs)return cb(TREE.imgs);
+    var names=['bark','leaf','line'],out={},n=0;
+    names.forEach(function(k){var im=new Image();im.onload=im.onerror=function(){out[k]=im;if(++n===names.length){TREE.imgs=out;cb(out)}};im.src='art/birch-'+k+'.png'});
+  }
+  function cssColor(v){var d=document.createElement('i');d.style.color=v;d.style.display='none';document.body.appendChild(d);var c=getComputedStyle(d).color;d.remove();
+    var m=c.match(/color\(srgb ([\d.]+) ([\d.]+) ([\d.]+)/);if(m)return 'rgb('+Math.round(m[1]*255)+','+Math.round(m[2]*255)+','+Math.round(m[3]*255)+')';return c}
   function placeTree(){
-    if(lookKey()!=='original')return;
-    var tr=document.querySelector('html>.trunk');if(!tr){tr=document.createElement('div');tr.className='trunk';tr.setAttribute('aria-hidden','true');tr.innerHTML='<i class="t-bark"></i><i class="t-leaf"></i><i class="t-line"></i>';document.documentElement.appendChild(tr)}
-    if(!document.querySelector('html>.trunk-fx')){var fx2=document.createElement('div');fx2.className='trunk-fx';fx2.setAttribute('aria-hidden','true');fx2.innerHTML='<i class="t-bark"></i><i class="t-line"></i>';document.documentElement.appendChild(fx2)}
-    var hl=document.querySelector('#app .head .top .date')||document.querySelector('#app .hello');if(!hl)return;
-    var y=hl.getBoundingClientRect().top+window.scrollY-2;
-    document.documentElement.style.setProperty('--tree-y',Math.round(y)+'px');
-    var end=document.body.getBoundingClientRect().bottom+window.scrollY;
-    tr.style.height=Math.max(Math.round(end),window.innerHeight)+900+'px';
+    var R=document.documentElement;
+    if(lookKey()!=='original'){if(TREE.key){R.style.removeProperty('--trunk-img');TREE.key=''}return}
+    var hl=document.querySelector('#app .head .top .date')||document.querySelector('#app .hello');
+    if(hl){var y=hl.getBoundingClientRect().top+window.scrollY-2;R.style.setProperty('--trunk-pos',Math.round(y-52)+'px')}
+    var cols=[cssColor('var(--bark)'),cssColor('var(--bark-leaf)'),cssColor('var(--trunk-line, var(--bark-line))')],dpr=Math.min(3,window.devicePixelRatio||1),key=cols.join('|')+'@'+dpr;
+    if(key===TREE.key)return;TREE.key=key;
+    treeImgs(function(I){
+      if(TREE.key!==key)return;
+      var w=Math.round(44*dpr),h=Math.round(I.bark.naturalHeight*44/I.bark.naturalWidth*dpr),cv=document.createElement('canvas');cv.width=w;cv.height=h;var g=cv.getContext('2d');
+      [['bark',cols[0]],['leaf',cols[1]],['line',cols[2]]].forEach(function(L){
+        var t=document.createElement('canvas');t.width=w;t.height=h;var tg=t.getContext('2d');
+        tg.drawImage(I[L[0]],0,0,w,h);tg.globalCompositeOperation='source-in';tg.fillStyle=L[1];tg.fillRect(0,0,w,h);g.drawImage(t,0,0);
+      });
+      try{R.style.setProperty('--trunk-img','url('+cv.toDataURL('image/png')+')')}catch(e){}
+    });
   }
   window.addEventListener('resize',function(){clearTimeout(placeTree.t);placeTree.t=setTimeout(placeTree,120)});
   try{new ResizeObserver(function(){clearTimeout(placeTree.t);placeTree.t=setTimeout(placeTree,60)}).observe(document.body)}catch(e){}
+  try{window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(){setTimeout(placeTree,50)})}catch(e){}
   function render(){
     var tk=ymd(new Date());if(S.statusDay!==tk){S.status={};S.statusDay=tk}
     var js=JSON.stringify(S.status);if(js!==S.statusSaved){S.statusSaved=js;save('gs-status',{d:tk,s:S.status})}

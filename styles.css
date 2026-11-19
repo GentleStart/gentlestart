@@ -1024,23 +1024,10 @@ html:root[data-theme="dark"][data-look] .tabs button[data-v="today"][aria-curren
 :root[data-theme="dark"] .garland .h-purp{background:color-mix(in srgb,var(--accent) 48%,var(--surface))}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .garland .g-ink,:root:not([data-theme="light"]) .garland .h-ink{background:color-mix(in srgb,var(--ink2) 60%,var(--bg));opacity:1}:root:not([data-theme="light"]) .garland .g-tl,:root:not([data-theme="light"]) .garland .h-tl{opacity:.12}:root:not([data-theme="light"]) .garland .g-leaf,:root:not([data-theme="light"]) .garland .h-leaf{background:color-mix(in srgb,color-mix(in srgb,#7FA678 70%,var(--accent)) 62%,var(--surface))}:root:not([data-theme="light"]) .garland .h-yel{background:color-mix(in srgb,#D8A93A 58%,var(--surface))}:root:not([data-theme="light"]) .garland .h-pink{background:color-mix(in srgb,var(--wood) 38%,var(--surface))}:root:not([data-theme="light"]) .garland .h-purp{background:color-mix(in srgb,var(--accent) 48%,var(--surface))}}
 
-/* Original: the birch scrolls with the page. Its first sprout sits just above the greeting,
-   and the trunk keeps going above the top of the page so pulling down past the top still shows bark. */
-.trunk{display:none}
-/* the trunk is placed against the whole page (not inside body), so body's sideways clipping never cuts it off at the top */
-:root[data-look="original"] body{min-height:100vh;min-height:100dvh}
-:root[data-look="original"] .trunk{display:block;position:absolute;left:0;top:-900px;height:calc(100vh + 900px);width:44px;z-index:-1;pointer-events:none}
-.trunk i{position:absolute;inset:0;-webkit-mask-size:44px auto;mask-size:44px auto;-webkit-mask-repeat:repeat-y;mask-repeat:repeat-y;-webkit-mask-position:0 calc(900px + var(--tree-y,40px) - 52px);mask-position:0 calc(900px + var(--tree-y,40px) - 52px)}
-.trunk .t-bark{background:var(--bark);-webkit-mask-image:url(art/birch-bark.png);mask-image:url(art/birch-bark.png)}
-.trunk .t-leaf{background:var(--bark-leaf);-webkit-mask-image:url(art/birch-leaf.png);mask-image:url(art/birch-leaf.png)}
-.trunk .t-line{background:var(--trunk-line,var(--bark-line));-webkit-mask-image:url(art/birch-line.png);mask-image:url(art/birch-line.png)}
-@media (min-width:760px){.trunk i{-webkit-mask-position:-1px calc(900px + var(--tree-y,40px) - 52px);mask-position:-1px calc(900px + var(--tree-y,40px) - 52px)}}
 
-/* a plain stretch of trunk pinned behind the page, reaching past the screen edges,
-   so pulling past the top or bottom (the bounce) still shows bark instead of a gap */
-.trunk-fx{display:none}
-:root[data-look="original"] .trunk-fx{display:block;position:fixed;left:0;top:-100vh;bottom:-100vh;width:16px;overflow:hidden;z-index:-2;pointer-events:none}
-.trunk-fx i{position:absolute;top:0;bottom:0;left:0;width:44px;-webkit-mask-size:44px auto;mask-size:44px auto;-webkit-mask-repeat:repeat-y;mask-repeat:repeat-y;-webkit-mask-position:0 300px;mask-position:0 300px}
-.trunk-fx .t-bark{background:var(--bark);-webkit-mask-image:url(art/birch-bark.png);mask-image:url(art/birch-bark.png)}
-.trunk-fx .t-line{background:var(--trunk-line,var(--bark-line));-webkit-mask-image:url(art/birch-line.png);mask-image:url(art/birch-line.png)}
-@media (min-width:760px){.trunk-fx i{-webkit-mask-position:-1px 300px;mask-position:-1px 300px}}
+
+/* Original: the birch is the page background itself (an image drawn in the colorway's colors by app.js),
+   so it fills the whole canvas: behind the status bar, during the bounce, and the full page length */
+:root[data-look="original"]{background:var(--trunk-img,none) 0 var(--trunk-pos,0) / 44px auto repeat-y,var(--bg)}
+:root[data-look="original"] body{background:transparent;min-height:100vh;min-height:100dvh}
+@media (min-width:760px){:root[data-look="original"]{background-position:-1px var(--trunk-pos,0)}}
