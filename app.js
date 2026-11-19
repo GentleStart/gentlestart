@@ -2101,12 +2101,12 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   }
   window.addEventListener('resize',function(){clearTimeout(meadowFrames.t);meadowFrames.t=setTimeout(meadowFrames,120)});
   document.addEventListener('toggle',function(){meadowFrames()},true);
-  /* Original: line the birch's first sprout up just above the greeting */
+  /* Original: line the birch's first sprout up just above the date */
   function placeTree(){
     if(lookKey()!=='original')return;
     var tr=document.querySelector('body>.trunk');if(!tr){tr=document.createElement('div');tr.className='trunk';tr.setAttribute('aria-hidden','true');tr.innerHTML='<i class="t-bark"></i><i class="t-leaf"></i><i class="t-line"></i>';document.body.insertBefore(tr,document.body.firstChild)}
-    var hl=document.querySelector('#app .hello');if(!hl)return;
-    var y=hl.getBoundingClientRect().top-document.body.getBoundingClientRect().top-4;
+    var hl=document.querySelector('#app .head .top .date')||document.querySelector('#app .hello');if(!hl)return;
+    var y=hl.getBoundingClientRect().top-document.body.getBoundingClientRect().top-2;
     document.documentElement.style.setProperty('--tree-y',Math.round(y)+'px');
   }
   window.addEventListener('resize',function(){clearTimeout(placeTree.t);placeTree.t=setTimeout(placeTree,120)});
