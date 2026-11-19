@@ -253,7 +253,7 @@
         +'<g class="bub"><circle cx="372" cy="12" r="13" fill="none" pointer-events="all"/><circle cx="372" cy="12" r="4.5" fill="none" style="stroke:var(--accent)" stroke-width="1.4"/></g>'
         +'</svg>';
     },
-    original:function(){return '<div class="vine vlay" aria-hidden="true"><i class="v-light"></i><i class="v-mid"></i><i class="v-line"></i></div>'},
+    original:function(){return '<div class="vine vlay" aria-hidden="true"><i class="v-light"></i><i class="v-acc"></i><i class="v-mid"></i><i class="v-line"></i></div>'},
     birch:function(){
       return '<span class="inkart wave" role="presentation"></span><img class="goldart wave" src="art/stroke-wave-gold.png" alt="" width="1200" height="98">';
     }

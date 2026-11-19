@@ -318,13 +318,14 @@ details.tuck ul{margin:8px 0 0;padding-left:20px;color:var(--ink2);font-size:15p
 
 /* ===== LOOK: Original. Soft base plus a birch trunk down the edge, a morning glow and a branch across the top. ===== */
 :root[data-look="original"] body{padding-left:max(46px,calc(env(safe-area-inset-left,0px) + 34px))}
-:root[data-look="original"]{--bark:color-mix(in srgb,var(--surface) 90%,var(--accent));--bark-leaf:color-mix(in srgb,var(--accent) 55%,var(--surface));--bark-line:color-mix(in srgb,var(--accent) 65%,var(--ink));--leaf-light:color-mix(in srgb,var(--accent) 28%,var(--surface))}
-:root[data-theme="dark"][data-look="original"]{--leaf-light:color-mix(in srgb,var(--accent) 55%,var(--ink))}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"])[data-look="original"]{--leaf-light:color-mix(in srgb,var(--accent) 55%,var(--ink))}}
+:root[data-look="original"]{--bark:color-mix(in srgb,var(--surface) 90%,var(--accent));--bark-leaf:color-mix(in srgb,var(--accent) 55%,var(--surface));--bark-line:color-mix(in srgb,var(--accent) 65%,var(--ink));--leaf-light:color-mix(in srgb,var(--accent) 28%,var(--surface));--leaf-acc:var(--sky)}
+:root[data-theme="dark"][data-look="original"]{--leaf-light:color-mix(in srgb,var(--accent) 55%,var(--ink));--leaf-acc:color-mix(in srgb,var(--sky) 60%,var(--ink))}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"])[data-look="original"]{--leaf-light:color-mix(in srgb,var(--accent) 55%,var(--ink));--leaf-acc:color-mix(in srgb,var(--sky) 60%,var(--ink))}}
 /* the header vine uses the same three colors as the birch */
 .deco .vlay{display:block;position:relative;width:100%;aspect-ratio:897/96;margin:0 auto}
 .deco .vlay i{position:absolute;inset:0;-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
 .deco .vlay .v-light{background:var(--leaf-light);-webkit-mask-image:url(art/vine-light.png);mask-image:url(art/vine-light.png)}
+.deco .vlay .v-acc{background:var(--leaf-acc);-webkit-mask-image:url(art/vine-acc.png);mask-image:url(art/vine-acc.png)}
 .deco .vlay .v-mid{background:var(--bark-leaf);-webkit-mask-image:url(art/vine-mid.png);mask-image:url(art/vine-mid.png)}
 .deco .vlay .v-line{background:var(--bark-line);-webkit-mask-image:url(art/vine-line.png);mask-image:url(art/vine-line.png)}
 @media (min-width:900px){.deco .vlay{max-width:640px}}
