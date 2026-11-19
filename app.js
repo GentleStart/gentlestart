@@ -2101,11 +2101,12 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   }
   window.addEventListener('resize',function(){clearTimeout(meadowFrames.t);meadowFrames.t=setTimeout(meadowFrames,120)});
   document.addEventListener('toggle',function(){meadowFrames()},true);
-  /* Original: line the birch's first sprout up just above the date */
+  /* Original: line the birch's first sprout up just above the date.
+     The trunk lives directly under <html>, outside <body>, so Safari's clipping of body never trims it below the status bar. */
   function placeTree(){
     if(lookKey()!=='original')return;
-    var tr=document.querySelector('body>.trunk');if(!tr){tr=document.createElement('div');tr.className='trunk';tr.setAttribute('aria-hidden','true');tr.innerHTML='<i class="t-bark"></i><i class="t-leaf"></i><i class="t-line"></i>';document.body.insertBefore(tr,document.body.firstChild)}
-    if(!document.querySelector('body>.trunk-fx')){var fx2=document.createElement('div');fx2.className='trunk-fx';fx2.setAttribute('aria-hidden','true');fx2.innerHTML='<i class="t-bark"></i><i class="t-line"></i>';document.body.insertBefore(fx2,document.body.firstChild)}
+    var tr=document.querySelector('html>.trunk');if(!tr){tr=document.createElement('div');tr.className='trunk';tr.setAttribute('aria-hidden','true');tr.innerHTML='<i class="t-bark"></i><i class="t-leaf"></i><i class="t-line"></i>';document.documentElement.appendChild(tr)}
+    if(!document.querySelector('html>.trunk-fx')){var fx2=document.createElement('div');fx2.className='trunk-fx';fx2.setAttribute('aria-hidden','true');fx2.innerHTML='<i class="t-bark"></i><i class="t-line"></i>';document.documentElement.appendChild(fx2)}
     var hl=document.querySelector('#app .head .top .date')||document.querySelector('#app .hello');if(!hl)return;
     var y=hl.getBoundingClientRect().top+window.scrollY-2;
     document.documentElement.style.setProperty('--tree-y',Math.round(y)+'px');
