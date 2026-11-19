@@ -937,7 +937,7 @@
   /* ---- planner view (On the clock): the whole day, hour by hour ---- */
   function planItem(x){
     if(x.k==='r'){var st=S.status[x.id];return '<button class="pi r'+(st==='done'?' done':st==='skip'?' skip':'')+'" data-a="ptog" data-v="'+x.id+'"><b>'+esc(nmOf(x.id))+'</b><small>'+fmtRange(x.start,x.dur)+'</small></button>'}
-    var ev=x.ev;return '<button class="pi e'+(ev.by==='p'?' pj':'')+'" data-a="evedit" data-v="'+esc(ev.id)+'"><b>'+(ev.by==='p'?'§P\u2019s: ':'')+esc(ev.title)+'</b><small>'+fmtRange(x.start,x.dur)+(ev.place?', '+esc(ev.place):'')+'</small></button>';
+    var ev=x.ev;return '<button class="pi e'+(ev.by==='p'?' pj':'')+'" data-a="evedit" data-lp="evedit" data-v="'+esc(ev.id)+'"><b>'+(ev.by==='p'?'§P\u2019s: ':'')+esc(ev.title)+'</b><small>'+fmtRange(x.start,x.dur)+(ev.place?', '+esc(ev.place):'')+'</small></button>';
   }
   function plannerCard(){
     var tk=ymd(new Date()),now=SIM[S.part],items=[],rows='';
@@ -958,7 +958,7 @@
   function ovMonthStart(){var n=new Date();return new Date(n.getFullYear(),n.getMonth()+S.ovMo,1)}
   function wkEv(ev,k){
     var st=tmin(ev.time),end=st+(ev.dur||0);
-    return '<button class="wkev'+(ev.withJ||ev.by==='p'?' wj':'')+'" data-a="evedit" data-v="'+esc(ev.id)+'"><small>'+(ev.by==='p'?'§P\u2019s, ':'')+fmt(st)+(ev.dur?' to '+fmt(end):'')+'</small><b>'+esc(ev.title)+'</b>'+(ev.place?'<span class="small">'+esc(ev.place)+'</span>':'')+'</button>';
+    return '<button class="wkev'+(ev.withJ||ev.by==='p'?' wj':'')+'" data-a="evedit" data-lp="evedit" data-v="'+esc(ev.id)+'"><small>'+(ev.by==='p'?'§P\u2019s, ':'')+fmt(st)+(ev.dur?' to '+fmt(end):'')+'</small><b>'+esc(ev.title)+'</b>'+(ev.place?'<span class="small">'+esc(ev.place)+'</span>':'')+'</button>';
   }
   function ovAll(){
     return '<input class="field" type="search" id="plsearch" placeholder="Search plans" aria-label="Search plans" autocomplete="off" value="'+esc(S.pq||'')+'" style="margin:12px 0"><div id="plresults">'+plBody()+'</div>';
@@ -980,7 +980,7 @@
     past.forEach(function(x){h+=plRow(x.ev,'Past: '+plWhen(x))});
     return h+'</div></div>';
   }
-  function plRow(ev,sub){return '<button class="ev nt" data-a="evedit" data-v="'+esc(ev.id)+'"><span class="bd"><b>'+esc(ev.title)+(ev.ex&&!S.demo?' <span class="small">(example)</span>':'')+'</b><span class="small">'+esc(sub)+'</span></span></button>'}
+  function plRow(ev,sub){return '<button class="ev nt" data-a="evedit" data-lp="evedit" data-v="'+esc(ev.id)+'"><span class="bd"><b>'+esc(ev.title)+(ev.ex&&!S.demo?' <span class="small">(example)</span>':'')+'</b><span class="small">'+esc(sub)+'</span></span></button>'}
   function plWhen(x){var tk=ymd(new Date()),d=kDate(x.k),lbl=x.k===tk?'Today':x.k===ymd(addDays(new Date(),1))?'Tomorrow':d.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:d.getFullYear()!==new Date().getFullYear()?'numeric':undefined});return lbl+(x.ev.time?', '+fmtRange(tmin(x.ev.time),x.ev.dur):'')+(x.ev.place?', '+x.ev.place:'')}
   function plBody(){
     if(S.pq&&S.pq.trim())return plSearch(S.pq.trim());
@@ -1181,7 +1181,7 @@
     if(ev.withJ)tags+=tag('With §P');
     if(ev.share==='generic')tags+=tag('Shows as "Appointment"');
     if(ev.share==='hidden')tags+=tag('Private');
-    return '<button class="ev'+(past?' past':'')+'" data-a="evedit" data-v="'+esc(ev.id)+'"><span class="tm">'+fmt(st)+'<small>'+((isToday||qt)?(ev.dur?'to '+fmt(end):''):esc(dayLabel(key)))+'</small></span><span class="bd"><b>'+esc(ev.title)+'</b>'+(ev.place?'<span class="small">'+esc(ev.place)+'</span>':'')+(tags?'<span class="tags">'+tags+'</span>':'')+'</span></button>';
+    return '<button class="ev'+(past?' past':'')+'" data-a="evedit" data-lp="evedit" data-v="'+esc(ev.id)+'"><span class="tm">'+fmt(st)+'<small>'+((isToday||qt)?(ev.dur?'to '+fmt(end):''):esc(dayLabel(key)))+'</small></span><span class="bd"><b>'+esc(ev.title)+'</b>'+(ev.place?'<span class="small">'+esc(ev.place)+'</span>':'')+(tags?'<span class="tags">'+tags+'</span>':'')+'</span></button>';
   }
   function plans(){
     var tk=ymd(new Date()),now=SIM[S.part],td=evsOn(tk);
@@ -1400,7 +1400,7 @@
     if(ue){
       var ust=tmin(ue.time),when=ue.travel?'Leave by '+fmt(leaveBy(ue))+' to be there at '+fmt(ust)+(ue.place?', '+ue.place:'')+'.':'Starts at '+fmt(ust)+(ue.place?', '+ue.place:'')+'.';
       h+='<section class="hero" aria-live="polite"><div class="kicker">Heads up</div><h2>Get ready for '+esc(ue.title)+'</h2><p class="sub">'+esc(when)+'</p>'+(ue.prep?'<p class="sub"><b>Before you go:</b> '+esc(ue.prep)+'</p>':'')
-        +'<div class="row"><button class="btn grow" data-a="evready" data-v="'+esc(ue.id)+'">I am ready</button><button class="btn alt grow" data-a="evedit" data-v="'+esc(ue.id)+'">Edit or cancel</button></div><div class="row"><button class="quiet" data-a="evhide" data-v="'+esc(ue.id)+'">Show my routine for now</button></div></section>';
+        +'<div class="row"><button class="btn grow" data-a="evready" data-v="'+esc(ue.id)+'">I am ready</button><button class="btn alt grow" data-a="evedit" data-lp="evedit" data-v="'+esc(ue.id)+'">Edit or cancel</button></div><div class="row"><button class="quiet" data-a="evhide" data-v="'+esc(ue.id)+'">Show my routine for now</button></div></section>';
       if(S.doing&&taskById(S.doing))h+=doingHero(taskById(S.doing));
     }else if(S.doing&&taskById(S.doing)){
       h+=doingHero(taskById(S.doing));
@@ -1436,7 +1436,7 @@
       var cls=s==='done'?'done':s==='skip'?'skipped':sid===cur?'now':'';
       var stt=s==='done'?'done':s==='skip'?'skipped':sid===cur?'next':'';
       if(!s&&sc2)stt=(sid===cur?'next, ':'')+fmt(sc2.start);
-      h+='<li class="'+cls+'" data-a="stepclick" data-v="'+sid+'" role="button" tabindex="0" aria-label="'+esc(nmOf(sid))+(s==='done'?', done. Tap to undo':s==='skip'?', skipped. Tap to bring it back':', tap to go to the card')+'"><span class="dot"></span><span class="nm">'+esc(nmOf(sid))+'</span><em class="st">'+esc(stt)+'</em></li>';
+      h+='<li class="'+cls+'" data-a="stepclick" data-lp="rtedit" data-v="'+sid+'" role="button" tabindex="0" aria-label="'+esc(nmOf(sid))+(s==='done'?', done. Tap to undo':s==='skip'?', skipped. Tap to bring it back':', tap to go to the card')+'"><span class="dot"></span><span class="nm">'+esc(nmOf(sid))+'</span><em class="st">'+esc(stt)+'</em></li>';
     });
     h+='</ul></div>';
     }
@@ -1470,7 +1470,7 @@
       h+='<details class="card lcard"'+(li===0||ed?' open':'')+' data-id="'+L.id+'"><summary><span>'+esc(L.name)+'</span><span class="count">'+n+' item'+(n===1?'':'s')+'</span></summary><ul class="items">'+(ed?'<li class="item"><input class="lsedit ltitle" type="text" data-l="'+li+'" value="'+esc(L.name)+'" maxlength="40" aria-label="List name"></li>':'');
       L.items.forEach(function(it,ii){
         if(ed){h+='<li class="item"><input class="lsedit" type="text" data-l="'+li+'" data-i="'+ii+'" value="'+esc(itTxt(it))+'" maxlength="120" aria-label="Item"><button class="x" aria-label="Delete item" data-a="del" data-l="'+li+'" data-i="'+ii+'">&times;</button></li>';return}
-        h+='<li class="item'+(it.done?' done':'')+'"><button class="check" role="checkbox" aria-checked="'+it.done+'" aria-label="'+esc(itTxt(it))+'" data-a="tick" data-l="'+li+'" data-i="'+ii+'">'+(it.done?CK:'')+'</button><span class="t">'+esc(itTxt(it))+'</span>'+(it.done?'':'<button class="lpk'+(it.parked?' on':'')+'" aria-pressed="'+!!it.parked+'" aria-label="'+(it.parked?esc(U().parked)+'. Tap to take it back out of '+esc(lotThe()):'Move to '+esc(lotThe()))+'" data-a="lpark" data-l="'+li+'" data-i="'+ii+'">'+(it.parked?esc(U().parked):esc(U().parkIt))+'</button>')+'<button class="swdel" data-a="del" data-l="'+li+'" data-i="'+ii+'" tabindex="-1" aria-hidden="true">Delete</button></li>';
+        h+='<li class="item'+(it.done?' done':'')+'" data-lp="itopen" data-l="'+li+'" data-i="'+ii+'"><button class="check" role="checkbox" aria-checked="'+it.done+'" aria-label="'+esc(itTxt(it))+'" data-a="tick" data-l="'+li+'" data-i="'+ii+'">'+(it.done?CK:'')+'</button><span class="t">'+esc(itTxt(it))+'</span>'+(it.done?'':'<button class="lpk'+(it.parked?' on':'')+'" aria-pressed="'+!!it.parked+'" aria-label="'+(it.parked?esc(U().parked)+'. Tap to take it back out of '+esc(lotThe()):'Move to '+esc(lotThe()))+'" data-a="lpark" data-l="'+li+'" data-i="'+ii+'">'+(it.parked?esc(U().parked):esc(U().parkIt))+'</button>')+'<button class="swdel" data-a="del" data-l="'+li+'" data-i="'+ii+'" tabindex="-1" aria-hidden="true">Delete</button></li>';
       });
       h+='</ul>'+(ed?'<button class="quiet ldel" data-a="ldellist" data-l="'+li+'">Delete this list</button>':'<form class="add" data-a="additem" data-l="'+li+'"><input type="text" id="add-'+L.id+'" placeholder="Add to '+esc(L.name)+'" aria-label="Add to '+esc(L.name)+'"><button type="submit">Add</button></form>')+'</details>';
     });
@@ -1745,7 +1745,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     if(PROF&&PROF.partner){
       h+='<div class="card"><div class="between"><h3>§P&rsquo;s schedule</h3><button class="addbtn" data-a="evnewp">+ Add</button></div><p class="small">Things on §P&rsquo;s day you want to plan around, like a lunch break or a late shift. Only you see these, and they show up on your Overview.</p>';
       var pr='';
-      for(var n=0;n<8;n++){var kk=ymd(addDays(new Date(),n));evsOn(kk).forEach(function(ev){if(ev.by==='p')pr+='<button class="ev" data-a="evedit" data-v="'+esc(ev.id)+'"><span class="tm">'+fmt(tmin(ev.time))+'<small>'+esc(dayLabel(kk))+'</small></span><span class="bd"><b>'+esc(ev.title)+'</b>'+(ev.place?'<span class="small">'+esc(ev.place)+'</span>':'')+'</span></button>'})}
+      for(var n=0;n<8;n++){var kk=ymd(addDays(new Date(),n));evsOn(kk).forEach(function(ev){if(ev.by==='p')pr+='<button class="ev" data-a="evedit" data-lp="evedit" data-v="'+esc(ev.id)+'"><span class="tm">'+fmt(tmin(ev.time))+'<small>'+esc(dayLabel(kk))+'</small></span><span class="bd"><b>'+esc(ev.title)+'</b>'+(ev.place?'<span class="small">'+esc(ev.place)+'</span>':'')+'</span></button>'})}
       h+=pr?'<div class="evlist">'+pr+'</div>':'<p class="small">Nothing added yet.</p>';
       h+='</div>';
     }
@@ -1929,7 +1929,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       PS.forEach(function(p){
         var ids=S.rtn.parts[p[0]].filter(function(id){return !offId(id)});
         v+='<div class="grp"><div class="lab">'+p[1]+'</div>';
-        if(ids.length){v+='<ul class="rtv">';ids.forEach(function(id){v+='<li><span>'+esc(nmOf(id))+'</span><button class="fpill'+(isFloor(id)?' on':'')+'" data-a="flrtog" data-v="'+esc(id)+'" aria-pressed="'+isFloor(id)+'">'+(creature()?(isFloor(id)?'<em class="pun">Bear</em> minimum \u2713':'<em class="pun">Bear</em> minimum'):(isFloor(id)?'Anchored':'Anchor it'))+'</button></li>'});v+='</ul>'}
+        if(ids.length){v+='<ul class="rtv">';ids.forEach(function(id){v+='<li data-lp="rtedit" data-v="'+esc(id)+'"><span>'+esc(nmOf(id))+'</span><button class="fpill'+(isFloor(id)?' on':'')+'" data-a="flrtog" data-v="'+esc(id)+'" aria-pressed="'+isFloor(id)+'">'+(creature()?(isFloor(id)?'<em class="pun">Bear</em> minimum \u2713':'<em class="pun">Bear</em> minimum'):(isFloor(id)?'Anchored':'Anchor it'))+'</button></li>'});v+='</ul>'}
         else v+='<p class="small">Nothing here yet.</p>';
         v+='</div>';
       });
@@ -1959,17 +1959,23 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   function repeatingGrp(){
     var h='<div class="grp"><div class="lab mid">Repeating tasks</div><p class="small">Things that aren\u2019t in your daily routine, but come up every week or month. If one slips by, it just resets for next time. It never piles up.</p>';
     var rplans=S.events.filter(function(ev){return ev.rpt&&ev.by!=='p'});
-    if(rplans.length){h+='<div class="evlist">';rplans.forEach(function(ev){h+='<button class="ev nt" data-a="evedit" data-v="'+esc(ev.id)+'"><span class="bd"><b>'+esc(ev.title)+'</b><span class="small">'+esc(repLabel({rep:ev.rpt.rep,days:ev.rpt.days,dom:ev.rpt.dom,mode:ev.rpt.mode,nth:ev.rpt.nth,dow:ev.rpt.dow,as:'ev',time:ev.time}))+'</span></span></button>'});h+='</div>'}
+    if(rplans.length){h+='<div class="evlist">';rplans.forEach(function(ev){h+='<button class="ev nt" data-a="evedit" data-lp="evedit" data-v="'+esc(ev.id)+'"><span class="bd"><b>'+esc(ev.title)+'</b><span class="small">'+esc(repLabel({rep:ev.rpt.rep,days:ev.rpt.days,dom:ev.rpt.dom,mode:ev.rpt.mode,nth:ev.rpt.nth,dow:ev.rpt.dow,as:'ev',time:ev.time}))+'</span></span></button>'});h+='</div>'}
     if(S.reps.length){h+='<div class="evlist">';S.reps.forEach(function(r){h+='<button class="ev nt" data-a="reedit" data-v="'+esc(r.id)+'"><span class="bd"><b>'+esc(r.t)+'</b><span class="small">'+esc(repLabel(r))+'</span></span></button>'});h+='</div>'}
     else if(!rplans.length)h+='<p class="small">None yet.</p>';
     return h+'<button class="btn alt" data-a="renew" style="margin-top:8px">+ Add a repeating task</button></div>';
   }
   function newRe(){return {id:null,t:'',rep:'w',days:[],dom:1,part:'afternoon',as:'step',time:'',dur:60,err:''}}
   function syncRe(){var R=S.re;if(!R)return;var t=document.getElementById('re-t'),d=document.getElementById('re-dom');var tm=document.getElementById('re-time');if(tm)R.time=tm.value;if(t)R.t=t.value;if(d)R.dom=Math.max(1,Math.min(31,parseInt(d.value,10)||1))}
+  function itSheet(){
+    var E=S.itE;if(!E)return '';var L=S.lists[E.l],it=L&&L.items[E.i];if(!it){S.itE=null;return ''}
+    return '<div class="backdrop mid" data-a="itbg"><div class="sheet" role="dialog" aria-modal="true" aria-label="Edit item"><h2 style="font-size:22px;text-align:center">Edit item</h2><p class="small" style="text-align:center;margin:0">In '+esc(L.name)+'</p><input class="field" type="text" id="it-name" maxlength="120" value="'+esc(itTxt(it))+'" aria-label="Item"><button class="btn" data-a="itsave">Save</button>'
+      +(it.done?'':'<button class="btn alt" data-a="itpark">'+(it.parked?'Take it out of '+esc(lotThe()):esc(U().parkIt))+'</button>')
+      +'<button class="quiet" style="text-align:center" data-a="itdel">Delete this item</button><button class="quiet" style="text-align:center" data-a="itcancel">Cancel</button></div></div>';
+  }
   function seSheet(){
     if(!S.se)return '';
     var id=S.se.id,cu=S.cust.some(function(x){return x.id===id});
-    return '<div class="backdrop mid" data-a="sebg"><div class="sheet" role="dialog" aria-modal="true" aria-label="Edit step"><h2 style="font-size:22px;text-align:center">Edit step</h2><input class="field" type="text" id="se-name" maxlength="50" value="'+esc(S.se.name)+'" aria-label="Step name"><button class="btn" data-a="sesave">Save name</button><button class="quiet" style="text-align:center" data-a="sedel">'+(cu?'Delete this step':'Remove from routine')+'</button><button class="quiet" style="text-align:center" data-a="secancel">Cancel</button></div></div>';
+    return '<div class="backdrop mid" data-a="sebg"><div class="sheet" role="dialog" aria-modal="true" aria-label="Edit step"><h2 style="font-size:22px;text-align:center">Edit step</h2><input class="field" type="text" id="se-name" maxlength="50" value="'+esc(S.se.name)+'" aria-label="Step name"><button class="fpill'+(isFloor(id)?' on':'')+'" style="align-self:center" data-a="flrtog" data-v="'+esc(id)+'" aria-pressed="'+isFloor(id)+'">'+(creature()?(isFloor(id)?'<em class="pun">Bear</em> minimum \u2713':'<em class="pun">Bear</em> minimum'):(isFloor(id)?'Anchored':'Anchor it'))+'</button><button class="btn" data-a="sesave">Save name</button><button class="quiet" style="text-align:center" data-a="sedel">'+(cu?'Delete this step':'Remove from routine')+'</button><button class="quiet" style="text-align:center" data-a="secancel">Cancel</button></div></div>';
   }
   function reSheet(){
     var R=S.re;if(!R)return '';
@@ -2155,7 +2161,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     render.lastHero=_hk;
     var _l=document.querySelector('.lot'),_st=_l?_l.scrollTop:0;
     var _sc={};document.querySelectorAll('#sheetRoot .sheet[aria-label]').forEach(function(s){_sc[s.getAttribute('aria-label')]=s.scrollTop});
-    document.getElementById('sheetRoot').innerHTML=fx(roughSheet()+startSheet()+setupSheet()+menuSheet()+evSheet()+skipSheet()+forgotSheet()+catSheet()+seSheet()+reSheet()+nameSheet()+tkSheet()+lotSheet()+plSheet()+fab()+welcomeSheet());
+    document.getElementById('sheetRoot').innerHTML=fx(roughSheet()+startSheet()+setupSheet()+menuSheet()+evSheet()+skipSheet()+forgotSheet()+catSheet()+seSheet()+itSheet()+reSheet()+nameSheet()+tkSheet()+lotSheet()+plSheet()+fab()+welcomeSheet());
     document.querySelectorAll('#sheetRoot .sheet[aria-label]').forEach(function(s){var k=s.getAttribute('aria-label');if(_sc[k])s.scrollTop=_sc[k]});
     var _l2=document.querySelector('.lot');if(_l2)_l2.scrollTop=_st;
     try{publishLive()}catch(e){}
@@ -2447,6 +2453,13 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       else if(v===NAMES[se.id])delete S.rtn.names[se.id];else S.rtn.names[se.id]=v;
       syncSteps();saveRtn();S.se=null;render();toast('Saved.')
     },
+    itopen:function(b){S.itE={l:+b.dataset.l,i:+b.dataset.i};render();var i=document.getElementById('it-name');if(i){i.focus();i.select()}},
+    itsave:function(){var E=S.itE;if(!E)return;var it=S.lists[E.l].items[E.i],i=document.getElementById('it-name'),v=i?i.value.trim().slice(0,120):'';if(!v){toast('An item needs a name.');return}
+      it.t=v;if(it.tid){var t=taskById(it.tid);if(t){t.title=v;saveTasks()}}save('gs-lists',S.lists);S.itE=null;keepOpen();toast('Saved.')},
+    itpark:function(){var E=S.itE;if(!E)return;S.itE=null;A.lpark({dataset:{l:String(E.l),i:String(E.i)}})},
+    itdel:function(){var E=S.itE;if(!E)return;S.itE=null;A.del({dataset:{l:String(E.l),i:String(E.i)}});toast('Deleted.')},
+    itcancel:function(){S.itE=null;keepOpen()},
+    itbg:function(b,e){if(e.target===b){S.itE=null;keepOpen()}},
     sedel:function(){var se=S.se;if(!se)return;rmStep(se.id);S.se=null;render();toast('Removed from your routine.')},
     rtswdel:function(b){var id=b.dataset.v;keepSheet(function(){rmStep(id);render()});toast('Removed from your routine.')},
     secancel:function(){S.se=null;render()},
@@ -2777,6 +2790,25 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   document.addEventListener('touchmove',function(e){if(D&&D.active&&e.cancelable)e.preventDefault()},{passive:false});
   document.addEventListener('contextmenu',function(e){if(e.target.closest&&e.target.closest('[data-drag]'))e.preventDefault()});
   document.addEventListener('click',function(e){if(Date.now()<noClick){e.stopPropagation();e.preventDefault()}},true);
+  /* long press on a plan, list item or routine step opens its editor */
+  (function(){
+    var L=null,eat=0;
+    document.addEventListener('click',function(e){if(eat){var on=Date.now()<eat;eat=0;if(on){e.stopPropagation();e.preventDefault()}}},true);
+    function clear(){if(L){clearTimeout(L.t);if(L.el)L.el.classList.remove('lping');L=null}}
+    document.addEventListener('pointerdown',function(e){
+      eat=0;clear();var el=e.target.closest&&e.target.closest('[data-lp]');if(!el||e.button>0)return;
+      if(e.target.closest('input,textarea,select,.grip,.swdel,.lpk,.check,.fpill'))return;
+      L={el:el,x:e.clientX,y:e.clientY,id:e.pointerId,t:setTimeout(function(){
+        if(!L)return;var a=A[el.dataset.lp];var d=L;clear();if(!a||!document.body.contains(d.el))return;
+        eat=Date.now()+1500;try{navigator.vibrate&&navigator.vibrate(12)}catch(x){}
+        a(d.el,e);
+      },480)};
+      el.classList.add('lping');
+    });
+    document.addEventListener('pointermove',function(e){if(L&&e.pointerId===L.id&&(Math.abs(e.clientX-L.x)>9||Math.abs(e.clientY-L.y)>9))clear()});
+    ['pointerup','pointercancel','scroll'].forEach(function(n){document.addEventListener(n,function(){clear()},true)});
+    document.addEventListener('contextmenu',function(e){if(e.target.closest&&e.target.closest('[data-lp]'))e.preventDefault()});
+  })();
   document.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target&&e.target.id==='stackname'){e.preventDefault();A.namestack()}});
 
   /* ---- the "Stuck?" helper: a back-and-forth chat answered by Claude ---- */

@@ -1049,3 +1049,7 @@ body.rtdragging{-webkit-user-select:none;user-select:none}
 .gripmini{display:inline-block;width:14px;height:10px;vertical-align:-1px;background:linear-gradient(currentColor 0 0) 0 0/100% 2px no-repeat,linear-gradient(currentColor 0 0) 0 4px/100% 2px no-repeat,linear-gradient(currentColor 0 0) 0 8px/100% 2px no-repeat;opacity:.7}
 ul.rtl li.gripping{background:transparent;box-shadow:none;opacity:1}
 ul.rtl li.gripping .rtbox,ul.rtl li.gripping .grip{box-shadow:0 10px 22px -10px rgba(0,0,0,.45);background:var(--surface)}
+
+/* long press to edit */
+[data-lp]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.lping{transition:transform .45s ease,filter .45s ease;transform:scale(.985);filter:brightness(.97)}
