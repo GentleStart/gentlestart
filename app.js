@@ -1936,7 +1936,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       v+=anchorGrp()+'<button class="btn alt" data-a="rtedmode" style="margin:4px 0 8px">Edit routine</button>';
       return v+repeatingGrp();
     }
-    var h='<p class="small">Drag a step by its handle <span class="gripmini" aria-hidden="true"></span> to reorder it, or drag it into another part of the day. Swipe a step left to remove it. Tap a name to rename it.</p><div class="rtlanes">';
+    var h='<p class="small">Drag a step by its handle <span class="gripmini" aria-hidden="true"></span> to reorder it, or drag it into another part of the day. Swipe a step left, then tap Remove or swipe it again. Tap a name to rename it.</p><div class="rtlanes">';
     PS.forEach(function(p){
       var ids=S.rtn.parts[p[0]].filter(function(id){return !offId(id)});
       h+='<div class="grp rtlane"><div class="lab">'+p[1]+'</div><ul class="rtl" data-p="'+p[0]+'" aria-label="'+p[1]+'">';
@@ -2968,14 +2968,14 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     };
     r.readAsText(f);
   });
-  /* lists: swipe an item left to reveal Delete; a long swipe deletes it straight away */
+  /* lists and the routine editor: swipe left to reveal Delete; swiping left again on an open row deletes it */
   (function(){
     var SW=null,openLi=null,eat=false;
     function close(li){li.classList.remove('dragging');li.style.setProperty('--sx','0px');setTimeout(function(){if(li.style.getPropertyValue('--sx')==='0px')li.classList.remove('swp')},220);if(openLi===li)openLi=null}
     document.addEventListener('pointerdown',function(e){
       var li=e.target.closest&&e.target.closest('.items li.item, ul.rtl li');
       if(openLi&&li!==openLi)close(openLi);
-      if(!li||!li.querySelector('.swdel')||e.target.closest('.swdel')||e.target.closest('.grip'))return;
+      if(!li||!li.querySelector('.swdel')||(e.target.closest('.swdel')&&li!==openLi)||e.target.closest('.grip'))return;
       SW={li:li,x:e.clientX,y:e.clientY,id:e.pointerId,base:li===openLi?-84:0,v:li===openLi?-84:0,on:false};
     });
     document.addEventListener('pointermove',function(e){
@@ -2987,7 +2987,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     function up(e){
       if(!SW||(e&&e.pointerId!==SW.id))return;var d=SW;SW=null;if(!d.on)return;
       eat=true;setTimeout(function(){eat=false},400);d.li.classList.remove('dragging');
-      if(d.v<-d.li.offsetWidth*0.45){var b=d.li.querySelector('.swdel');openLi=null;if(b)b.click()}
+      if(d.base<0&&d.v<d.base-40){var b=d.li.querySelector('.swdel');openLi=null;if(b)b.click()}
       else if(d.v<-50){d.li.style.setProperty('--sx','-84px');openLi=d.li}
       else close(d.li);
     }
