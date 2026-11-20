@@ -1410,7 +1410,7 @@
       if(st.meal){
         h+='<button class="btn grow" data-a="done" data-v="'+id+'">'+esc(u.eaten)+'</button><a class="btn alt grow" href="https://www.google.com/search?q=easy+'+(id==='dinner'?'dinner':id==='lunch'?'lunch':'breakfast')+'+ideas" target="_blank" rel="noopener" data-a="recime">'+esc(u.food)+'</a>';
       }else if(st.lunch){
-        h+='<button class="btn grow" data-a="lunch">'+esc(u.lunchBtn)+'</button><button class="btn alt grow" data-a="done" data-v="'+id+'">'+esc(u.eaten)+'</button>';
+        h+='<a class="btn grow" href="'+esc(smsHref('Lunch?'))+'" data-a="lunch">'+esc(u.lunchBtn)+'</a><button class="btn alt grow" data-a="done" data-v="'+id+'">'+esc(u.eaten)+'</button>';
       }else{
         h+='<button class="btn grow" data-a="done" data-v="'+id+'">'+esc(st.c)+'</button>';
       }
@@ -2061,7 +2061,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       h+='</div></div>';
       h+='<div class="sethead" id="set-routine">Routine</div>'+routineTab();
       h+='<div class="sethead">Your data</div>';
-      h+='<div class="grp"><div class="lab">Back up your data</div><p class="small">Everything lives on this device only for now. A backup is one small file with your tasks, plans, lists, log and settings. Keep it somewhere safe, or use it to move to a new phone.</p><button class="btn" data-a="dexport">Save a backup</button></div>';
+      h+='<div class="grp"><div class="lab">Back up your data</div><p class="small">'+(signedIn()?'Your account already keeps everything synced. A backup is an extra copy: one small file with your tasks, plans, lists, log and settings, to keep somewhere safe.':'Without an account, everything lives on this device only. A backup is one small file with your tasks, plans, lists, log and settings. Keep it somewhere safe, or use it to move to a new phone.')+'</p><button class="btn" data-a="dexport">Save a backup</button></div>';
       h+='<div class="grp"><div class="lab">Restore from a backup</div><p class="small">This replaces what is on this device with what is in the file.</p><label class="btn alt" style="cursor:pointer">Choose a backup file<input type="file" id="dimport" accept=".json,application/json" hidden></label></div>';
       if(S.dataPending)h+='<div class="note" role="alert">Found a backup with '+S.dataPending.n+' saved items'+(S.dataPending.when?' from '+esc(S.dataPending.when):'')+'. Replace what is on this device with it?<div class="row" style="margin-top:10px"><button class="btn grow" data-a="dgo">Yes, restore it</button><button class="btn alt grow" data-a="dno">Cancel</button></div></div>';
       if(S.dataMsg)h+='<div class="note" role="status">'+esc(S.dataMsg)+'</div>';
@@ -2425,7 +2425,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     fgbg:function(b,e){if(e.target===b){S.fg=null;render()}},
     sqbg:function(b,e){if(e.target===b){S.sq=null;render()}},
     recime:function(){toast('Opening a recipe search.')},
-    lunch:function(){S.status.lunch='done';render();toast('Prototype: the real app would draft a quick "lunch?" text to §P.')},
+    lunch:function(){setTimeout(function(){S.status.lunch='done';render()},300)},
     lunchsolo:function(){S.status.lunch='done';render();toast('Got it. Lunch is on your own today.')},
     rough:function(){S.rp={t:null,sev:null,meds:[]};render()},
     rmig:function(b){var id=b.dataset.v;S.rp.t=S.rp.t===id?null:id;S.rp.sev=null;S.rp.meds=[];keepAll(render)},
