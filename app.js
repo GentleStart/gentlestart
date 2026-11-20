@@ -1455,7 +1455,7 @@
   function hasSampleLists(){return S.lists.some(function(L){return L.items.some(sampleItem)||(SAMPLE_LISTS.indexOf(L.id)>=0&&!L.items.length)})}
   function lists(){
     var ed=!!S.lmode;
-    var h=head({title:'Lists',sub:'Separate from today. Nothing here is due. Tap Park it on any item and I\u2019ll find space for it in your week.'});
+    var h=head({title:'Lists',sub:'Separate from your day, and nothing here is due. Tap '+U().parkIt+' on any item to send it to '+lotThe()+', and Home will suggest it when there\u2019s time.'});
     h+='<div class="between" style="justify-content:flex-end;gap:8px">'+(S.lists.length>1?'<button class="expall" data-a="lexp" aria-label="Expand or collapse all lists">Expand all</button>':'')+'<button class="psign" data-a="lot" aria-label="Open '+esc(U().lot)+'"><b>P</b><span>'+esc(U().lot)+'</span></button></div>';
     if(!S.demo&&!S.lists.length&&!S.hints.jitlists){
       S.jl=S.jl||[];
