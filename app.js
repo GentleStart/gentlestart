@@ -2274,6 +2274,16 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   function reopen(ids){ids.forEach(function(id){var d=document.querySelector('details.lcard[data-id="'+id+'"]');if(d)d.open=true})}
   function keepOpen(){var ids=openIds();render();reopen(ids)}
   function resetForm(){S.f={sels:[],td:{}}}
+  /* a save that is missing something: show the note, then point at the field itself */
+  function errAt(sel){
+    keepSheet(render);var sh=document.querySelectorAll('#sheetRoot .sheet'),el=null;
+    for(var i=sh.length-1;i>=0&&!el;i--)el=sh[i].querySelector(sel);
+    if(!el)return;var box=el.closest('.tfield')||el;box.classList.add('fielderr');
+    var nt=el.closest('.sheet').querySelector('.note[role=alert]'),msg=null;if(nt){msg=document.createElement('p');msg.className='small fielderrmsg';msg.setAttribute('role','alert');msg.textContent=nt.textContent;box.insertAdjacentElement('afterend',msg)}
+    el.scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'});
+    if(el.matches('input'))try{el.focus({preventScroll:true})}catch(x){}
+    var clear=function(){box.classList.remove('fielderr');if(msg&&msg.parentNode)msg.parentNode.removeChild(msg);el.removeEventListener('input',clear);el.removeEventListener('change',clear)};el.addEventListener('input',clear);el.addEventListener('change',clear);
+  }
   function keepSheet(fn){var sh=document.querySelector('.sheet'),st=sh?sh.scrollTop:0;fn();var s2=document.querySelector('.sheet');if(s2)s2.scrollTop=st}
   function closeSheets(){S.menu=false;S.rp=null;S.ev=null;S.ns=null;S.tk=null;S.pl=null;S.sq=null;S.fg=null;S.ce=null;S.se=null;S.re=null}
 
@@ -2402,8 +2412,8 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     tkstepdone:function(b){keepSheet(function(){syncTk();var x=S.tk.steps[+b.dataset.i];if(x)x.done=!x.done;render()})},
     tksave:function(){
       syncTk();var T=S.tk;commitStep();T.err='';
-      if(!T.title.trim()){T.err='Give it a name or pick a tag first.';keepSheet(render);return}
-      if(T.rpt&&T.rpt.rep==='w'&&!T.rpt.days.length){T.err='Pick which days it repeats.';keepSheet(render);return}
+      if(!T.title.trim()){T.err='Give it a name or pick a tag first.';errAt('#tk-title');return}
+      if(T.rpt&&T.rpt.rep==='w'&&!T.rpt.days.length){T.err='Pick which days it repeats.';errAt('[aria-label="Days"]');return}
       if(T.id&&T.repId&&!T.scope){T.ask='save';keepSheet(render);var _a=document.querySelector('.askseries');if(_a)_a.scrollIntoView({block:'center'});return}
       if(T.scope==='one'){var o1=taskById(T.id);if(o1){o1.title=T.title.trim();o1.g=T.g||undefined;o1.h=T.h;o1.must=T.h==='day'&&!!T.must;if(T.h==='day'&&!o1.dayOf)o1.dayOf=ymd(new Date());o1.nr=T.nr;o1.fun=T.fun;o1.bd=T.bd;o1.mins=T.mins;o1.w=T.w;o1.due=T.due||'';o1.steps=T.steps}saveTasks();S.tk=null;render();toast('Saved for this one. The repeat stays as it was.');return}
       var old=T.id?taskById(T.id):null,repId=T.repId||null;
@@ -2583,7 +2593,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       if(!R.t.trim())R.err='Give it a name first.';
       else if(R.rep==='w'&&!R.days.length)R.err='Pick at least one day.';
       else if(R.as==='ev'&&!R.time)R.err='Add a start time so it lands in the right spot.';
-      if(R.err){keepSheet(render);return}
+      if(R.err){errAt(!R.t.trim()?'#re-t':R.rep==='w'&&!R.days.length?'[aria-label="Days"]':'#re-time');return}
       var rec={mode:R.mode||'dom',nth:R.nth,dow:R.dow,anchor:R.anchor||ymd(new Date()),id:R.id||('p'+Date.now()),t:R.t.trim().slice(0,50),rep:R.rep,days:R.days.slice(),dom:R.dom,part:R.part,as:R.as,time:R.as==='ev'?R.time:undefined,dur:R.as==='ev'?R.dur:undefined};
       var ix=-1;S.reps.forEach(function(x,i){if(x.id===rec.id)ix=i});
       if(ix>=0)S.reps[ix]=rec;else S.reps.push(rec);
@@ -2664,7 +2674,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       else if(!E.time)E.err='Add a start time so it lands in the right spot.';
       else if(E.dk==='other'&&!E.dateVal)E.err='Pick the day.';
       else if(E.rpt&&E.rpt.rep==='w'&&!E.rpt.days.length)E.err='Pick which days it repeats.';
-      if(E.err){keepSheet(render);return}
+      if(E.err){errAt(!E.title.trim()?'#ev-title':!E.time?'#ev-time':(E.dk==='other'&&!E.dateVal)?'#ev-date':'[aria-label="Days"]');return}
       var date=E.dk==='today'?ymd(new Date()):E.dk==='tomorrow'?ymd(addDays(new Date(),1)):E.dateVal;
       if(E.id&&E.series&&!E.scope){E.ask='save';keepSheet(render);var _a=document.querySelector('.askseries');if(_a)_a.scrollIntoView({block:'center'});return}
       var base=E.id?S.events.filter(function(x){return x.id===E.id})[0]:null;

@@ -1068,3 +1068,9 @@ ul.rtl li .swdel{width:calc(-1 * var(--sx) - 10px)}
 .tourhi{outline:3px solid var(--accent);outline-offset:4px;border-radius:14px;animation:tourpulse 1.6s ease-in-out infinite;position:relative;z-index:1}
 @keyframes tourpulse{50%{outline-offset:7px}}
 @media (prefers-reduced-motion:reduce){.tourhi{animation:none}}
+
+/* field a save needs */
+.fielderr{outline:2.5px solid #b8473a;outline-offset:3px;border-radius:12px;animation:fieldnudge .35s ease 1}
+@keyframes fieldnudge{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@media (prefers-reduced-motion:reduce){.fielderr{animation:none}}
+.fielderrmsg{color:#b8473a;margin:6px 0 0;font-weight:600}
