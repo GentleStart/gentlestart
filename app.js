@@ -3079,6 +3079,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   function syncClock(first){
     if(rollDaily()&&!first&&!document.querySelector('.sheet'))render();
     var n=new Date(),m=n.getHours()*60+n.getMinutes(),o=S.dayOff||0;
+    if(S.tour!==null&&S.tour!==undefined)m=570+o; /* the tour always shows a 9:30 morning, so the morning-only parts are there to point at */
     SIM.morning=SIM.afternoon=SIM.evening=m;
     var p=m<720+o?'morning':m<1020+o?'afternoon':'evening';
     if(first||p!==S.autoPart){var moved=!first;S.autoPart=p;S.part=p;S.shift=0;if(moved&&!S.menu&&!S.ev&&!S.tk&&!S.setup&&!S.lot&&!document.querySelector('.sheet'))render()}
