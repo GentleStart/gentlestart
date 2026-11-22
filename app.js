@@ -528,6 +528,7 @@
     if(d!==null)sc+=d<=0?55:d===1?40:d<=3?28:d<=7?14:4;
     sc+=w==='big'?24:w==='small'?0:12;
     sc+=ageDays(t);
+    if(t.h==='day')sc+=t.must?45:30;
     if(m<=av*0.6)sc+=6;
     if(S.logic==='tiny'&&m<=15)sc+=8;
     if(creature()&&S.mood==='energetic'&&w==='big')sc+=10;
@@ -568,6 +569,7 @@
     if(t.mins)g+=tag(fmtMins(t.mins));
     if(t.w==='big')g+=tag('A lot');else if(t.w==='small')g+=tag('A little');
     if(t.bd)g+=tag('Big deal');
+    if(t.h==='day'&&t.must)g+=tag('Must do');
     if(t.fun)g+=tag('Fun');
     if(d)g+=tag('By '+dayLabel(d));
     if(t.nr)g+=tag('Not in randomizers');
@@ -855,16 +857,17 @@
   function lotInner(embedded){
     var u=U(),tab=S.lotTab;
     var h='<div class="between"><h2 class="lottitle">'+esc(u.lot)+'</h2>'+(embedded?'':'<button class="x lotx" data-a="lclose" aria-label="Close">&times;</button>')+'</div>';
-    h+='<div class="subtabs lotabs" role="group" aria-label="Sections"><button data-a="lottab" data-v="week" aria-pressed="'+(tab==='week')+'">Weekly</button><button data-a="lottab" data-v="month" aria-pressed="'+(tab==='month')+'">Monthly</button><button data-a="lottab" data-v="groups" aria-pressed="'+(tab==='groups')+'">Groups</button></div>';
+    h+='<div class="subtabs lotabs" role="group" aria-label="Sections"><button data-a="lottab" data-v="day" aria-pressed="'+(tab==='day')+'">Daily</button><button data-a="lottab" data-v="week" aria-pressed="'+(tab==='week')+'">Weekly</button><button data-a="lottab" data-v="month" aria-pressed="'+(tab==='month')+'">Monthly</button><button data-a="lottab" data-v="groups" aria-pressed="'+(tab==='groups')+'">Groups</button></div>';
     if(tab==='groups')h+=groupsView(u);
     else{
-      h+='<form class="add lotadd" data-a="tkquick" data-h="'+tab+'"><input type="text" id="tkq" placeholder="'+(tab==='week'?'Something for this week':'Something for this month')+'" aria-label="Add something"><button type="submit">'+esc(u.parkIt)+'</button></form>'+hint('hold','lotnote','Tip: hold the button to fill in details first.');
+      h+='<form class="add lotadd" data-a="tkquick" data-h="'+tab+'"><input type="text" id="tkq" placeholder="'+(tab==='day'?'Something for today':tab==='week'?'Something for this week':'Something for this month')+'" aria-label="Add something"><button type="submit">'+esc(u.parkIt)+'</button></form>'+hint('hold','lotnote','Tip: hold the button to fill in details first.');
       var list=S.tasks.filter(function(t){return !t.done&&(t.h||'week')===tab}).sort(function(a,b){
         var da=dueOf(a),db=dueOf(b);
         if(da&&db)return da<db?-1:da>db?1:0;
         if(da)return -1;if(db)return 1;
         return (b.created||0)-(a.created||0);
       });
+      if(tab==='day')h+=hint('daily','lotnote','Daily is for things you mean to get to today. Anything left tonight slides into Weekly, unless you tag it Must do.');
       if(!list.length)h+='<div class="lotnote">An empty lot. Nice and quiet.</div>';
       else{h+='<div class="spaces">';list.forEach(function(t,i){h+=bay(t,i+1,false)});h+='</div>'}
     }
@@ -879,13 +882,13 @@
     if(T.err)h+='<div class="note" role="alert">'+esc(T.err)+'</div>';
     if(T.ask)h+='<div class="note askseries" role="alert"><b>This task repeats.</b> '+(T.ask==='del'?'Delete just this one, or stop it repeating too?':'Change just this one, or every time it comes back?')+'<div class="row" style="margin-top:10px"><button class="btn alt grow" data-a="tkscope" data-v="one">Just this one</button><button class="btn grow" data-a="tkscope" data-v="all">'+(T.ask==='del'?'Stop repeating':'Every time')+'</button></div><button class="quiet" data-a="tkscope" data-v="cancel">Cancel</button></div>';
     h+='<div class="grp"><div class="lab">What is it</div><input class="field" type="text" id="tk-title" value="'+esc(T.title)+'" placeholder="e.g. Call about the bill" aria-label="What is it"></div>';
-    h+='<div class="grp"><div class="lab">Where it lives</div>'+evChips('tkh',T.h,[['week','This week'],['month','This month']])+'</div>';
+    h+='<div class="grp"><div class="lab">Where it lives</div>'+evChips('tkh',T.h,[['day','Today'],['week','This week'],['month','This month']])+'</div>';
     h+=rptUI('tk',T.rpt||(T.rpt=rptNew()));
     if(S.groups.length)h+='<div class="grp"><div class="lab">Group (optional)</div>'+evChips('tkg',T.g||'',[['','None']].concat(S.groups.map(function(g){return [g.id,esc(g.name)]})))+'</div>';
     h+='<div class="grp"><div class="lab">How long might it take (optional)</div>'+evChips('tkmins',T.mins,[[0,'Not sure'],[5,'5 min'],[15,'15 min'],[30,'30 min'],[60,'1 hr'],[120,'2 hr+']])+'</div>';
     h+='<div class="grp"><div class="lab">How much it matters (optional)</div>'+evChips('tkw',T.w,[['small','A little'],['med','In between'],['big','A lot']])+'</div>';
     h+='<div class="grp"><div class="lab">A date, only if it really has one (optional)</div><input class="field" type="date" id="tk-due" value="'+esc(T.due)+'" aria-label="Date">'+(T.due?'<button class="quiet" data-a="tkclr" style="align-self:flex-start">No date</button>':'')+'</div>';
-    h+='<div class="grp"><div class="lab">Tags (select any number)</div><div class="chips sm" role="group" aria-label="Tags">'+[['fun','A fun or creative one'],['nr','Keep this out of the plinko'],['bd','A big deal']].map(function(o){return '<button data-a="tktag" data-v="'+o[0]+'" aria-pressed="'+(!!T[o[0]])+'">'+o[1]+'</button>'}).join('')+'</div>'+(T.bd?'<p class="small">Big deals get extra encouragement when you start, and a bigger celebration when you finish.</p>':'')+'</div>';
+    h+='<div class="grp"><div class="lab">Tags (select any number)</div><div class="chips sm" role="group" aria-label="Tags">'+[['fun','A fun or creative one'],['nr','Keep this out of the plinko'],['bd','A big deal']].concat(T.h==='day'?[['must','Must do (stays in Daily)']]:[]).map(function(o){return '<button data-a="tktag" data-v="'+o[0]+'" aria-pressed="'+(!!T[o[0]])+'">'+o[1]+'</button>'}).join('')+'</div>'+(T.bd?'<p class="small">Big deals get extra encouragement when you start, and a bigger celebration when you finish.</p>':'')+'</div>';
     h+='<div class="grp"><div class="lab">Tiny steps (optional)</div>';
     if(T.steps.length){h+='<ul class="items" style="margin-top:0">';T.steps.forEach(function(x,i){
       h+='<li class="item'+(x.done?' done':'')+'"><button class="check" role="checkbox" aria-checked="'+x.done+'" aria-label="'+esc(x.t)+'" data-a="tkstepdone" data-i="'+i+'">'+(x.done?'<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7.5l3 3 6-7"/></svg>':'')+'</button><span class="t">'+esc(x.t)+'</span><button class="x" aria-label="Remove step" data-a="tkstepdel" data-i="'+i+'">&times;</button></li>';
@@ -2354,7 +2357,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     carenext:function(){S.careIdx=(S.careIdx+1)%Math.max(1,careList().length);render()},
     tkopen:function(b){
       var t=taskById(b.dataset.v);if(!t)return;
-      S.tk={g:t.g||'',rpt:(function(){var r=t.rep&&S.reps.filter(function(x){return x.id===t.rep})[0];return r?rptCopy(r):rptNew()})(),repId:t.rep||null,id:t.id,title:t.title,h:t.h||'week',nr:!!t.nr,fun:!!t.fun,bd:!!t.bd,work:(t.work||[]).slice(),mins:t.mins||0,w:t.w||'med',due:dueOf(t),steps:t.steps.map(function(x){return {t:x.t,done:x.done}}),newStep:'',err:''};render();
+      S.tk={g:t.g||'',rpt:(function(){var r=t.rep&&S.reps.filter(function(x){return x.id===t.rep})[0];return r?rptCopy(r):rptNew()})(),repId:t.rep||null,id:t.id,title:t.title,h:t.h||'week',must:!!t.must,nr:!!t.nr,fun:!!t.fun,bd:!!t.bd,work:(t.work||[]).slice(),mins:t.mins||0,w:t.w||'med',due:dueOf(t),steps:t.steps.map(function(x){return {t:x.t,done:x.done}}),newStep:'',err:''};render();
     },
     tkclose:function(){S.tk=null;render()},
     tkbg:function(b,e){if(e.target===b){S.tk=null;render()}},
@@ -2378,13 +2381,13 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       if(!T.title.trim()){T.err='Give it a name or pick a tag first.';keepSheet(render);return}
       if(T.rpt&&T.rpt.rep==='w'&&!T.rpt.days.length){T.err='Pick which days it repeats.';keepSheet(render);return}
       if(T.id&&T.repId&&!T.scope){T.ask='save';keepSheet(render);var _a=document.querySelector('.askseries');if(_a)_a.scrollIntoView({block:'center'});return}
-      if(T.scope==='one'){var o1=taskById(T.id);if(o1){o1.title=T.title.trim();o1.g=T.g||undefined;o1.h=T.h;o1.nr=T.nr;o1.fun=T.fun;o1.bd=T.bd;o1.mins=T.mins;o1.w=T.w;o1.due=T.due||'';o1.steps=T.steps}saveTasks();S.tk=null;render();toast('Saved for this one. The repeat stays as it was.');return}
+      if(T.scope==='one'){var o1=taskById(T.id);if(o1){o1.title=T.title.trim();o1.g=T.g||undefined;o1.h=T.h;o1.must=T.h==='day'&&!!T.must;if(T.h==='day'&&!o1.dayOf)o1.dayOf=ymd(new Date());o1.nr=T.nr;o1.fun=T.fun;o1.bd=T.bd;o1.mins=T.mins;o1.w=T.w;o1.due=T.due||'';o1.steps=T.steps}saveTasks();S.tk=null;render();toast('Saved for this one. The repeat stays as it was.');return}
       var old=T.id?taskById(T.id):null,repId=T.repId||null;
       if(T.rpt&&T.rpt.rep!=='none'){
         var rr=rptCopy(T.rpt);rr.anchor=T.rpt.anchor||ymd(new Date());rr.id=repId||('p'+Date.now());rr.t=T.title.trim().slice(0,50);rr.part='afternoon';rr.as='lot';
         var ri=-1;S.reps.forEach(function(x,i){if(x.id===rr.id)ri=i});if(ri>=0)S.reps[ri]=rr;else S.reps.push(rr);repId=rr.id;S.repSeen[rr.id]=ymd(new Date());save('gs-repseen',S.repSeen);syncSteps();saveRtn();
       }else if(repId){S.reps=S.reps.filter(function(x){return x.id!==repId});repId=null;saveRtn()}
-      var rec={g:T.g||undefined,rep:repId||undefined,id:T.id||('t'+Date.now()),title:T.title.trim(),h:T.h,nr:T.nr,fun:T.fun,bd:T.bd,mins:T.mins,w:T.w,due:T.due||'',steps:T.steps,work:old?(old.work||[]):[],done:old?old.done:false,created:old?old.created:Date.now(),doneAt:old?old.doneAt:0,snooze:old?old.snooze:''};
+      var rec={g:T.g||undefined,rep:repId||undefined,id:T.id||('t'+Date.now()),title:T.title.trim(),h:T.h,must:T.h==='day'&&!!T.must,dayOf:T.h==='day'?((old&&old.h==='day'&&old.dayOf)||ymd(new Date())):undefined,nr:T.nr,fun:T.fun,bd:T.bd,mins:T.mins,w:T.w,due:T.due||'',steps:T.steps,work:old?(old.work||[]):[],done:old?old.done:false,created:old?old.created:Date.now(),doneAt:old?old.doneAt:0,snooze:old?old.snooze:''};
       if(old){S.tasks[S.tasks.indexOf(old)]=rec}else S.tasks.unshift(rec);
       saveTasks();S.tk=null;render();toast('Saved.');
     },
@@ -2768,7 +2771,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       S.care.push(v);save('gs-care',S.care);S.careIdx=careList().length-1;render();toast('Added.');
     }else if(f.dataset.a==='tkquick'){
       if(S.lpFired)return;
-      S.tasks.unshift({g:f.dataset.g||undefined,id:'t'+Date.now(),title:v,h:f.dataset.h||'week',nr:false,fun:false,work:[],mins:0,w:'med',due:'',steps:[],done:false,created:Date.now()});saveTasks();render();
+      S.tasks.unshift({g:f.dataset.g||undefined,id:'t'+Date.now(),title:v,h:f.dataset.h||'week',dayOf:f.dataset.h==='day'?ymd(new Date()):undefined,nr:false,fun:false,work:[],mins:0,w:'med',due:'',steps:[],done:false,created:Date.now()});saveTasks();render();
       var q=document.getElementById('tkq');if(q)q.focus();toast(U().parked+'. It can wait there.');
     }else if(f.dataset.a==='newlist'){
       S.lists.push({id:'l'+Date.now(),name:v,items:[]});save('gs-lists',S.lists);render();reopen(ids);
@@ -3031,13 +3034,20 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   /* today's done and skipped steps survive a refresh (and sync between devices); a new day starts fresh */
   (function(){var st=load('gs-status',null),tk=ymd(new Date());S.status=(st&&st.d===tk&&st.s)?st.s:{};S.statusDay=tk;S.statusSaved=JSON.stringify(S.status)})();
   /* follow the real time of day: the clock updates every minute, and the part of the day moves on its own */
+  function rollDaily(){
+    var tk=ymd(new Date()),ch=false;
+    S.tasks.forEach(function(t){if(t.done||t.h!=='day')return;if(!t.dayOf){t.dayOf=tk;ch=true;return}if(t.dayOf<tk){if(t.must)t.dayOf=tk;else{t.h='week';delete t.dayOf}ch=true}});
+    if(ch)saveTasks();return ch;
+  }
   function syncClock(first){
+    if(rollDaily()&&!first&&!document.querySelector('.sheet'))render();
     var n=new Date(),m=n.getHours()*60+n.getMinutes(),o=S.dayOff||0;
     SIM.morning=SIM.afternoon=SIM.evening=m;
     var p=m<720+o?'morning':m<1020+o?'afternoon':'evening';
     if(first||p!==S.autoPart){var moved=!first;S.autoPart=p;S.part=p;S.shift=0;if(moved&&!S.menu&&!S.ev&&!S.tk&&!S.setup&&!S.lot&&!document.querySelector('.sheet'))render()}
   }
   syncClock(true);
+  if(S.tasks.some(function(t){return !t.done&&t.h==='day'}))S.lotTab='day';
   setInterval(function(){syncClock(false)},60000);
   document.addEventListener('visibilitychange',function(){if(!document.hidden)syncClock(false)});
   try{applyLook()}catch(e){}
