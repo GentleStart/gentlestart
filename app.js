@@ -572,7 +572,7 @@
     if(t.h==='day'&&t.must)g+=tag('Must do');
     if(t.fun)g+=tag('Fun');
     if(d)g+=tag('By '+dayLabel(d));
-    if(t.nr)g+=tag('Not in randomizers');
+    if(t.nr)g+=tag('No random picks');
     if(t.work&&t.work.length)g+=tag('Worked on '+t.work.length+(t.work.length===1?' time':' times'));
     return '<span class="tags">'+g+'</span>';
   }
@@ -888,7 +888,7 @@
     h+='<div class="grp"><div class="lab">How long might it take (optional)</div>'+evChips('tkmins',T.mins,[[0,'Not sure'],[5,'5 min'],[15,'15 min'],[30,'30 min'],[60,'1 hr'],[120,'2 hr+']])+'</div>';
     h+='<div class="grp"><div class="lab">How much it matters (optional)</div>'+evChips('tkw',T.w,[['small','A little'],['med','In between'],['big','A lot']])+'</div>';
     h+='<div class="grp"><div class="lab">A date, only if it really has one (optional)</div><input class="field" type="date" id="tk-due" value="'+esc(T.due)+'" aria-label="Date">'+(T.due?'<button class="quiet" data-a="tkclr" style="align-self:flex-start">No date</button>':'')+'</div>';
-    h+='<div class="grp"><div class="lab">Tags (select any number)</div><div class="chips sm" role="group" aria-label="Tags">'+[['fun','A fun or creative one'],['nr','Keep this out of the plinko'],['bd','A big deal']].concat(T.h==='day'?[['must','Must do (stays in Daily)']]:[]).map(function(o){return '<button data-a="tktag" data-v="'+o[0]+'" aria-pressed="'+(!!T[o[0]])+'">'+o[1]+'</button>'}).join('')+'</div>'+(T.bd?'<p class="small">Big deals get extra encouragement when you start, and a bigger celebration when you finish.</p>':'')+'</div>';
+    h+='<div class="grp"><div class="lab">Tags (select any number)</div><div class="chips sm" role="group" aria-label="Tags">'+[['fun','A fun or creative one'],['nr','Not for random picks'],['bd','A big deal']].concat(T.h==='day'?[['must','Must do (stays in Daily)']]:[]).map(function(o){return '<button data-a="tktag" data-v="'+o[0]+'" aria-pressed="'+(!!T[o[0]])+'">'+o[1]+'</button>'}).join('')+'</div>'+(T.bd?'<p class="small">Big deals get extra encouragement when you start, and a bigger celebration when you finish.</p>':'')+'</div>';
     h+='<div class="grp"><div class="lab">Tiny steps (optional)</div>';
     if(T.steps.length){h+='<ul class="items" style="margin-top:0">';T.steps.forEach(function(x,i){
       h+='<li class="item'+(x.done?' done':'')+'"><button class="check" role="checkbox" aria-checked="'+x.done+'" aria-label="'+esc(x.t)+'" data-a="tkstepdone" data-i="'+i+'">'+(x.done?'<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7.5l3 3 6-7"/></svg>':'')+'</button><span class="t">'+esc(x.t)+'</span><button class="x" aria-label="Remove step" data-a="tkstepdel" data-i="'+i+'">&times;</button></li>';
