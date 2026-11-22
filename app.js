@@ -1857,8 +1857,8 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       {tab:'today',t:'Welcome to the tour',b:'This is a practice copy of the app, filled with examples. Tap anything you like. Nothing here is saved, and when you finish, your own app comes back exactly as it was.'},
       {tab:'today',sel:'section.hero',t:'One step at a time',b:'Home shows just your next step, so there is nothing to sort through. Finish it, or skip it, and the next one takes its place.'},
       {tab:'today',sel:'ul.steps',t:'Your routine, in order',b:'Tap a step to check it off or jump back to it. Hold one to rename it or anchor it, so it always counts.'},
-      {tab:'today',sel:'[data-a=rough]',t:'For rough days',b:'Tap this when a day starts badly. The app switches to '+(creature()?'bear minimum':'low battery mode')+': just your anchored basics, and nothing else asks for attention.'},
-      {tab:'today',sel:function(){var x=document.querySelector('.parkh');return x&&x.closest('.card')},t:'The '+lot,b:'Things with no set time live in the '+lot+'. Nothing in it is ever overdue. Home suggests one when it fits the time you have.'},
+      {tab:'today',sel:'[data-a=rough]',t:'For rough days',b:'Tap this when a day starts badly. The app switches to '+(creature()?'bear minimum':'low battery mode')+': just your anchored basics, and nothing else asks for attention.',alt:'In the morning, a \u201cRough morning?\u201d button sits under your next step. Tap it when a day starts badly, and the app switches to '+(creature()?'bear minimum':'low battery mode')+': just your anchored basics, and nothing else asks for attention.'},
+      {tab:'today',sel:function(){var x=document.querySelector('.parkh');return x&&x.closest('.card')},t:'The '+lot,b:'Things with no set time live in the '+lot+'. Nothing in it is ever overdue. Home suggests one when it fits the time you have.',alt:'Things with no set time live in the '+lot+'. Nothing in it is ever overdue. When there is room in your day, Home suggests one of them.'},
       {tab:'ov',sel:'.ovmain',t:'Plans',b:'Your week or month at a glance, with the '+lot+' alongside. Tap + Add on any day to plan something there.'},
       {tab:'lists',sel:'details.lcard',t:'Lists',b:'Groceries, gift ideas, movies to watch. Nothing here is due. Tap '+pk+' on an item to send it to the '+lot+'. Swipe left to delete, or hold to edit.'},
       {tab:'lot',sel:'.lotpage',t:'The '+lot+', up close',b:'Everything with no set time, sorted into this week, this month, and groups you make. Hold '+pk+' when adding something to fill in details first.'},
@@ -1873,16 +1873,16 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     if(S.tour===null)return '';var st=tourSteps(),i=Math.min(S.tour,st.length-1),s=st[i],last=i===st.length-1;
     return '<div class="tourcard" role="dialog" aria-label="Tour" aria-live="polite"><div class="between"><span class="small">'+(i+1)+' of '+st.length+'</span>'+(last?'':'<button class="quiet" data-a="tourend">End tour</button>')+'</div><h3>'+esc(s.t)+'</h3><p class="small">'+esc(s.b)+'</p><div class="row">'+(i?'<button class="btn alt grow" data-a="tourback">Back</button>':'')+'<button class="btn grow" data-a="'+(last?'tourend':'tournext')+'">'+(last?(localStorage.getItem('gs-tour-new')?'Set up my app':'Finish'):'Next')+'</button></div></div>';
   }
-  function tourApply(scroll){
+  function tourApply(scroll,newTab){
     document.querySelectorAll('.tourhi').forEach(function(x){x.classList.remove('tourhi')});
     if(S.tour===null)return;var st=tourSteps(),s=st[Math.min(S.tour,st.length-1)],el=null;
     if(s.sel)el=typeof s.sel==='function'?s.sel():document.querySelector(s.sel);
     var card=document.querySelector('.tourcard');
     if(el){el.classList.add('tourhi');if(scroll){var r=el.getBoundingClientRect();if(r.top<70||r.bottom>innerHeight-260)window.scrollTo({top:Math.max(0,scrollY+r.top-90),behavior:'smooth'})}}
-    else if(scroll)window.scrollTo({top:0,behavior:'smooth'});
+    else{if(s.sel&&s.alt&&card){var cp=card.querySelector('p');if(cp)cp.textContent=s.alt}if(scroll&&newTab)window.scrollTo({top:0,behavior:'smooth'})}
     if(card){setTimeout(function(){var r=el&&el.getBoundingClientRect();card.classList.toggle('tctop',!!(r&&r.top>innerHeight*0.5))},scroll?400:0)}
   }
-  function tourGo(n){var st=tourSteps();S.tour=Math.max(0,Math.min(st.length-1,n));localStorage.setItem('gs-tour',String(S.tour));S.menu=false;S.tab=st[S.tour].tab;render();tourApply(true)}
+  function tourGo(n){var st=tourSteps();S.tour=Math.max(0,Math.min(st.length-1,n));localStorage.setItem('gs-tour',String(S.tour));S.menu=false;var nt=S.tab!==st[S.tour].tab;S.tab=st[S.tour].tab;render();tourApply(true,nt)}
   function resetForSetup(){
     S.tasks=[];saveTasks();S.events=[];save('gs-events',S.events);S.log=[];save('gs-log',S.log);S.lists=[];save('gs-lists',S.lists);
     S.reps=[];S.cust=[];S.rtn={parts:{morning:PARTS.morning.steps.slice(),afternoon:PARTS.afternoon.steps.slice(),evening:PARTS.evening.steps.slice()},hidden:['dailymeds'],names:{}};saveRtn();
