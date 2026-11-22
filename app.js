@@ -1322,7 +1322,7 @@
   }
   function newEv(){return {rpt:rptNew(),tags:[],id:null,by:'me',title:'',dk:'today',dateVal:'',time:'',dur:60,place:'',travel:0,prep:'',withJ:false,share:'full',err:''}}
   function syncEv(){
-    var E=S.ev;if(!E)return;rptSync('ev',E.rpt);var tr=document.getElementById('ev-trm');if(E.trOther&&tr)E.travel=Math.max(0,Math.min(600,parseInt(tr.value,10)||0));var dh=document.getElementById('ev-durh'),dm=document.getElementById('ev-durm');if(E.durOther&&dh&&dm){E.dur=Math.max(0,Math.min(23,parseInt(dh.value,10)||0))*60+Math.max(0,Math.min(59,parseInt(dm.value,10)||0))}
+    var E=S.ev;if(!E)return;rptSync('ev',E.rpt);var tr=document.getElementById('ev-trm'),trh=document.getElementById('ev-trh');if(E.trOther&&tr)E.travel=Math.max(0,Math.min(600,(parseInt(trh&&trh.value,10)||0)*60+(parseInt(tr.value,10)||0)));var dh=document.getElementById('ev-durh'),dm=document.getElementById('ev-durm');if(E.durOther&&dh&&dm){E.dur=Math.max(0,Math.min(23,parseInt(dh.value,10)||0))*60+Math.max(0,Math.min(59,parseInt(dm.value,10)||0))}
     [['ev-title','title'],['ev-time','time'],['ev-place','place'],['ev-prep','prep'],['ev-date','dateVal']].forEach(function(p){var e=document.getElementById(p[0]);if(e)E[p[1]]=e.value});
   }
   function evChips(act,cur,list){
@@ -1359,7 +1359,7 @@
     if(E.durOther)h+='<div class="durin"><input class="field" type="number" min="0" max="23" inputmode="numeric" id="ev-durh" value="'+Math.floor((E.dur||0)/60)+'" aria-label="Hours"><span>hr</span><input class="field" type="number" min="0" max="59" step="5" inputmode="numeric" id="ev-durm" value="'+((E.dur||0)%60)+'" aria-label="Minutes"><span>min</span></div>';
     h+='</div>';
     h+='<div class="grp"><div class="lab">Where (optional)</div><input class="field" type="text" id="ev-place" value="'+esc(E.place)+'" placeholder="e.g. Main Street clinic" aria-label="Where"></div>';
-    if(E.by!=='p')h+='<div class="grp"><div class="lab">Travel time (optional)</div>'+(function(){var TP=[0,15,30,45];if(E.trOther===undefined)E.trOther=TP.indexOf(+E.travel)<0;return evChips('evtravel',E.trOther?'other':E.travel,[[0,'None'],[15,'15 min'],[30,'30 min'],[45,'45 min'],['other','Other']])+(E.trOther?'<div class="durin"><input class="field" type="number" min="0" max="600" step="5" inputmode="numeric" id="ev-trm" value="'+(E.travel||0)+'" aria-label="Travel minutes"><span>min</span></div>':'')})()+'<p class="small">Used to tell you when to start getting ready. It adds 10 minutes of buffer.</p></div>';
+    if(E.by!=='p')h+='<div class="grp"><div class="lab">Travel time (optional)</div>'+(function(){var TP=[0,15,30,45];if(E.trOther===undefined)E.trOther=TP.indexOf(+E.travel)<0;return evChips('evtravel',E.trOther?'other':E.travel,[[0,'None'],[15,'15 min'],[30,'30 min'],[45,'45 min'],['other','Other']])+(E.trOther?'<div class="durin"><input class="field" type="number" min="0" max="10" inputmode="numeric" id="ev-trh" value="'+Math.floor((E.travel||0)/60)+'" aria-label="Travel hours"><span>hr</span><input class="field" type="number" min="0" max="59" step="5" inputmode="numeric" id="ev-trm" value="'+((E.travel||0)%60)+'" aria-label="Travel minutes"><span>min</span></div>':'')})()+'<p class="small">Used to tell you when to start getting ready. It adds 10 minutes of buffer.</p></div>';
     if(E.by!=='p')h+='<div class="grp"><div class="lab">Before you go (optional)</div><input class="field" type="text" id="ev-prep" value="'+esc(E.prep)+'" placeholder="e.g. Bring your insurance card" aria-label="Before you go"></div>';
     if(E.by!=='p')h+='<div class="grp"><div class="lab">§P</div><div class="chips sm"><button data-a="evwj" aria-pressed="'+E.withJ+'">§P is coming too</button></div>'
       +'<div class="lab" style="margin-top:8px">What §P sees</div>'+evChips('evshare',E.share,[['full','Show details'],['generic','Just "Appointment"'],['hidden','Keep private']])+'</div>';
@@ -2653,7 +2653,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     evquick:function(b){keepSheet(function(){syncEv();var t=S.ev.tags=S.ev.tags||[],i=t.indexOf(b.dataset.v);if(i>=0)t.splice(i,1);else t.push(b.dataset.v);render()})},
     evday:function(b){keepSheet(function(){syncEv();S.ev.dk=b.dataset.v;render()})},
     evdur:function(b){keepSheet(function(){syncEv();if(b.dataset.v==='other'){S.ev.durOther=true;if(!S.ev.dur)S.ev.dur=180}else{S.ev.durOther=false;S.ev.dur=+b.dataset.v}render();if(S.ev.durOther){var x=document.getElementById('ev-durh');if(x)x.focus()}})},
-    evtravel:function(b){keepSheet(function(){syncEv();if(b.dataset.v==='other'){S.ev.trOther=true;if(!S.ev.travel)S.ev.travel=60}else{S.ev.trOther=false;S.ev.travel=+b.dataset.v}render();if(S.ev.trOther){var x=document.getElementById('ev-trm');if(x)x.focus()}})},
+    evtravel:function(b){keepSheet(function(){syncEv();if(b.dataset.v==='other'){S.ev.trOther=true;if(!S.ev.travel)S.ev.travel=60}else{S.ev.trOther=false;S.ev.travel=+b.dataset.v}render();if(S.ev.trOther){var x=document.getElementById('ev-trh');if(x)x.focus()}})},
     evby:function(b){keepSheet(function(){syncEv();S.ev.by=b.dataset.v;render()})},
     evwj:function(){keepSheet(function(){syncEv();S.ev.withJ=!S.ev.withJ;render()})},
     evshare:function(b){keepSheet(function(){syncEv();S.ev.share=b.dataset.v;render()})},
