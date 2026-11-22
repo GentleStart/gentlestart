@@ -1830,7 +1830,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   /* demo: the example-filled app, with a way to wipe it and start setup fresh */
   /* the tour: a practice copy of the app filled with examples. Starting it tucks the person's own data
      away in gs-tour-snap (never synced); finishing puts it all back exactly as it was. */
-  var TKEEP={'gs-tabs':1,'gs-profile':1,'gs-look':1,'gs-cw':1,'gs-trk':1,'gs-appear':1,'gs-logic':1};
+  var TKEEP={'gs-tabs':1,'gs-profile':1,'gs-trk':1,'gs-appear':1}; /* the tour always shows the Original look and Gentle mindset */
   function lsKeys(){var o=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf('gs-')===0)o.push(k)}return o}
   function tourStart(isNew){
     if(localStorage.getItem('gs-tour-snap'))return;
