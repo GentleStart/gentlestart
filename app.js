@@ -1481,7 +1481,7 @@
   function itTxt(it){return S.demo?String(it.t).replace(/ \(sample item\)$/,''):it.t}
   function hasSampleLists(){return S.lists.some(function(L){return L.items.some(sampleItem)||(SAMPLE_LISTS.indexOf(L.id)>=0&&!L.items.length)})}
   function lists(){
-    var ed=!!S.lmode;
+    var edAll=S.lmode===true,ed=edAll;
     var h=head({title:'Lists',sub:'Separate from your day, and nothing here is due. Tap '+U().parkIt+' on any item to send it to '+lotThe()+', and Home will suggest it when there\u2019s time.'});
     h+='<div class="between" style="justify-content:flex-end;gap:8px">'+(S.lists.length>1?'<button class="expall" data-a="lexp" aria-label="Expand or collapse all lists">Expand all</button>':'')+'<button class="psign" data-a="lot" aria-label="Open '+esc(U().lot)+'"><b>P</b><span>'+esc(U().lot)+'</span></button></div>';
     if(!S.demo&&!S.lists.length&&!S.hints.jitlists){
@@ -1493,15 +1493,16 @@
     if(!S.demo&&hasSampleLists())h+=hint('lists','note','Sample items are marked. Check them off, park them, or edit them.');
     var CK='<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7.5l3 3 6-7"/></svg>';
     S.lists.forEach(function(L,li){
+      var ed=edAll||S.lmode===L.id;
       var n=L.items.filter(function(i){return !i.done}).length;
-      h+='<details class="card lcard"'+(li===0||ed?' open':'')+' data-id="'+L.id+'"><summary><span>'+esc(L.name)+'</span><span class="count">'+n+' item'+(n===1?'':'s')+'</span></summary><ul class="items">'+(ed?'<li class="item"><input class="lsedit ltitle" type="text" data-l="'+li+'" value="'+esc(L.name)+'" maxlength="40" aria-label="List name"></li>':'');
+      h+='<details class="card lcard"'+(li===0||ed?' open':'')+' data-id="'+L.id+'"><summary data-lp="ledit" data-l="'+li+'"><span>'+esc(L.name)+'</span><span class="count">'+n+' item'+(n===1?'':'s')+'</span></summary><ul class="items">'+(ed?'<li class="item"><input class="lsedit ltitle" type="text" data-l="'+li+'" value="'+esc(L.name)+'" maxlength="40" aria-label="List name"></li>':'');
       L.items.forEach(function(it,ii){
         if(ed){h+='<li class="item"><input class="lsedit" type="text" data-l="'+li+'" data-i="'+ii+'" value="'+esc(itTxt(it))+'" maxlength="120" aria-label="Item"><button class="x" aria-label="Delete item" data-a="del" data-l="'+li+'" data-i="'+ii+'">&times;</button></li>';return}
         h+='<li class="item'+(it.done?' done':'')+'" data-lp="itopen" data-l="'+li+'" data-i="'+ii+'"><button class="check" role="checkbox" aria-checked="'+it.done+'" aria-label="'+esc(itTxt(it))+'" data-a="tick" data-l="'+li+'" data-i="'+ii+'">'+(it.done?CK:'')+'</button><span class="t">'+esc(itTxt(it))+'</span>'+(it.done?'':'<button class="lpk'+(it.parked?' on':'')+'" aria-pressed="'+!!it.parked+'" aria-label="'+(it.parked?esc(U().parked)+'. Tap to take it back out of '+esc(lotThe()):'Move to '+esc(lotThe()))+'" data-a="lpark" data-l="'+li+'" data-i="'+ii+'">'+(it.parked?esc(U().parked):esc(U().parkIt))+'</button>')+'<button class="swdel" data-a="del" data-l="'+li+'" data-i="'+ii+'" tabindex="-1" aria-hidden="true">Delete</button></li>';
       });
-      h+='</ul>'+(ed?'<button class="quiet ldel" data-a="ldellist" data-l="'+li+'">Delete this list</button>':'<form class="add" data-a="additem" data-l="'+li+'"><input type="text" id="add-'+L.id+'" placeholder="Add to '+esc(L.name)+'" aria-label="Add to '+esc(L.name)+'"><button type="submit">Add</button></form>')+'</details>';
+      h+='</ul>'+(ed?'<button class="quiet ldel" data-a="ldellist" data-l="'+li+'">Delete this list</button>'+(edAll?'':'<button class="btn alt" data-a="lmodeoff" style="margin-top:6px">Done editing</button>'):'<form class="add" data-a="additem" data-l="'+li+'"><input type="text" id="add-'+L.id+'" placeholder="Add to '+esc(L.name)+'" aria-label="Add to '+esc(L.name)+'"><button type="submit">Add</button></form>')+'</details>';
     });
-    h+='<form class="card" data-a="newlist"><b>Start a new list</b><div class="add" style="margin-top:0"><input type="text" id="newlist" placeholder="e.g. Pet store, Gift ideas" aria-label="New list name"><button type="submit">Create</button></div><button type="button" class="quiet linkbtn" data-a="lmode">'+(ed?'Done editing':'Edit an existing list')+'</button></form>';
+    h+='<form class="card" data-a="newlist"><b>Start a new list</b><div class="add" style="margin-top:0"><input type="text" id="newlist" placeholder="e.g. Pet store, Gift ideas" aria-label="New list name"><button type="submit">Create</button></div><button type="button" class="quiet linkbtn" data-a="lmode">'+(edAll?'Done editing':'Edit an existing list')+'</button></form>';
     if(!S.demo&&hasSampleLists())h+='<button class="quiet" data-a="clrexl">Clear sample lists</button>';
     return h;
   }
@@ -2723,7 +2724,9 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     dellog:function(b){S.log.splice(+b.dataset.i,1);save('gs-log',S.log);render()},
     prevmo:function(){S.mo-=1;S.day=null;render()},
     nextmo:function(){if(S.mo<0){S.mo+=1;S.day=null;render()}},
-    lmode:function(){S.lmode=!S.lmode;render()},
+    lmode:function(){S.lmode=S.lmode===true?false:true;render()},
+    lmodeoff:function(){S.lmode=false;keepOpen()},
+    ledit:function(b){var L=S.lists[+b.dataset.l];if(!L)return;S.lmode=L.id;render();var d=document.querySelector('details.lcard[data-id="'+L.id+'"]');if(d){d.open=true;d.scrollIntoView({block:'start',behavior:'smooth'});var t=d.querySelector('.ltitle');if(t)try{t.focus({preventScroll:true})}catch(x){}}},
     ldellist:function(b){var L=S.lists[+b.dataset.l];if(!L)return;if(L.items.length&&!confirm('Delete "'+L.name+'" and its '+L.items.length+' item'+(L.items.length===1?'':'s')+'?'))return;S.lists.splice(+b.dataset.l,1);save('gs-lists',S.lists);render()},
     tick:function(b){var it=S.lists[+b.dataset.l].items[+b.dataset.i];it.done=!it.done;save('gs-lists',S.lists);keepOpen()},
     ustext:function(){sendOut(usText(),null,'Copied. Paste it anywhere.')},
