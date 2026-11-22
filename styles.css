@@ -1058,3 +1058,13 @@ ul.rtl li.gripping .rtbox,ul.rtl li.gripping .grip{box-shadow:0 10px 22px -10px 
 .rthead{align-items:center;margin-bottom:6px}
 .rthead .lab{margin:0}
 ul.rtl li .swdel{width:calc(-1 * var(--sx) - 10px)}
+
+/* tour */
+.tourcard{position:fixed;left:12px;right:12px;bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:18;max-width:460px;margin:0 auto;background:var(--surface);border:1.5px solid var(--accent);border-radius:18px;padding:12px 14px 14px;box-shadow:0 18px 40px -18px color-mix(in srgb,var(--ink) 60%,transparent);display:flex;flex-direction:column;gap:6px}
+.tourcard.tctop{bottom:auto;top:calc(12px + env(safe-area-inset-top,0px))}
+.tourcard h3{margin:0;font-size:19px}
+.tourcard p{margin:0}
+.tourcard .row{margin-top:4px}
+.tourhi{outline:3px solid var(--accent);outline-offset:4px;border-radius:14px;animation:tourpulse 1.6s ease-in-out infinite;position:relative;z-index:1}
+@keyframes tourpulse{50%{outline-offset:7px}}
+@media (prefers-reduced-motion:reduce){.tourhi{animation:none}}

@@ -312,7 +312,7 @@
   var DOW=['S','M','T','W','T','F','S'];
 
   function load(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
-  function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}try{window.GSSync&&window.GSSync.touch(k)}catch(e){}}
+  function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}try{if(!localStorage.getItem('gs-tour-snap'))window.GSSync&&window.GSSync.touch(k)}catch(e){}}
   /* personal names are filled in at display time, so none of them live in the code */
   var PROF=(function(){try{return JSON.parse(localStorage.getItem('gs-profile'))}catch(e){return null}})();
   function fxWith(s,html){
@@ -1800,8 +1800,62 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   /* ---- after the welcome: set things up now, or look around with the examples ---- */
   S.startQ=load('gs-startq',false);
   /* demo: the example-filled app, with a way to wipe it and start setup fresh */
-  S.demo=load('gs-demo',false);
-  function demoBar(){return S.demo?'<div class="demobar" role="note"><span><b>Demo.</b> Everything here is an example. Tap around, nothing counts.</span><button class="btn" data-a="demoend">Set up my own</button></div>':''}
+  /* the tour: a practice copy of the app filled with examples. Starting it tucks the person's own data
+     away in gs-tour-snap (never synced); finishing puts it all back exactly as it was. */
+  var TKEEP={'gs-tabs':1,'gs-profile':1,'gs-look':1,'gs-cw':1,'gs-trk':1,'gs-appear':1,'gs-logic':1};
+  function lsKeys(){var o=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf('gs-')===0)o.push(k)}return o}
+  function tourStart(isNew){
+    if(localStorage.getItem('gs-tour-snap'))return;
+    var snap={};lsKeys().forEach(function(k){if(k.indexOf('gs-sync-')===0||k.indexOf('gs-tour')===0)return;snap[k]=localStorage.getItem(k)});
+    try{localStorage.setItem('gs-tour-snap',JSON.stringify(snap))}catch(e){toast('Not enough room on this device for the tour.');return}
+    lsKeys().forEach(function(k){if(TKEEP[k]||k.indexOf('gs-sync-')===0||k.indexOf('gs-tour')===0)return;localStorage.removeItem(k)});
+    localStorage.setItem('gs-tour','0');if(isNew)localStorage.setItem('gs-tour-new','1');
+    location.hash='';location.reload();
+  }
+  function tourEnd(){
+    var raw=localStorage.getItem('gs-tour-snap');if(!raw)return;var snap={};try{snap=JSON.parse(raw)||{}}catch(e){}
+    var isNew=localStorage.getItem('gs-tour-new');
+    lsKeys().forEach(function(k){if(k.indexOf('gs-sync-')===0)return;localStorage.removeItem(k)});
+    Object.keys(snap).forEach(function(k){try{localStorage.setItem(k,snap[k])}catch(e){}});
+    if(isNew)localStorage.setItem('gs-gosetup','1');
+    location.reload();
+  }
+  S.tour=localStorage.getItem('gs-tour-snap')?(+localStorage.getItem('gs-tour')||0):null;
+  try{localStorage.removeItem('gs-demo')}catch(e){}
+  S.demo=S.tour!==null;
+  function demoBar(){return ''}
+  function tourSteps(){
+    var u=U(),lot=U().lot.toLowerCase(),pk=U().parkIt;
+    return [
+      {tab:'today',t:'Welcome to the tour',b:'This is a practice copy of the app, filled with examples. Tap anything you like. Nothing here is saved, and when you finish, your own app comes back exactly as it was.'},
+      {tab:'today',sel:'section.hero',t:'One step at a time',b:'Home shows just your next step, so there is nothing to sort through. Finish it, or skip it, and the next one takes its place.'},
+      {tab:'today',sel:'ul.steps',t:'Your routine, in order',b:'Tap a step to check it off or jump back to it. Hold one to rename it or anchor it, so it always counts.'},
+      {tab:'today',sel:'[data-a=rough]',t:'For rough days',b:'Tap this when a day starts badly. The app switches to '+(creature()?'bear minimum':'low battery mode')+': just your anchored basics, and nothing else asks for attention.'},
+      {tab:'today',sel:function(){var x=document.querySelector('.parkh');return x&&x.closest('.card')},t:'The '+lot,b:'Things with no set time live in the '+lot+'. Nothing in it is ever overdue. Home suggests one when it fits the time you have.'},
+      {tab:'ov',sel:'.ovmain',t:'Overview',b:'Your week or month at a glance, with the '+lot+' alongside. Tap + Add on any day to plan something there.'},
+      {tab:'lists',sel:'details.lcard',t:'Lists',b:'Groceries, gift ideas, movies to watch. Nothing here is due. Tap '+pk+' on an item to send it to the '+lot+'. Swipe left to delete, or hold to edit.'},
+      {tab:'lot',sel:'.lotpage',t:'The '+lot+', up close',b:'Everything with no set time, sorted into this week, this month, and groups you make. Hold '+pk+' when adding something to fill in details first.'},
+      {tab:'us',t:'Us',b:'If you plan around a partner, Us shows each of you what the other has going on, without merging your calendars. You choose how much each plan shares.'},
+      {tab:'log',sel:'.chipflow',t:'The Log',b:'A quick, optional way to note things like a rough morning or a migraine. One tap is a whole entry, and you can look back by month.'},
+      {tab:'today',sel:'.fab',t:'When you are stuck',b:'Tap here any time you cannot get started, or have a question about the app.'},
+      {tab:'today',sel:'[data-a=menu]',t:'The menu',b:'Themes, mindsets, your routine and your settings all live here.'},
+      {tab:'today',t:'That is the tour',b:localStorage.getItem('gs-tour-new')?'Next, a few quick questions to set the app up for you. The examples will be cleared.':'Your own app comes back exactly as you left it.'}
+    ].filter(function(s){return s.tab==='today'||tabsOn().indexOf(s.tab)>=0});
+  }
+  function tourCard(){
+    if(S.tour===null)return '';var st=tourSteps(),i=Math.min(S.tour,st.length-1),s=st[i],last=i===st.length-1;
+    return '<div class="tourcard" role="dialog" aria-label="Tour" aria-live="polite"><div class="between"><span class="small">'+(i+1)+' of '+st.length+'</span>'+(last?'':'<button class="quiet" data-a="tourend">End tour</button>')+'</div><h3>'+esc(s.t)+'</h3><p class="small">'+esc(s.b)+'</p><div class="row">'+(i?'<button class="btn alt grow" data-a="tourback">Back</button>':'')+'<button class="btn grow" data-a="'+(last?'tourend':'tournext')+'">'+(last?(localStorage.getItem('gs-tour-new')?'Set up my app':'Finish'):'Next')+'</button></div></div>';
+  }
+  function tourApply(scroll){
+    document.querySelectorAll('.tourhi').forEach(function(x){x.classList.remove('tourhi')});
+    if(S.tour===null)return;var st=tourSteps(),s=st[Math.min(S.tour,st.length-1)],el=null;
+    if(s.sel)el=typeof s.sel==='function'?s.sel():document.querySelector(s.sel);
+    var card=document.querySelector('.tourcard');
+    if(el){el.classList.add('tourhi');if(scroll){var r=el.getBoundingClientRect();if(r.top<70||r.bottom>innerHeight-260)window.scrollTo({top:Math.max(0,scrollY+r.top-90),behavior:'smooth'})}}
+    else if(scroll)window.scrollTo({top:0,behavior:'smooth'});
+    if(card){setTimeout(function(){var r=el&&el.getBoundingClientRect();card.classList.toggle('tctop',!!(r&&r.top>innerHeight*0.5))},scroll?400:0)}
+  }
+  function tourGo(n){var st=tourSteps();S.tour=Math.max(0,Math.min(st.length-1,n));localStorage.setItem('gs-tour',String(S.tour));S.menu=false;S.tab=st[S.tour].tab;render();tourApply(true)}
   function resetForSetup(){
     S.tasks=[];saveTasks();S.events=[];save('gs-events',S.events);S.log=[];save('gs-log',S.log);S.lists=[];save('gs-lists',S.lists);
     S.reps=[];S.cust=[];S.rtn={parts:{morning:PARTS.morning.steps.slice(),afternoon:PARTS.afternoon.steps.slice(),evening:PARTS.evening.steps.slice()},hidden:['dailymeds'],names:{}};saveRtn();
@@ -1815,7 +1869,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     if(!S.startQ||!PROF)return '';
     return '<div class="backdrop" style="z-index:40"><div class="sheet" role="dialog" aria-modal="true" aria-label="How would you like to start?"><h2 style="font-size:24px">How would you like to start?</h2>'
       +'<button class="opt" data-a="startcust"><span><b>Customize my routine</b><span class="small">Clears the examples and opens your settings, so you can set things up your way.</span></span></button>'
-      +'<button class="opt" data-a="startlook"><span><b>Just let me see how the app works</b><span class="small">Opens a demo filled with example tasks, plans and lists. Tap around freely. When you are ready, start fresh with your own.</span></span></button>'
+      +'<button class="opt" data-a="startlook"><span><b>Show me around first</b><span class="small">A short tour on a practice copy filled with examples. When it ends, the examples are cleared and you set up your own.</span></span></button>'
       +'</div></div>';
   }
 
@@ -2001,7 +2055,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     if(st.user){
       var when=st.last?Math.max(0,Math.round((Date.now()-st.last)/60000)):null;
       h+='<p class="small">Signed in as <b>'+esc(st.email||'your account')+'</b>. Your tasks, plans, lists, log and settings sync across every device you sign in on.</p>';
-      h+='<p class="small acstat">'+(st.status==='syncing'?'Syncing\u2026':st.status==='pending'?'Saving your latest change\u2026':st.status==='error'?esc(st.error):when===null?'Up to date.':when<1?'Synced just now.':'Synced '+when+' min ago.')+'</p>';
+      h+='<p class="small acstat">'+(st.status==='paused'?'Sync is paused during the tour.':st.status==='syncing'?'Syncing\u2026':st.status==='pending'?'Saving your latest change\u2026':st.status==='error'?esc(st.error):when===null?'Up to date.':when<1?'Synced just now.':'Synced '+when+' min ago.')+'</p>';
       h+='<div class="chips sm"><button data-a="acsync">Sync now</button><button data-a="acout">Sign out</button></div>';
     }else{
       h+='<p class="small">Sign in to keep your phone and computer in step. Without an account everything stays on this device only, which also works fine.</p>';
@@ -2048,6 +2102,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
 
     }else if(S.mt==='settings'){
       h+='<div class="sethead first">About you</div>'+accountUI();
+      h+='<div class="grp"><div class="lab">Take the tour</div><p class="small">A quick walk through the app on a practice copy with examples. Your own things are set aside and come back exactly as they were.</p><button class="btn alt" data-a="tourgo">Start the tour</button></div>';
       h+='<form id="profform" class="grp" style="display:flex;flex-direction:column;gap:4px">'+nameFields(PROF)+'</form>';
       h+='<div class="sethead">General</div>';
       h+='<div class="grp"><div class="lab">How should chance pick for you?</div><p class="small">This is what happens when you tap the button to let chance choose from the things that fit your time. It never picks anything that is not already a good fit.</p>';
@@ -2168,8 +2223,9 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     render.lastHero=_hk;
     var _l=document.querySelector('.lot'),_st=_l?_l.scrollTop:0;
     var _sc={};document.querySelectorAll('#sheetRoot .sheet[aria-label]').forEach(function(s){_sc[s.getAttribute('aria-label')]=s.scrollTop});
-    document.getElementById('sheetRoot').innerHTML=fx(roughSheet()+startSheet()+setupSheet()+menuSheet()+rtSheet()+evSheet()+skipSheet()+forgotSheet()+catSheet()+seSheet()+itSheet()+reSheet()+nameSheet()+tkSheet()+lotSheet()+plSheet()+fab()+welcomeSheet());
+    document.getElementById('sheetRoot').innerHTML=fx(roughSheet()+startSheet()+setupSheet()+menuSheet()+rtSheet()+evSheet()+skipSheet()+forgotSheet()+catSheet()+seSheet()+itSheet()+reSheet()+nameSheet()+tkSheet()+lotSheet()+plSheet()+fab()+tourCard()+welcomeSheet());
     document.querySelectorAll('#sheetRoot .sheet[aria-label]').forEach(function(s){var k=s.getAttribute('aria-label');if(_sc[k])s.scrollTop=_sc[k]});
+    if(S.tour!==null)tourApply(false);
     var _l2=document.querySelector('.lot');if(_l2)_l2.scrollTop=_st;
     try{publishLive()}catch(e){}
     try{meadowFrames()}catch(e){}
@@ -2229,8 +2285,11 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     'jg-tog':function(b){var v=b.dataset.v,i=S.jg.indexOf(v);if(i>=0)S.jg.splice(i,1);else S.jg.push(v);render()},
     'jg-save':function(){S.cats=S.jg.slice();save('gs-cats',S.cats);S.jg=null;S.hints.jitlog=1;save('gs-hints',S.hints);render()},
     jitmode:function(b){clearLowTmp();S.logic=b.dataset.v;save('gs-logic',S.logic);S.shift=0;S.skipPark=[];applyLook();S.hints.jitmode=1;save('gs-hints',S.hints);render();toast('Switched. You can change it any time in the menu, under Logic.')},
-    startlook:function(){S.startQ=false;save('gs-startq',false);S.demo=true;save('gs-demo',true);render();toast('This is a demo. When you are ready, tap Set up my own at the top.')},
-    demoend:function(){resetForSetup();S.demo=false;save('gs-demo',false);S.tab='today';S.menu=false;S.setup=suNew();render();window.scrollTo(0,0)},
+    startlook:function(){tourStart(true)},
+    tourgo:function(){tourStart(false)},
+    tournext:function(){tourGo(S.tour+1)},
+    tourback:function(){tourGo(S.tour-1)},
+    tourend:function(){tourEnd()},
     welnext:function(){var n=document.getElementById('pf-name');S.welName=n?n.value:'';S.welP2=true;render();var f=document.querySelector('#welcomeform input:not([type=hidden])');if(f)f.focus()},
     welback:function(){S.welP2=false;render()},
     incl:function(b){keepSheet(function(){keepAll(function(){S.incl=S.incl||{};S.incl[b.dataset.v]=!S.incl[b.dataset.v];render()})});
@@ -2848,6 +2907,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
       "Sharing with someone":{a:"The Us tab shows what your partner sees of your day. Each plan can show full details, just Appointment, or stay private. Once you are signed in you can send a live schedule link that updates by itself, and a daily card can open Messages with your plans for the day.",act:[]},
       "Syncing my devices":{a:"Sign in from the menu under Settings, Account, using Google or an email link, then sign in on your other devices. Everything syncs within a few seconds. Without signing in, everything stays on this device, and you can always save a backup file.",act:[]},
       "The Log":{a:"The Log is an optional, quick way to note things like a rough day, a medication or watering the plants. If you track something health-related, like migraines or flares, it gets its own tile and its own view, and one tap is a whole entry. Tap what happened and it is saved for that day. Look back by month whenever you like. Nothing is ever required.",act:[]},
+      "Show me around":{a:"Happy to. The tour opens a practice copy of the app with examples in it, so you can tap anything. When you finish, everything of yours comes back exactly as it was.",act:['tour']},
       "Themes and looks":{a:"Open the menu with the button at the top right. Themes changes the whole look, Colorway changes the colors, and Appearance switches between light and dark. Woodland creatures, under Premium Themes, is a storybook look with moods and seasons.",act:[]}}}
   };
   function helpPick(l){
@@ -2888,7 +2948,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     else if(S.noAI&&c.opts){h+='<div class="chips sm">';Object.keys(c.opts).forEach(function(q){h+='<button data-a="chp" data-v="'+esc(q)+'">'+esc(q)+'</button>'});h+='</div>'}
     else if(S.noAI){
       var acts=(c.act||[]).filter(function(k){return k!=='pl'||plPool().length>=2});
-      if(acts.length){h+='<div class="row">';acts.forEach(function(k){h+='<button class="btn alt grow" data-a="hact" data-v="'+(k==='pl'?'plopen':'rough')+'">'+esc(k==='pl'?u.plbtn:'Rough day options')+'</button>'});h+='</div>'}
+      if(acts.length){h+='<div class="row">';acts.forEach(function(k){h+='<button class="btn alt grow" data-a="hact" data-v="'+(k==='pl'?'plopen':k==='tour'?'tourgo':'rough')+'">'+esc(k==='pl'?u.plbtn:k==='tour'?'Start the tour':'Rough day options')+'</button>'});h+='</div>'}
       h+='<div class="row">'+(c.appq?'<button class="quiet" data-a="chpapp">Another app question</button>':'')+'<button class="quiet" data-a="cnew">Something else</button></div>';
     }
     if(c.err)h+='<div class="note" role="alert">'+esc(c.err)+(c.retry?' <button class="quiet" data-a="cretry">Try again</button>':'')+'</div>';
@@ -2967,6 +3027,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   startLive(0);
   window.addEventListener('hashchange',function(){S.pv=pvParse();startLive(0);render()});
   seedSamples();
+  if(localStorage.getItem('gs-gosetup')){localStorage.removeItem('gs-gosetup');try{A.startcust()}catch(e){}}
   /* today's done and skipped steps survive a refresh (and sync between devices); a new day starts fresh */
   (function(){var st=load('gs-status',null),tk=ymd(new Date());S.status=(st&&st.d===tk&&st.s)?st.s:{};S.statusDay=tk;S.statusSaved=JSON.stringify(S.status)})();
   /* follow the real time of day: the clock updates every minute, and the part of the day moves on its own */

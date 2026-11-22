@@ -19,7 +19,9 @@ const auth = getAuth(app), db = getFirestore(app);
 
 const META = 'gs-sync-meta';            // { key: lastWriteTime } for this device
 const DIRTY = 'gs-sync-dirty';          // keys changed locally and not yet uploaded
-const SKIP = { 'gs-sync-meta':1, 'gs-sync-dirty':1, 'gs-sync-email':1, 'gs-sync-pushall':1, 'gs-sync-uid':1 };
+const SKIP = { 'gs-sync-meta':1, 'gs-sync-dirty':1, 'gs-sync-email':1, 'gs-sync-pushall':1, 'gs-sync-uid':1, 'gs-tour-snap':1, 'gs-tour':1, 'gs-tour-new':1, 'gs-gosetup':1 };
+/* during the tour the app holds practice data, so nothing goes up or comes down until it ends */
+const touring = () => { try { return !!localStorage.getItem('gs-tour-snap') } catch (e) { return false } };
 const rd = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d } catch (e) { return d } };
 const wr = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch (e) {} };
 const syncable = k => k && k.indexOf('gs-') === 0 && !SKIP[k];
@@ -32,13 +34,13 @@ function setStatus(s, err) { state.status = s; state.error = err || ''; if (s ==
 
 /* local edits -> upload (debounced) */
 function touch(k) {
-  if (!syncable(k) || applying) return;
+  if (!syncable(k) || applying || touring()) return;
   const m = rd(META, {}); m[k] = Date.now(); wr(META, m);
   const d = rd(DIRTY, {}); d[k] = 1; wr(DIRTY, d);
   if (state.user) { clearTimeout(timer); timer = setTimeout(flush, 1200); setStatus('pending') }
 }
 async function flush() {
-  if (!state.user) return;
+  if (!state.user || touring()) return;
   const d = rd(DIRTY, {}), keys = Object.keys(d); if (!keys.length) { setStatus('synced'); return }
   setStatus('syncing');
   const m = rd(META, {}), uid = state.user.uid;
@@ -54,6 +56,7 @@ async function flush() {
 
 /* remote -> local */
 function applyRemote(docs, first) {
+  if (touring()) return false;
   const m = rd(META, {}), d = rd(DIRTY, {}); let changed = false;
   applying = true;
   docs.forEach(x => {
@@ -74,6 +77,7 @@ function reloadSoon() {
 }
 
 async function startSync(user) {
+  if (touring()) { setStatus('paused'); return }
   setStatus('syncing');
   const uid = user.uid, prevUid = localStorage.getItem('gs-sync-uid');
   try {
