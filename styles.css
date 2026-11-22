@@ -1074,3 +1074,10 @@ ul.rtl li .swdel{width:calc(-1 * var(--sx) - 10px)}
 @keyframes fieldnudge{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 @media (prefers-reduced-motion:reduce){.fielderr{animation:none}}
 .fielderrmsg{color:#b8473a;margin:6px 0 0;font-weight:600}
+
+/* tour: the tab it switches to gets "tapped" first, then glows */
+.tabs button.tourtap{animation:tourtap .5s ease forwards}
+@keyframes tourtap{0%{transform:scale(1)}35%{transform:scale(.86)}100%{transform:scale(1);box-shadow:0 0 0 3px var(--accent)}}
+.tabs button.tourtap,.tabs button.tourtab{border-radius:14px;position:relative}
+.tabs button.tourtap::after,.tabs button.tourtab::after{content:"";position:absolute;inset:-4px;border-radius:16px;border:2.5px solid var(--accent);pointer-events:none;animation:tourring 1.5s ease-out forwards}
+@keyframes tourring{0%{opacity:0;transform:scale(.9)}20%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.12)}}

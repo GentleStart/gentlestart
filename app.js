@@ -1883,7 +1883,14 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
     else{if(s.sel&&s.alt&&card){var cp=card.querySelector('p');if(cp)cp.textContent=s.alt}if(scroll&&newTab)window.scrollTo({top:0,behavior:'smooth'})}
     if(card){setTimeout(function(){var r=el&&el.getBoundingClientRect();card.classList.toggle('tctop',!!(r&&r.top>innerHeight*0.5))},scroll?400:0)}
   }
-  function tourGo(n){var st=tourSteps();S.tour=Math.max(0,Math.min(st.length-1,n));localStorage.setItem('gs-tour',String(S.tour));S.menu=false;var nt=S.tab!==st[S.tour].tab;S.tab=st[S.tour].tab;render();tourApply(true,nt)}
+  function tourGo(n){
+    var st=tourSteps();S.tour=Math.max(0,Math.min(st.length-1,n));localStorage.setItem('gs-tour',String(S.tour));S.menu=false;
+    var to=st[S.tour].tab,nt=S.tab!==to;
+    if(!nt){render();tourApply(true,false);return}
+    /* show the tab being tapped first, so the page change makes sense */
+    var tb=document.querySelector('.tabs [data-v="'+to+'"]'),go=function(){S.tab=to;render();tourApply(true,true);var t2=document.querySelector('.tabs [data-v="'+to+'"]');if(t2){t2.classList.add('tourtab');setTimeout(function(){t2.classList.remove('tourtab')},1600)}};
+    if(tb&&!matchMedia('(prefers-reduced-motion:reduce)').matches){tb.classList.add('tourtap');setTimeout(go,520)}else go();
+  }
   function resetForSetup(){
     S.tasks=[];saveTasks();S.events=[];save('gs-events',S.events);S.log=[];save('gs-log',S.log);S.lists=[];save('gs-lists',S.lists);
     S.reps=[];S.cust=[];S.rtn={parts:{morning:PARTS.morning.steps.slice(),afternoon:PARTS.afternoon.steps.slice(),evening:PARTS.evening.steps.slice()},hidden:['dailymeds'],names:{}};saveRtn();
