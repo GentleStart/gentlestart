@@ -261,7 +261,8 @@
   function deco(){var f=DECO[lookKey()];return f?'<div class="deco" aria-hidden="true"'+(S.logic==='mammal'?' data-a="critter"':'')+'>'+f()+'</div>':''}
   function head(o){
     return '<header class="head"><div class="top"><div>'+(o.eyebrow?'<div class="date">'+esc(o.eyebrow)+'</div>':'')+'<h1 class="hello">'+esc(o.title)+'</h1>'+(o.sub?'<div class="date">'+esc(o.sub)+'</div>':'')+'</div>'
-      +(EMBS[lookKey()]?'<button class="emblem fancy" data-a="menu" aria-label="Open menu" aria-haspopup="dialog">'+emblemSvg(lookKey())+'</button>':'<button class="emblem" data-a="menu" aria-label="Open menu" aria-haspopup="dialog">'+motif()+'</button>')+'</div>'+deco()+(o.def&&lookKey()==='nook'?'<p class="defn"><b>with\u00b7y</b> <span class="ipa">/\u02c8w\u026a\u00f0.i/</span> <i>noun</i> &mdash; <b>1.</b>&nbsp;a flexible willow shoot, woven to bind things together. <b>2.</b>&nbsp;<i>(informal)</i> something that bends without breaking.</p>':'')+'</header>';
+      +'<div class="hdbtns">'+(EMBS[lookKey()]?'<button class="emblem fancy" data-a="menu" aria-label="Open menu" aria-haspopup="dialog">'+emblemSvg(lookKey())+'</button>':'<button class="emblem" data-a="menu" aria-label="Open menu" aria-haspopup="dialog">'+motif()+'</button>')
+      +(S.tab!=='lot'&&!S.pv?'<button class="psign hdp" data-a="lot" aria-label="Open '+esc(U().lot)+'"><b>P</b></button>':'')+'</div></div>'+deco()+(o.def&&lookKey()==='nook'?'<p class="defn"><b>with\u00b7y</b> <span class="ipa">/\u02c8w\u026a\u00f0.i/</span> <i>noun</i> &mdash; <b>1.</b>&nbsp;a flexible willow shoot, woven to bind things together. <b>2.</b>&nbsp;<i>(informal)</i> something that bends without breaking.</p>':'')+'</header>';
   }
 
   var ICON={
@@ -1045,7 +1046,7 @@
   function overview(){
     var u=U();
     var hd=head({title:'Overview',sub:'Your plans at a glance.'}),h='';
-    h+='<div class="between" style="gap:10px"><div class="subtabs" role="group" aria-label="Overview range" style="flex:1"><button data-a="ovv" data-v="week" aria-pressed="'+(S.ovv==='week')+'">Week</button><button data-a="ovv" data-v="month" aria-pressed="'+(S.ovv==='month')+'">Month</button><button data-a="ovv" data-v="all" aria-pressed="'+(S.ovv==='all')+'">All plans</button></div><button class="psign" data-a="lot" aria-label="Open '+esc(u.lot)+'"><b>P</b><span>'+esc(u.lot)+'</span></button></div>';
+    h+='<div class="between" style="gap:10px"><div class="subtabs" role="group" aria-label="Overview range" style="flex:1"><button data-a="ovv" data-v="week" aria-pressed="'+(S.ovv==='week')+'">Week</button><button data-a="ovv" data-v="month" aria-pressed="'+(S.ovv==='month')+'">Month</button><button data-a="ovv" data-v="all" aria-pressed="'+(S.ovv==='all')+'">All plans</button></div></div>';
     if(!S.demo&&!S.events.some(function(e){return !e.ex})&&!S.hints.jitplans)h+='<div class="card" style="margin:12px 0"><h3>Anything this week with a set time?</h3><p class="small">Appointments, classes, calls, dinners. Add one and it shows up on the right day, with a heads-up when it is time to get ready.</p><div class="row"><button class="btn grow" data-a="evnew">Add a plan</button></div><button class="quiet" data-a="hintx" data-v="jitplans">Not now</button></div>';
     return hd+'<div class="ovsplit"><aside class="lot lotside" aria-label="'+esc(u.lot)+'">'+lotInner(true)+'</aside><div class="ovmain">'+h+(S.ovv==='week'?ovWeek():S.ovv==='all'?ovAll():ovMonth())+(!S.demo&&S.events.some(function(e){return e.ex})?'<button class="quiet" data-a="clrexev">Clear example plans</button>':'')+'</div></div>';
   }
@@ -1459,7 +1460,7 @@
   function lists(){
     var ed=!!S.lmode;
     var h=head({title:'Lists',sub:'Separate from your day, and nothing here is due. Tap '+U().parkIt+' on any item to send it to '+lotThe()+', and Home will suggest it when there\u2019s time.'});
-    h+='<div class="between" style="justify-content:flex-end;gap:8px">'+(S.lists.length>1?'<button class="expall" data-a="lexp" aria-label="Expand or collapse all lists">Expand all</button>':'')+'<button class="psign" data-a="lot" aria-label="Open '+esc(U().lot)+'"><b>P</b><span>'+esc(U().lot)+'</span></button></div>';
+    h+='<div class="between" style="justify-content:flex-end;gap:8px">'+(S.lists.length>1?'<button class="expall" data-a="lexp" aria-label="Expand or collapse all lists">Expand all</button>':'')+'</div>';
     if(!S.demo&&!S.lists.length&&!S.hints.jitlists){
       S.jl=S.jl||[];
       h+='<div class="card"><h3>What lists do you keep in your Notes app?</h3><p class="small">Pick any and they will be here, ready to fill. Nothing on a list is ever due.</p><div class="chips">';

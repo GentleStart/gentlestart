@@ -1068,3 +1068,8 @@ ul.rtl li .swdel{width:calc(-1 * var(--sx) - 10px)}
 .tourhi{outline:3px solid var(--accent);outline-offset:4px;border-radius:14px;animation:tourpulse 1.6s ease-in-out infinite;position:relative;z-index:1}
 @keyframes tourpulse{50%{outline-offset:7px}}
 @media (prefers-reduced-motion:reduce){.tourhi{animation:none}}
+
+/* parking sign under the menu button, the same spot on every page */
+.hdbtns{display:flex;flex-direction:column;align-items:center;gap:8px;flex:none;align-self:flex-start}
+.psign.hdp{padding:4px;border-radius:10px;box-shadow:0 6px 14px -8px color-mix(in srgb,var(--ink) 50%,transparent)}
+.psign.hdp b{width:28px;height:28px;font-size:17px}
