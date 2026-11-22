@@ -259,6 +259,7 @@
     }
   };
   function deco(){var f=DECO[lookKey()];return f?'<div class="deco" aria-hidden="true"'+(S.logic==='mammal'?' data-a="critter"':'')+'>'+f()+'</div>':''}
+  function lotRow(){return '<div class="between" style="justify-content:flex-end;gap:8px"><button class="psign" data-a="lot" aria-label="Open '+esc(U().lot)+'"><b>P</b><span>'+esc(U().lot)+'</span></button></div>'}
   function head(o){
     return '<header class="head"><div class="top"><div>'+(o.eyebrow?'<div class="date">'+esc(o.eyebrow)+'</div>':'')+'<h1 class="hello">'+esc(o.title)+'</h1>'+(o.sub?'<div class="date">'+esc(o.sub)+'</div>':'')+'</div>'
       +(EMBS[lookKey()]?'<button class="emblem fancy" data-a="menu" aria-label="Open menu" aria-haspopup="dialog">'+emblemSvg(lookKey())+'</button>':'<button class="emblem" data-a="menu" aria-label="Open menu" aria-haspopup="dialog">'+motif()+'</button>')+'</div>'+deco()+(o.def&&lookKey()==='nook'?'<p class="defn"><b>with\u00b7y</b> <span class="ipa">/\u02c8w\u026a\u00f0.i/</span> <i>noun</i> &mdash; <b>1.</b>&nbsp;a flexible willow shoot, woven to bind things together. <b>2.</b>&nbsp;<i>(informal)</i> something that bends without breaking.</p>':'')+'</header>';
@@ -1566,7 +1567,7 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   function logview(){
     var ms=monthStart(),y=ms.getFullYear(),m=ms.getMonth(),tv=trkById(S.lv)?S.lv:(S.lv==='migraine'&&trkById('mig')?'mig':null),T=trkById(tv),mig=!!T;
     var label=ms.toLocaleDateString(undefined,{month:'long',year:'numeric'});
-    var h=head({title:'Log',sub:'Optional. Only what you choose to add.'});
+    var h=head({title:'Log',sub:'Optional. Only what you choose to add.'})+lotRow();
     if(!S.demo&&!S.log.some(function(e){return !e.smp})&&!S.hints.jitlog){
       if(!S.jg)S.jg=S.cats.slice();
       var jo=['Rough day','Slept badly','Workout','Took a walk','Watered plants','Hobby time','Social time','Good day'];S.cats.forEach(function(c){if(jo.indexOf(c)<0)jo.push(c)});
@@ -1720,11 +1721,11 @@ var SUGG={meds:['Rescue med','OTC painkiller']};
   }
   function us(){
     if(!(PROF&&PROF.partner)){
-      var e=head({title:'Us',sub:'Share your day with the people you plan around'});
+      var e=head({title:'Us',sub:'Share your day with the people you plan around'})+lotRow();
       e+='<div class="card"><h3>What Us is for</h3><p class="small">Add a partner and this becomes your shared view of each other&rsquo;s day.</p><ul class="usx"><li><b>See their agenda at a glance.</b> Today, tomorrow and the rest of the week, without asking.</li><li><b>Plan joint activities.</b> Dinner out or a movie night shows up once for both of you.</li><li><b>Choose what they see.</b> Each plan can show full details, just &ldquo;Appointment&rdquo;, or stay private.</li><li><b>Plan around their schedule.</b> Add their late shift or lunch break so your Overview knows.</li><li><b>Send a quick summary.</b> A bulleted list or a read-only link of your week, in one tap.</li></ul><button class="btn" data-a="usadd">Add a partner</button></div>';
       return e;
     }
-    var h=head({title:'Us',sub:'What §P sees of your day'});
+    var h=head({title:'Us',sub:'What §P sees of your day'})+lotRow();
     h+=hint('us','note','Built from the plans you add on Home. Each plan shows the way you set it: full details, just "Appointment", or nothing. Free time shows nothing.');
     var groups=[['Today',[0]],['Tomorrow',[1]],['Later this week',[2,3,4,5,6,7]]],hidden=0,any=false;
     groups.forEach(function(g){
