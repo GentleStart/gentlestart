@@ -1235,12 +1235,6 @@
     var m;
     if(/\b(today|tonight|this (morning|afternoon|evening))\b/.test(low))setDay(today,'today');
     else if(/\b(tomorrow|tmrw|tmr|tomorow)\b/.test(low))setDay(addDays(today,1),'tomorrow');
-    if(!out.date&&(m=low.match(/\b(next |this |on )?(sun|mon|tue|tues|wed|weds|thu|thur|thurs|fri|sat)(day|nesday|sday|urday|rsday)?\b/))){
-      var wd=DAYS.indexOf(m[2].slice(0,3)),diff=(wd-today.getDay()+7)%7;
-      if(m[1]==='next '&&diff===0)diff=7;
-      var d=addDays(today,diff);setDay(d,d.toLocaleDateString(undefined,{weekday:'long'}));
-    }
-    if(!out.date&&/\b(this|the) weekend\b/.test(low)){var dw=today.getDay();setDay(addDays(today,dw===0||dw===6?0:6-dw),'this weekend')}
     if(!out.date&&(m=low.match(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.? (\d{1,2})(st|nd|rd|th)?\b/)||low.match(/\b(\d{1,2})(st|nd|rd|th)? (?:of )?(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\b/))){
       var mo,dd;if(isNaN(+m[1])){mo=MON.indexOf(m[1].slice(0,3));dd=+m[2]}else{mo=MON.indexOf(m[3].slice(0,3));dd=+m[1]}
       if(mo>=0&&dd>=1&&dd<=31){var x=new Date(today.getFullYear(),mo,dd);if(x<today)x=new Date(today.getFullYear()+1,mo,dd);setDay(x,x.toLocaleDateString(undefined,{month:'short',day:'numeric'}))}
@@ -1249,9 +1243,24 @@
       var mo2=+m[1]-1,dd2=+m[2];if(mo2>=0&&mo2<12&&dd2>=1&&dd2<=31){var yr=m[3]?(+m[3]<100?2000+(+m[3]):+m[3]):today.getFullYear(),x2=new Date(yr,mo2,dd2);if(!m[3]&&x2<today)x2=new Date(yr+1,mo2,dd2);setDay(x2,x2.toLocaleDateString(undefined,{month:'short',day:'numeric'}))}
     }
     if(!out.date&&(m=low.match(/\bthe (\d{1,2})(st|nd|rd|th)\b/))){var dd3=+m[1];if(dd3>=1&&dd3<=31){var x3=new Date(today.getFullYear(),today.getMonth(),dd3);if(x3<today)x3=new Date(today.getFullYear(),today.getMonth()+1,dd3);setDay(x3,x3.toLocaleDateString(undefined,{month:'short',day:'numeric'}))}}
+    /* a weekday name only counts when no explicit date was given ("Wed Dec 2" means Dec 2) */
+    if(!out.date&&(m=low.match(/\b(next |this |on )?(sun|mon|tue|tues|wed|weds|thu|thur|thurs|fri|sat)(day|nesday|sday|urday|rsday)?\b/))){
+      var wd=DAYS.indexOf(m[2].slice(0,3)),diff=(wd-today.getDay()+7)%7;
+      if(m[1]==='next '&&diff===0)diff=7;
+      var d=addDays(today,diff);setDay(d,d.toLocaleDateString(undefined,{weekday:'long'}));
+    }
+    if(!out.date&&/\b(this|the) weekend\b/.test(low)){var dw=today.getDay();setDay(addDays(today,dw===0||dw===6?0:6-dw),'this weekend')}
     /* time */
     var eve=/\b(dinner|drinks|tonight|evening|night|movie|party|bar|concert|show|game night|date)\b/.test(low),mins=null;
     if(/\bnoon\b/.test(low))mins=720;
+    if(mins===null&&(m=low.match(/(?:^|[^\d\/:])(\d{1,2})(?::(\d{2}))?\s?(am|pm)?\s?(?:-|\u2013|to)\s?(\d{1,2})(?::(\d{2}))?\s?(am|pm)?(?![\d\/:])/))){
+      var h1=+m[1],m1=+(m[2]||0),h2=+m[4],m2=+(m[5]||0),a1=m[3]||m[6]||'',a2=m[6]||'';
+      if(h1>=1&&h1<=12&&h2>=1&&h2<=12){
+        function to24(h,a,fb){if(a==='pm'&&h<12)return h+12;if(a==='am')return h===12?0:h;return fb(h)}
+        var s1=to24(h1,m[3]||'',function(h){return a2==='pm'&&h<=h2?h+12:a2==='am'?h:(h<=7||eve?h+12:h===12?12:h)})*60+m1,s2=to24(h2,a2,function(h){return h<=7||eve||s1>=720?(h<12?h+12:h):h})*60+m2;
+        if(s2<=s1)s2+=720;if(s2-s1>0&&s2-s1<=720){mins=s1;out.dur=s2-s1}
+      }
+    }
     if(mins===null){
       var re=/(^|[^\d\/:])(at |@ ?|around |by |til |till |until |~ ?)?(\d{1,2})(?::(\d{2}))? ?((?:am|pm|a\.m\.|p\.m\.|a|p)(?![a-z]))?(ish)?(?![\d\/:])/g,best=null;
       while((m=re.exec(low))){
@@ -1269,8 +1278,9 @@
     /* how long */
     if((m=low.match(/\bfor (an?|one|\d+(?:\.\d+)?|half an?) ?(hour|hr|hours|hrs|minutes|mins|min)\b/))){
       var q=m[1]==='a'||m[1]==='an'||m[1]==='one'?1:/half/.test(m[1])?0.5:+m[1],dur=/^h/.test(m[2])?Math.round(q*60):Math.round(q);
-      if(dur>0&&dur<=720){out.dur=dur;out.found.push(fmtMins(dur))}
+      if(dur>0&&dur<=720){out.dur=dur}
     }
+    if(out.dur)out.found.push(fmtMins(out.dur));
     /* where */
     var STOP=/^(least|all|first|last|most|once|some point|the moment|the latest|the earliest|noon|midnight|night)\b/i;
     var pre=/(?:^|[\s(])(?:at\s+|@\s*)(?![\d\s])([^,.!?;\n()]{2,50}?)(?=\s+(?:on|at|around|by|for|tomorrow|tonight|today|this|next|instead|then|if|so|after|before|with|lol|haha)\b|[,.!?;\n()]|$)/gi;
@@ -1279,10 +1289,23 @@
     /* what it is */
     var KW=[['game night','Game night'],['brunch','Brunch'],['breakfast','Breakfast'],['lunch','Lunch'],['dinner','Dinner'],['coffee','Coffee'],['drinks','Drinks'],['happy hour','Happy hour'],['movies?','Movie'],['birthday','Birthday'],['party','Party'],['concert','Concert'],['wedding','Wedding'],['baby shower','Baby shower'],['bbq|barbecue|cookout','Cookout'],['picnic','Picnic'],['hike','Hike'],['dentist','Dentist'],['doctor|dr\\.? appt','Doctor'],['haircut|hair appt','Haircut'],['appointment|appt','Appointment'],['meeting','Meeting'],['interview','Interview'],['yoga','Yoga'],['gym|workout','Workout'],['class','Class'],['practice','Practice'],['playdate','Playdate'],['date night','Date night'],['call\\b|phone call|facetime','Call'],['game\\b','Game']];
     for(var i=0;i<KW.length;i++){if(new RegExp('\\b('+KW[i][0]+')').test(low)){out.title=KW[i][1];break}}
-    if(!out.title){
-      var t=text.replace(/^(hey|hi|hello|yo|so|ok|okay|omg|ooh|oh|lol|haha|hahaha)\b[\s,!.]*/i,'').replace(/^(do you |did you |wanna |want to |you want to |are you free (to )?|would you (like|want) to |can you |let's |lets |we should )/i,'');
-      t=t.split(/[.!?\n]/)[0].trim();if(t.length>40)t=t.slice(0,40).replace(/\s+\S*$/,'')+'…';
-      out.title=t?t.charAt(0).toUpperCase()+t.slice(1):'';out.titleGuess=true;
+    var GEN={Class:1,Game:1,Practice:1,Meeting:1,Call:1,Party:1,Birthday:1,Appointment:1,Concert:1,Interview:1};
+    if(!out.title||GEN[out.title]){
+      var kw=out.title;
+      var rest=text
+        .replace(/\b(next |this |on )?(sun|mon|tue|tues|wed|weds|thu|thur|thurs|fri|sat)(day|nesday|sday|urday|rsday)?\b\.?( (morning|afternoon|evening|night))?/gi,' ')
+        .replace(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.? \d{1,2}(st|nd|rd|th)?\b|\b\d{1,2}(st|nd|rd|th)? (of )?(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\b/gi,' ')
+        .replace(/\b\d{1,2}\/\d{1,2}(\/\d{2,4})?\b|\bthe \d{1,2}(st|nd|rd|th)\b/gi,' ')
+        .replace(/\b(today|tonight|tomorrow|tmrw|tmr|this (morning|afternoon|evening)|(this|the) weekend)\b/gi,' ')
+        .replace(/(\b(at|around|by|until|till|til)\s+|@\s*|~\s*)?\b\d{1,2}(:\d{2})?\s?(am|pm|a\.m\.|p\.m\.|a|p)?(ish)?\b|\bnoon\b/gi,' ')
+        .replace(/\bfor (an?|one|\d+(\.\d+)?|half an?) ?(hour|hr|hours|hrs|minutes|mins|min)\b/gi,' ').replace(/\s?(-|\u2013|to)\s?(?=\s|$)/g,' ');
+      if(out.place)rest=rest.replace(new RegExp('(\\bat\\s+|@\\s*)?'+out.place.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i'),' ');
+      var FILL=/^(hey|hi|hello|yo|so|ok|okay|omg|ooh|oh|lol|haha+|yeah|yes|yep|sure|maybe|sounds good|great|cool|also|and|then)\b[\s,!]*/i,ASK=/^(do you |did you |wanna |want to |you want to |are you free (to )?|would you (like|want) to |can you |let's |lets |we should |going to |gonna |i'm |im |i am |we're |were )/i,JUNK=/^(works|work|ok|okay|sure|maybe|good|fine|great|cool|yes|no|free|it|that)$/i;
+      var segs=rest.split(/[.!?\n]/).map(function(x){x=x.replace(/[,;:\-–—]+/g,' ').replace(/\s+/g,' ').trim();var p;do{p=x;x=x.replace(FILL,'').replace(ASK,'').trim()}while(x!==p);return x.replace(/^(get|grab|go to|go|have|do)\s+/i,'').replace(/\s+\b(on|at|around|by|this|next|works|work)$/i,'').trim()}).filter(function(x){return x&&!JUNK.test(x)});
+      var pick=kw?segs.filter(function(x){return x.toLowerCase().indexOf(kw.toLowerCase())>=0})[0]:segs[0];
+      if(pick&&pick.length>40)pick=pick.slice(0,40).replace(/\s+\S*$/,'')+'\u2026';
+      if(pick&&pick.length>=2){out.title=pick.charAt(0).toUpperCase()+pick.slice(1);out.titleGuess=!kw}
+      else if(!kw)out.title='';
     }
     out.text=text;
     return out;
